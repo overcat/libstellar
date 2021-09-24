@@ -1,0 +1,76 @@
+#include <setjmp.h>
+#include <stdarg.h>
+#include <stddef.h>
+
+#include "../../src/strkey.h"
+#include <cmocka.h>
+
+void test_encode_ed25519_public_key(void **state) {
+  unsigned char in[] = {0x7f, 0xff, 0xb1, 0x32, 0x3a, 0xff, 0x7,  0x57,
+                        0x3b, 0x97, 0x74, 0xcd, 0x32, 0x2e, 0x74, 0x46,
+                        0xa5, 0xc9, 0x30, 0x5f, 0x99, 0x49, 0x6,  0xbd,
+                        0xfc, 0x74, 0xdb, 0x7d, 0x6e, 0x1d, 0x9d, 0x12};
+  char out[ED25519_PUBLIC_KEY_LENGTH + 1];
+  assert_true(encode_ed25519_public_key(in, out));
+  assert_string_equal(
+      out, "GB777MJSHL7QOVZ3S52M2MROORDKLSJQL6MUSBV57R2NW7LODWORELJO");
+}
+
+void test_encode_med25519_public_key(void **state) {
+  stellarxdr_MuxedAccountMed25519 in = {
+      .ed25519 = {0x7f, 0xff, 0xb1, 0x32, 0x3a, 0xff, 0x7,  0x57,
+                  0x3b, 0x97, 0x74, 0xcd, 0x32, 0x2e, 0x74, 0x46,
+                  0xa5, 0xc9, 0x30, 0x5f, 0x99, 0x49, 0x6,  0xbd,
+                  0xfc, 0x74, 0xdb, 0x7d, 0x6e, 0x1d, 0x9d, 0x12},
+      .id = 1234,
+  };
+  char out[MED25519_PUBLIC_KEY_LENGTH + 1];
+  assert_true(encode_med25519_public_key(&in, out));
+  assert_string_equal(
+      out,
+      "MB777MJSHL7QOVZ3S52M2MROORDKLSJQL6MUSBV57R2NW7LODWOREAAAAAAAAAAE2K4YI");
+}
+
+void test_encode_ed25519_secret_seed(void **state) {
+  unsigned char in[] = {0x7f, 0xff, 0xb1, 0x32, 0x3a, 0xff, 0x7,  0x57,
+                        0x3b, 0x97, 0x74, 0xcd, 0x32, 0x2e, 0x74, 0x46,
+                        0xa5, 0xc9, 0x30, 0x5f, 0x99, 0x49, 0x6,  0xbd,
+                        0xfc, 0x74, 0xdb, 0x7d, 0x6e, 0x1d, 0x9d, 0x12};
+  char out[ED25519_SECRET_SEED_LENGTH + 1];
+  assert_true(encode_ed25519_secret_seed(in, out));
+  assert_string_equal(
+      out, "SB777MJSHL7QOVZ3S52M2MROORDKLSJQL6MUSBV57R2NW7LODWORFP2R");
+}
+
+void test_encode_pre_auth_tx(void **state) {
+  unsigned char in[] = {0x7f, 0xff, 0xb1, 0x32, 0x3a, 0xff, 0x7,  0x57,
+                        0x3b, 0x97, 0x74, 0xcd, 0x32, 0x2e, 0x74, 0x46,
+                        0xa5, 0xc9, 0x30, 0x5f, 0x99, 0x49, 0x6,  0xbd,
+                        0xfc, 0x74, 0xdb, 0x7d, 0x6e, 0x1d, 0x9d, 0x12};
+  char out[PRE_AUTH_TX_LENGTH + 1];
+  assert_true(encode_pre_auth_tx(in, out));
+  assert_string_equal(
+      out, "TB777MJSHL7QOVZ3S52M2MROORDKLSJQL6MUSBV57R2NW7LODWORFW37");
+}
+
+void test_encode_sha256_hash(void **state) {
+  unsigned char in[] = {0x7f, 0xff, 0xb1, 0x32, 0x3a, 0xff, 0x7,  0x57,
+                        0x3b, 0x97, 0x74, 0xcd, 0x32, 0x2e, 0x74, 0x46,
+                        0xa5, 0xc9, 0x30, 0x5f, 0x99, 0x49, 0x6,  0xbd,
+                        0xfc, 0x74, 0xdb, 0x7d, 0x6e, 0x1d, 0x9d, 0x12};
+  char out[SHA256_HASH_LENGTH + 1];
+  assert_true(encode_sha256_hash(in, out));
+  assert_string_equal(
+      out, "XB777MJSHL7QOVZ3S52M2MROORDKLSJQL6MUSBV57R2NW7LODWORES6G");
+}
+
+int main() {
+  const struct CMUnitTest tests[] = {
+      cmocka_unit_test(test_encode_ed25519_public_key),
+      cmocka_unit_test(test_encode_med25519_public_key),
+      cmocka_unit_test(test_encode_ed25519_secret_seed),
+      cmocka_unit_test(test_encode_pre_auth_tx),
+      cmocka_unit_test(test_encode_sha256_hash),
+  };
+  return cmocka_run_group_tests(tests, NULL, NULL);
+}
