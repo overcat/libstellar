@@ -25,7 +25,7 @@ bool_t xdr_stellarxdr_int32(XDR *xdrs, stellarxdr_int32 *objp) {
 }
 
 bool_t xdr_stellarxdr_uint64(XDR *xdrs, stellarxdr_uint64 *objp) {
-  if (!xdr_u_int64_t(xdrs, objp))
+  if (!xdr_uint64_t(xdrs, objp))
     return (FALSE);
   return (TRUE);
 }
