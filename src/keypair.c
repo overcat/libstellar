@@ -44,3 +44,20 @@ bool keypair_secret(const struct Keypair *keypair, char *secret) {
   }
   return encode_ed25519_secret_seed(keypair->seed, secret);
 }
+
+bool keypair_sign(const struct Keypair *keypair, unsigned char *signature,
+                  const unsigned char *message, size_t message_len) {
+  if (!keypair->can_sign) {
+    return false;
+  }
+  uint8_t private_key[64], public_key[32];
+  ed25519_create_keypair(public_key, private_key, keypair->seed);
+  ed25519_sign(signature, message, message_len, public_key, private_key);
+  return true;
+}
+
+bool keypair_verify(const struct Keypair *keypair,
+                    const unsigned char *signature,
+                    const unsigned char *message, size_t message_len) {
+  return ed25519_verify(signature, message, message_len, keypair->public_key);
+}
