@@ -48,7 +48,9 @@ add_library(
 )
 
 add_executable(test_strkey src/test_strkey.c)
-
 target_link_libraries(test_strkey PRIVATE cmocka stellar_base)
-
 add_test(test_strkey test_strkey)
+
+add_executable(test_keypair src/test_keypair.c)
+target_link_libraries(test_keypair PRIVATE cmocka stellar_base)
+add_test(test_keypair test_keypair)
