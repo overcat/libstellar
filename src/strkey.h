@@ -21,13 +21,24 @@ enum VersionByte {
 
 bool encode_ed25519_public_key(const uint8_t *in, char *out);
 
+bool decode_ed25519_public_key(const char *in, uint8_t *out);
+
 bool encode_med25519_public_key(const stellarxdr_MuxedAccountMed25519 *in,
                                 char *out);
 
+bool decode_med25519_public_key(const char *in,
+                                stellarxdr_MuxedAccountMed25519 *out);
+
 bool encode_ed25519_secret_seed(const uint8_t *in, char *out);
+
+bool decode_ed25519_secret_seed(const char *in, uint8_t *out);
 
 bool encode_pre_auth_tx(const uint8_t *in, char *out);
 
+bool decode_pre_auth_tx(const char *in, uint8_t *out);
+
 bool encode_sha256_hash(const uint8_t *in, char *out);
+
+bool decode_sha256_hash(const char *in, uint8_t *out);
 
 #endif
