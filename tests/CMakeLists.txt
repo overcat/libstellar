@@ -62,3 +62,7 @@ add_test(test_memo test_memo)
 add_executable(test_muxed_account src/test_muxed_account.c)
 target_link_libraries(test_muxed_account PRIVATE cmocka stellar_base)
 add_test(test_muxed_account test_muxed_account)
+
+add_executable(test_operation src/test_operation.c)
+target_link_libraries(test_operation PRIVATE cmocka stellar_base)
+add_test(test_operation test_operation)
