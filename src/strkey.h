@@ -5,11 +5,21 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+static const char *MUXED_ACCOUNT_STARTING_LETTER = "M";
+static const char *ED25519_PUBLIC_KEY_ACCOUNT_STARTING_LETTER = "G";
+
 static const uint8_t ED25519_PUBLIC_KEY_LENGTH = 56;
 static const uint8_t ED25519_SECRET_SEED_LENGTH = 56;
 static const uint8_t PRE_AUTH_TX_LENGTH = 56;
 static const uint8_t SHA256_HASH_LENGTH = 56;
 static const uint8_t MED25519_PUBLIC_KEY_LENGTH = 69;
+
+enum CryptoKeyType {
+  KEY_TYPE_ED25519 = 0,
+  KEY_TYPE_PRE_AUTH_TX = 1,
+  KEY_TYPE_HASH_X = 2,
+  KEY_TYPE_MUXED_ED25519 = 0x100,
+};
 
 enum VersionByte {
   ED25519_PUBLIC_KEY = 6 << 3,   // Base32-encodes to 'G...'
