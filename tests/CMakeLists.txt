@@ -54,3 +54,7 @@ add_test(test_strkey test_strkey)
 add_executable(test_keypair src/test_keypair.c)
 target_link_libraries(test_keypair PRIVATE cmocka stellar_base)
 add_test(test_keypair test_keypair)
+
+add_executable(test_memo src/test_memo.c)
+target_link_libraries(test_memo PRIVATE cmocka stellar_base)
+add_test(test_memo test_memo)

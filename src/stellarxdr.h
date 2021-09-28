@@ -11,6 +11,7 @@
 
 #include <rpc/rpc.h>
 
+// TODO: uint8?
 typedef char stellarxdr_Hash[32];
 #ifdef __cplusplus
 extern "C" bool_t xdr_stellarxdr_Hash(XDR *, stellarxdr_Hash);
