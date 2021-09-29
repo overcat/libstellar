@@ -1,12 +1,8 @@
-#ifndef TRANSACTION_H
-#define TRANSACTION_H
+#ifndef TIME_BOUNDS_H
+#define TIME_BOUNDS_H
 
-#include "memo.h"
-#include "muxed_account.h"
-#include "operation.h"
 #include "stellarxdr.h"
 #include <stdbool.h>
-#include <stdint.h>
 
 struct TimeBounds {
   uint64_t min_time;
