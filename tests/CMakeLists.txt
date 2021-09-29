@@ -66,3 +66,7 @@ add_test(test_muxed_account test_muxed_account)
 add_executable(test_operation src/test_operation.c)
 target_link_libraries(test_operation PRIVATE cmocka stellar_base)
 add_test(test_operation test_operation)
+
+add_executable(test_time_bounds src/test_time_bounds.c)
+target_link_libraries(test_time_bounds PRIVATE cmocka stellar_base)
+add_test(test_time_bounds test_time_bounds)
