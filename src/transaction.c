@@ -19,6 +19,9 @@ bool transaction_to_xdr_object(const struct Transaction *in,
   } else {
     stellarxdr_TimeBounds *time_bounds_xdr =
         malloc(sizeof(stellarxdr_TimeBounds));
+    if (time_bounds_xdr == NULL) {
+      return false;
+    }
     if (!time_bounds_to_xdr_object(in->time_bounds, time_bounds_xdr)) {
       return false;
     }
@@ -27,6 +30,9 @@ bool transaction_to_xdr_object(const struct Transaction *in,
   out->operations.operations_len = in->operations_len;
   stellarxdr_Operation *operations_xdr =
       malloc(in->operations_len * sizeof(stellarxdr_Operation));
+  if (operations_xdr == NULL) {
+    return false;
+  }
   for (int i = 0; i < in->operations_len; i++) {
     stellarxdr_Operation operation_xdr;
     if (!operation_to_xdr_object(in->operations + i, &operation_xdr)) {
@@ -57,6 +63,9 @@ bool transaction_from_xdr_object(const stellarxdr_Transaction *in,
     out->time_bounds = NULL;
   } else {
     struct TimeBounds *time_bounds = malloc(sizeof(struct TimeBounds));
+    if (time_bounds == NULL) {
+      return false;
+    }
     if (!time_bounds_from_xdr_object(in->timeBounds, time_bounds)) {
       return false;
     }
@@ -66,6 +75,9 @@ bool transaction_from_xdr_object(const stellarxdr_Transaction *in,
   out->operations_len = in->operations.operations_len;
   struct Operation *operations =
       malloc(in->operations.operations_len * sizeof(struct Operation));
+  if (operations == NULL) {
+    return false;
+  }
   for (int i = 0; i < in->operations.operations_len; i++) {
     struct Operation operation;
     if (!operation_from_xdr_object(in->operations.operations_val + i,

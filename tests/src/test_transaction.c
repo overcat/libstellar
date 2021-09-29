@@ -29,6 +29,9 @@ bool _transaction_from_xdr(char *buf, size_t buf_size,
   XDR xdr;
   stellarxdr_Transaction *transaction_xdr =
       malloc(sizeof(stellarxdr_Transaction));
+  if (transaction_xdr == NULL) {
+    return false;
+  }
   xdrstdio_create(&xdr, fp, XDR_DECODE);
   if (!xdr_stellarxdr_Transaction(&xdr, transaction_xdr)) {
     fclose(fp);
