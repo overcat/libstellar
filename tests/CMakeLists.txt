@@ -74,3 +74,8 @@ add_test(test_transaction test_transaction)
 add_executable(test_time_bounds src/test_time_bounds.c)
 target_link_libraries(test_time_bounds PRIVATE cmocka stellar_base)
 add_test(test_time_bounds test_time_bounds)
+
+
+add_executable(test_price src/test_price.c)
+target_link_libraries(test_price PRIVATE cmocka stellar_base)
+add_test(test_price test_price)
