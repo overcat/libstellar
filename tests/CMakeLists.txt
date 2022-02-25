@@ -37,6 +37,11 @@ file(GLOB base64_src
         "../src/vendor/base64/*.c"
         )
 
+file(GLOB sha256_src
+        "../src/vendor/sha256/*.h"
+        "../src/vendor/sha256/*.c"
+        )
+
 add_library(
         stellar_base
         ${ed25519_src}
@@ -44,6 +49,7 @@ add_library(
         ${base32_src}
         ${base58_src}
         ${base64_src}
+        ${sha256_src}
         ${stellar_base_src}
 )
 
@@ -82,3 +88,7 @@ add_test(test_price test_price)
 add_executable(test_decorated_signature src/test_decorated_signature.c)
 target_link_libraries(test_decorated_signature PRIVATE cmocka stellar_base)
 add_test(test_decorated_signature test_decorated_signature)
+
+add_executable(test_network src/test_network.c)
+target_link_libraries(test_network PRIVATE cmocka stellar_base)
+add_test(test_network test_network)
