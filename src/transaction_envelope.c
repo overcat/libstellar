@@ -17,9 +17,7 @@ bool transaction_envelope_to_xdr_object(const struct TransactionEnvelope *in,
                                            &stellarxdrDecoratedSignature)) {
       return false;
     }
-    // memcpy?
-    *(out->stellarxdr_TransactionEnvelope_u.v1.signatures.signatures_val + i) =
-        stellarxdrDecoratedSignature;
+    memcpy(out->stellarxdr_TransactionEnvelope_u.v1.signatures.signatures_val + i, &stellarxdrDecoratedSignature, sizeof(stellarxdr_DecoratedSignature));
   }
   return true;
 };
@@ -43,8 +41,7 @@ bool transaction_envelope_from_xdr_object(
             &decoratedSignature)) {
       return false;
     }
-    // memcpy?
-    *(out->signatures + i) = decoratedSignature;
+    memcpy(out->signatures + i, &decoratedSignature, sizeof(stellarxdr_DecoratedSignature));
   }
   return true;
   //    out->transaction = transaction_from_xdr_object()
