@@ -6,6 +6,8 @@
 #include "transaction.h"
 #include <stdbool.h>
 #include <stdint.h>
+#include "vendor/sha256/sha256.h"
+
 
 struct TransactionEnvelope {
   struct Transaction transaction;
