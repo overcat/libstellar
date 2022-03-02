@@ -167,6 +167,20 @@ void test_keypair_verify_failed(void **state) {
                               message_len));
 }
 
+void test_keypair_signature_hint(void **state) {
+  struct Keypair keypair = {
+      .public_key = {0x6d, 0xad, 0xcd, 0xfb, 0x9e, 0x98, 0x5b, 0xd,
+                     0xc3, 0x21, 0xcb, 0x7d, 0x67, 0xf5, 0x64, 0x43,
+                     0xfc, 0x3e, 0x7b, 0x2a, 0x6f, 0x21, 0xae, 0x36,
+                     0x21, 0xed, 0x43, 0x6f, 0xff, 0xf8, 0xc9, 0x53},
+      .can_sign = false};
+  unsigned char expect_hint[] = {0xff, 0xf8, 0xc9, 0x53};
+
+  unsigned char hint[4];
+  assert_true(keypair_signature_hint(&keypair, hint));
+  assert_memory_equal(expect_hint, hint, 4);
+}
+
 int main() {
   const struct CMUnitTest tests[] = {
       cmocka_unit_test(test_keypair_from_seed),
@@ -177,6 +191,7 @@ int main() {
       cmocka_unit_test(test_keypair_secret),
       cmocka_unit_test(test_keypair_sign),
       cmocka_unit_test(test_keypair_verify),
+      cmocka_unit_test(test_keypair_signature_hint),
   };
   return cmocka_run_group_tests(tests, NULL, NULL);
 }

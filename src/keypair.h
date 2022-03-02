@@ -29,4 +29,6 @@ bool keypair_sign(const struct Keypair *keypair, unsigned char *signature,
 bool keypair_verify(const struct Keypair *keypair,
                     const unsigned char *signature,
                     const unsigned char *message, size_t message_len);
+
+bool keypair_signature_hint(const struct Keypair *keypair, unsigned char *hint);
 #endif

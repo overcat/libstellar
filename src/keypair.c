@@ -61,3 +61,12 @@ bool keypair_verify(const struct Keypair *keypair,
                     const unsigned char *message, size_t message_len) {
   return ed25519_verify(signature, message, message_len, keypair->public_key);
 }
+
+bool keypair_signature_hint(const struct Keypair *keypair,
+                            unsigned char *hint) {
+  hint[0] = keypair->public_key[28];
+  hint[1] = keypair->public_key[29];
+  hint[2] = keypair->public_key[30];
+  hint[3] = keypair->public_key[31];
+  return true;
+}
