@@ -2,11 +2,11 @@
 #define TRANSACTION_ENVELOPE_H
 
 #include "decorated_signature.h"
+#include "keypair.h"
+#include "network.h"
 #include "stellarxdr.h"
 #include "transaction.h"
-#include "keypair.h"
 #include "vendor/sha256/sha256.h"
-#include "network.h"
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -23,7 +23,9 @@ bool transaction_envelope_to_xdr_object(const struct TransactionEnvelope *in,
 bool transaction_envelope_from_xdr_object(
     const stellarxdr_TransactionEnvelope *in, struct TransactionEnvelope *out);
 
-bool transaction_envelope_hash(struct TransactionEnvelope *transactionEnvelope, char* hash);
+bool transaction_envelope_hash(struct TransactionEnvelope *transactionEnvelope,
+                               char *hash);
 
-bool transaction_envelope_sign(const struct Keypair *signer, struct TransactionEnvelope *TransactionEnvelope);
+bool transaction_envelope_sign(const struct Keypair *signer,
+                               struct TransactionEnvelope *TransactionEnvelope);
 #endif
