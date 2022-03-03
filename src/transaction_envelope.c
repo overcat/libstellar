@@ -51,7 +51,7 @@ bool transaction_envelope_from_xdr_object(
 };
 
 bool transaction_envelope_hash(struct TransactionEnvelope *transactionEnvelope,
-                               char *hash) {
+                               unsigned char *hash) {
   char networkId[32];
   network_id(transactionEnvelope->networkPassphrase, networkId);
   SHA256_CTX sha256;
@@ -83,10 +83,32 @@ bool transaction_envelope_hash(struct TransactionEnvelope *transactionEnvelope,
   return true;
 }
 
-// bool transaction_envelope_sign(const struct Keypair *signer, struct
-// TransactionEnvelope *TransactionEnvelope){
-//   SHA256_CTX sha256;
-//   sha256_init(&sha256);
-//   sha256_update(&sha256, networkPassphrase, strlen(networkPassphrase));
-//   sha256_final(&sha256, networkId);
-// }
+bool transaction_envelope_sign(
+    const struct Keypair *signer,
+    struct TransactionEnvelope *transactionEnvelope) {
+  unsigned char hash[32];
+  if (!transaction_envelope_hash(transactionEnvelope, hash)) {
+    return false;
+  };
+
+  uint8_t signature[64];
+  if (!keypair_sign(signer, signature, hash, sizeof hash)) {
+    return false;
+  };
+
+  uint8_t signatureHint[4];
+  if (!keypair_signature_hint(signer, signatureHint)) {
+    return false;
+  }
+
+  transactionEnvelope->signatures_len += 1;
+  struct DecoratedSignature decoratedSignature;
+  memcpy(decoratedSignature.signatureHint, signatureHint, 4);
+  memcpy(decoratedSignature.signature, signature, 64);
+  transactionEnvelope->signatures =
+      realloc(&transactionEnvelope->signatures,
+              transactionEnvelope->signatures_len * sizeof(decoratedSignature));
+  memcpy(&transactionEnvelope->signatures +
+             transactionEnvelope->signatures_len - 1,
+         &decoratedSignature, sizeof decoratedSignature);
+}

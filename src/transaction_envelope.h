@@ -24,8 +24,8 @@ bool transaction_envelope_from_xdr_object(
     const stellarxdr_TransactionEnvelope *in, struct TransactionEnvelope *out);
 
 bool transaction_envelope_hash(struct TransactionEnvelope *transactionEnvelope,
-                               char *hash);
+                               unsigned char *hash);
 
 bool transaction_envelope_sign(const struct Keypair *signer,
-                               struct TransactionEnvelope *TransactionEnvelope);
+                               struct TransactionEnvelope *transactionEnvelope);
 #endif
