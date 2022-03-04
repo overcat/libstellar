@@ -101,14 +101,15 @@ bool transaction_envelope_sign(
     return false;
   }
 
-  transactionEnvelope->signatures_len += 1;
   struct DecoratedSignature decoratedSignature;
   memcpy(decoratedSignature.signatureHint, signatureHint, 4);
   memcpy(decoratedSignature.signature, signature, 64);
   transactionEnvelope->signatures =
-      realloc(&transactionEnvelope->signatures,
-              transactionEnvelope->signatures_len * sizeof(decoratedSignature));
-  memcpy(&transactionEnvelope->signatures +
-             transactionEnvelope->signatures_len - 1,
-         &decoratedSignature, sizeof decoratedSignature);
+      realloc(transactionEnvelope->signatures,
+              (transactionEnvelope->signatures_len + 1) *
+                  sizeof(struct DecoratedSignature));
+  memcpy(transactionEnvelope->signatures + transactionEnvelope->signatures_len,
+         &decoratedSignature, sizeof(struct DecoratedSignature));
+  transactionEnvelope->signatures_len += 1;
+  return true;
 }

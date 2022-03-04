@@ -89,4 +89,3 @@ bool transaction_from_xdr_object(const stellarxdr_Transaction *in,
   out->operations = operations;
   return true;
 }
-
