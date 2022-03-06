@@ -21,7 +21,8 @@ bool transaction_envelope_to_xdr_object(const struct TransactionEnvelope *in,
                                         stellarxdr_TransactionEnvelope *out);
 
 bool transaction_envelope_from_xdr_object(
-    const stellarxdr_TransactionEnvelope *in, struct TransactionEnvelope *out);
+    const stellarxdr_TransactionEnvelope *in, struct TransactionEnvelope *out,
+    char *networkPassphrase);
 
 bool transaction_envelope_hash(struct TransactionEnvelope *transactionEnvelope,
                                unsigned char *hash);

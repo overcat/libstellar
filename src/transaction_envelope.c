@@ -25,14 +25,18 @@ bool transaction_envelope_to_xdr_object(const struct TransactionEnvelope *in,
 };
 
 bool transaction_envelope_from_xdr_object(
-    const stellarxdr_TransactionEnvelope *in, struct TransactionEnvelope *out) {
-  out->signatures_len =
-      in->stellarxdr_TransactionEnvelope_u.v1.signatures.signatures_len;
+    const stellarxdr_TransactionEnvelope *in, struct TransactionEnvelope *out,
+    char *networkPassphrase) {
+
   struct Transaction transaction;
   if (!transaction_from_xdr_object(&in->stellarxdr_TransactionEnvelope_u.v1.tx,
                                    &transaction)) {
     return false;
   }
+  out->transaction = transaction;
+
+  out->signatures_len =
+      in->stellarxdr_TransactionEnvelope_u.v1.signatures.signatures_len;
   out->signatures =
       malloc(out->signatures_len * sizeof(struct DecoratedSignature));
   for (int i = 0; i < out->signatures_len; i++) {
@@ -44,10 +48,11 @@ bool transaction_envelope_from_xdr_object(
       return false;
     }
     memcpy(out->signatures + i, &decoratedSignature,
-           sizeof(stellarxdr_DecoratedSignature));
+           sizeof(struct DecoratedSignature));
   }
+  out->networkPassphrase = malloc(strlen(networkPassphrase) + 1);
+  strcpy(out->networkPassphrase, networkPassphrase);
   return true;
-  //    out->transaction = transaction_from_xdr_object()
 };
 
 bool transaction_envelope_hash(struct TransactionEnvelope *transactionEnvelope,
