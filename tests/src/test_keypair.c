@@ -181,6 +181,21 @@ void test_keypair_signature_hint(void **state) {
   assert_memory_equal(expect_hint, hint, 4);
 }
 
+void test_keypair_xdr_account_id(void **state) {
+  struct Keypair keypair = {
+      .public_key = {0x6d, 0xad, 0xcd, 0xfb, 0x9e, 0x98, 0x5b, 0xd,
+                     0xc3, 0x21, 0xcb, 0x7d, 0x67, 0xf5, 0x64, 0x43,
+                     0xfc, 0x3e, 0x7b, 0x2a, 0x6f, 0x21, 0xae, 0x36,
+                     0x21, 0xed, 0x43, 0x6f, 0xff, 0xf8, 0xc9, 0x53},
+      .can_sign = false};
+
+  stellarxdr_AccountID accountId;
+  assert_true(keypair_xdr_account_id(&keypair, &accountId));
+  assert_int_equal(accountId.type, stellarxdr_PUBLIC_KEY_TYPE_ED25519);
+  assert_memory_equal(&accountId.stellarxdr_PublicKey_u, keypair.public_key,
+                      32);
+}
+
 int main() {
   const struct CMUnitTest tests[] = {
       cmocka_unit_test(test_keypair_from_seed),
@@ -191,7 +206,9 @@ int main() {
       cmocka_unit_test(test_keypair_secret),
       cmocka_unit_test(test_keypair_sign),
       cmocka_unit_test(test_keypair_verify),
+      cmocka_unit_test(test_keypair_verify_failed),
       cmocka_unit_test(test_keypair_signature_hint),
+      cmocka_unit_test(test_keypair_xdr_account_id),
   };
   return cmocka_run_group_tests(tests, NULL, NULL);
 }

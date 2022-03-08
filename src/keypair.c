@@ -70,3 +70,10 @@ bool keypair_signature_hint(const struct Keypair *keypair,
   hint[3] = keypair->public_key[31];
   return true;
 }
+
+bool keypair_xdr_account_id(const struct Keypair *keypair,
+                            stellarxdr_AccountID *accountId) {
+  accountId->type = stellarxdr_PUBLIC_KEY_TYPE_ED25519;
+  memcpy(accountId->stellarxdr_PublicKey_u.ed25519, keypair->public_key, 32);
+  return true;
+}

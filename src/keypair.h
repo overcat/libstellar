@@ -31,4 +31,7 @@ bool keypair_verify(const struct Keypair *keypair,
                     const unsigned char *message, size_t message_len);
 
 bool keypair_signature_hint(const struct Keypair *keypair, unsigned char *hint);
+
+bool keypair_xdr_account_id(const struct Keypair *keypair,
+                            stellarxdr_AccountID *accountId);
 #endif
