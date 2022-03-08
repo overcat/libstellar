@@ -1,5 +1,37 @@
 #include "operation.h"
 #include "muxed_account.h"
+// 1. Create Account
+bool create_account_to_xdr_object(const struct CreateAccountOp *in,
+                                  stellarxdr_OperationBody *out) {
+  out->type = stellarxdr_CREATE_ACCOUNT;
+
+  struct Keypair keypair;
+  keypair_from_address(&keypair, in->destination);
+  stellarxdr_AccountID accountId;
+  keypair_xdr_account_id(&keypair, &accountId);
+
+  out->stellarxdr_OperationBody_u.createAccountOp.destination = accountId;
+  out->stellarxdr_OperationBody_u.createAccountOp.startingBalance =
+      in->startingBalance;
+  return true;
+}
+
+bool create_account_from_xdr_object(const stellarxdr_OperationBody *in,
+                                    struct CreateAccountOp *out) {
+  out->startingBalance =
+      in->stellarxdr_OperationBody_u.createAccountOp.startingBalance;
+  char k[ED25519_PUBLIC_KEY_LENGTH + 1];
+  if (!encode_ed25519_public_key(
+          &in->stellarxdr_OperationBody_u.createAccountOp.destination
+               .stellarxdr_PublicKey_u.ed25519,
+          k)) {
+    return false;
+  }
+  out->destination = malloc(ED25519_PUBLIC_KEY_LENGTH + 1);
+  memcpy(out->destination, k, ED25519_PUBLIC_KEY_LENGTH + 1);
+  return true;
+}
+
 // 11. Bump Sequence
 bool bump_sequence_to_xdr_object(const struct BumpSequenceOp *in,
                                  stellarxdr_OperationBody *out) {
@@ -19,6 +51,7 @@ bool operation_to_xdr_object(const struct Operation *in,
   stellarxdr_OperationBody operation_body;
   switch (in->type) {
   case CREATE_ACCOUNT:
+    create_account_to_xdr_object(&in->createAccountOp, &operation_body);
     break;
   case PAYMENT:
     break;
@@ -94,6 +127,8 @@ bool operation_from_xdr_object(const stellarxdr_Operation *in,
   }
   switch (in->body.type) {
   case stellarxdr_CREATE_ACCOUNT:
+    out->type = CREATE_ACCOUNT;
+    create_account_from_xdr_object(&in->body, &out->createAccountOp);
     break;
   case stellarxdr_PAYMENT:
     break;

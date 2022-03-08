@@ -1,7 +1,9 @@
 #ifndef OPERATION_H
 #define OPERATION_H
+#include "keypair.h"
 #include "muxed_account.h"
 #include "stellarxdr.h"
+#include "strkey.h"
 #include <stdbool.h>
 
 enum OperationType {
@@ -35,11 +37,17 @@ struct BumpSequenceOp {
   int64_t bump_to;
 };
 
+struct CreateAccountOp {
+  char *destination;       // account to create
+  int64_t startingBalance; // amount they end up with
+};
+
 struct Operation {
   bool source_account_present;
   struct MuxedAccount source_account;
   enum OperationType type;
   union {
+    struct CreateAccountOp createAccountOp;
     struct BumpSequenceOp bump_sequence_op;
   };
 };
@@ -51,6 +59,5 @@ bool operation_from_xdr_object(const stellarxdr_Operation *in,
                                struct Operation *out);
 
 // TODO: remove
-bool operation_to_xdr(const struct Operation *in, char **buf,
-                      size_t *buf_size);
+bool operation_to_xdr(const struct Operation *in, char **buf, size_t *buf_size);
 #endif // OPERATION_H
