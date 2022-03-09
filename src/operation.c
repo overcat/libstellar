@@ -16,6 +16,39 @@ bool create_account_to_xdr_object(const struct CreateAccountOp *in,
   return true;
 }
 
+// 2. Payment
+bool payment_to_xdr_object(const struct PaymentOp *in,
+                           stellarxdr_OperationBody *out) {
+  out->type = stellarxdr_PAYMENT;
+
+  stellarxdr_Asset stellarxdrAsset;
+  if (!asset_to_xdr_object(&in->asset, &stellarxdrAsset)) {
+    return false;
+  }
+
+  stellarxdr_MuxedAccount stellarxdrMuxedAccount;
+  if (in->destination[0] == 'G') {
+    stellarxdrMuxedAccount.type = stellarxdr_KEY_TYPE_ED25519;
+    struct Keypair keypair;
+    keypair_from_address(&keypair, in->destination);
+    memcpy(stellarxdrMuxedAccount.stellarxdr_MuxedAccount_u.ed25519,
+           keypair.public_key, 32);
+  } else {
+    stellarxdrMuxedAccount.type = stellarxdr_KEY_TYPE_MUXED_ED25519;
+    if (!decode_med25519_public_key(
+            in->destination,
+            &stellarxdrMuxedAccount.stellarxdr_MuxedAccount_u.med25519)) {
+      return false;
+    }
+  }
+
+  out->stellarxdr_OperationBody_u.paymentOp.asset = stellarxdrAsset;
+  out->stellarxdr_OperationBody_u.paymentOp.destination =
+      stellarxdrMuxedAccount;
+  out->stellarxdr_OperationBody_u.paymentOp.amount = in->amount;
+  return true;
+}
+
 bool create_account_from_xdr_object(const stellarxdr_OperationBody *in,
                                     struct CreateAccountOp *out) {
   out->startingBalance =
@@ -54,6 +87,7 @@ bool operation_to_xdr_object(const struct Operation *in,
     create_account_to_xdr_object(&in->createAccountOp, &operation_body);
     break;
   case PAYMENT:
+    payment_to_xdr_object(&in->paymentOp, &operation_body);
     break;
   case PATH_PAYMENT_STRICT_RECEIVE:
     break;

@@ -1,5 +1,6 @@
 #ifndef OPERATION_H
 #define OPERATION_H
+#include "asset.h"
 #include "keypair.h"
 #include "muxed_account.h"
 #include "stellarxdr.h"
@@ -33,13 +34,19 @@ enum OperationType {
   LIQUIDITY_POOL_WITHDRAW = 23,
 };
 
-struct BumpSequenceOp {
-  int64_t bump_to;
-};
-
 struct CreateAccountOp {
   char *destination;       // account to create
   int64_t startingBalance; // amount they end up with
+};
+
+struct PaymentOp {
+  char *destination;  // recipient of the payment
+  struct Asset asset; // what they end up with
+  int64_t amount;     // amount they end up with
+};
+
+struct BumpSequenceOp {
+  int64_t bump_to;
 };
 
 struct Operation {
@@ -48,6 +55,7 @@ struct Operation {
   enum OperationType type;
   union {
     struct CreateAccountOp createAccountOp;
+    struct PaymentOp paymentOp;
     struct BumpSequenceOp bump_sequence_op;
   };
 };
