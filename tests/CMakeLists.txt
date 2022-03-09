@@ -96,3 +96,7 @@ add_test(test_network test_network)
 add_executable(test_transaction_envelope src/test_transaction_envelope.c)
 target_link_libraries(test_transaction_envelope PRIVATE cmocka stellar_base)
 add_test(test_transaction_envelope test_transaction_envelope)
+
+add_executable(test_asset src/test_asset.c)
+target_link_libraries(test_asset PRIVATE cmocka stellar_base)
+add_test(test_asset test_asset)
