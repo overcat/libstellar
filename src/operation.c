@@ -104,7 +104,6 @@ bool path_payment_strict_receive_to_xdr_object(
     const struct PathPaymentStrictReceiveOp *in,
     stellarxdr_OperationBody *out) {
   out->type = stellarxdr_PATH_PAYMENT_STRICT_RECEIVE;
-  out->stellarxdr_OperationBody_u.pathPaymentStrictReceiveOp.destination;
 
   if (!asset_to_xdr_object(&in->sendAsset,
                            &out->stellarxdr_OperationBody_u
@@ -193,6 +192,79 @@ bool bump_sequence_from_xdr_object(const stellarxdr_OperationBody *in,
   return true;
 }
 
+// 13. Path Payment Strict Send
+bool path_payment_strict_send_to_xdr_object(
+    const struct PathPaymentStrictSendOp *in, stellarxdr_OperationBody *out) {
+  out->type = stellarxdr_PATH_PAYMENT_STRICT_SEND;
+
+  if (!asset_to_xdr_object(
+          &in->sendAsset,
+          &out->stellarxdr_OperationBody_u.pathPaymentStrictSendOp.sendAsset)) {
+    return false;
+  }
+  out->stellarxdr_OperationBody_u.pathPaymentStrictSendOp.sendAmount =
+      in->sendAmount;
+  if (!muxed_account_to_xdr_object(&in->destination,
+                                   &out->stellarxdr_OperationBody_u
+                                        .pathPaymentStrictSendOp.destination)) {
+    return false;
+  }
+  if (!asset_to_xdr_object(
+          &in->destAsset,
+          &out->stellarxdr_OperationBody_u.pathPaymentStrictSendOp.destAsset)) {
+    return false;
+  }
+  out->stellarxdr_OperationBody_u.pathPaymentStrictSendOp.destMin = in->destMin;
+  out->stellarxdr_OperationBody_u.pathPaymentStrictSendOp.path.path_len =
+      in->pathLen;
+  out->stellarxdr_OperationBody_u.pathPaymentStrictSendOp.path.path_val =
+      malloc(in->pathLen * sizeof(stellarxdr_Asset));
+  for (int i = 0; i < in->pathLen; i++) {
+    if (!asset_to_xdr_object(&in->path[i],
+                             out->stellarxdr_OperationBody_u
+                                     .pathPaymentStrictSendOp.path.path_val +
+                                 i)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+bool path_payment_strict_send_from_xdr_object(
+    const stellarxdr_OperationBody *in, struct PathPaymentStrictSendOp *out) {
+
+  if (!asset_from_xdr_object(
+          &in->stellarxdr_OperationBody_u.pathPaymentStrictSendOp.sendAsset,
+          &out->sendAsset)) {
+    return false;
+  }
+  out->sendAmount =
+      in->stellarxdr_OperationBody_u.pathPaymentStrictSendOp.sendAmount;
+  if (!asset_from_xdr_object(
+          &in->stellarxdr_OperationBody_u.pathPaymentStrictSendOp.destAsset,
+          &out->destAsset)) {
+    return false;
+  }
+  if (!muxed_account_from_xdr_object(
+          &in->stellarxdr_OperationBody_u.pathPaymentStrictSendOp.destination,
+          &out->destination)) {
+    return false;
+  }
+  out->destMin = in->stellarxdr_OperationBody_u.pathPaymentStrictSendOp.destMin;
+  out->pathLen =
+      in->stellarxdr_OperationBody_u.pathPaymentStrictSendOp.path.path_len;
+  for (int i = 0; i < out->pathLen; i++) {
+    if (!asset_from_xdr_object(in->stellarxdr_OperationBody_u
+                                       .pathPaymentStrictSendOp.path.path_val +
+                                   i,
+                               &out->path[i])) {
+      return false;
+    }
+  }
+  return true;
+}
+
 bool operation_to_xdr_object(const struct Operation *in,
                              stellarxdr_Operation *out) {
   stellarxdr_OperationBody operation_body;
@@ -229,6 +301,8 @@ bool operation_to_xdr_object(const struct Operation *in,
   case MANAGE_BUY_OFFER:
     break;
   case PATH_PAYMENT_STRICT_SEND:
+    path_payment_strict_send_to_xdr_object(&in->pathPaymentStrictSendOp,
+                                           &operation_body);
     break;
   case CREATE_CLAIMABLE_BALANCE:
     break;
@@ -312,6 +386,9 @@ bool operation_from_xdr_object(const stellarxdr_Operation *in,
   case stellarxdr_MANAGE_BUY_OFFER:
     break;
   case stellarxdr_PATH_PAYMENT_STRICT_SEND:
+    out->type = PATH_PAYMENT_STRICT_SEND;
+    path_payment_strict_send_from_xdr_object(&in->body,
+                                             &out->pathPaymentStrictSendOp);
     break;
   case stellarxdr_CREATE_CLAIMABLE_BALANCE:
     break;
