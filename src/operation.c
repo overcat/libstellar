@@ -16,6 +16,22 @@ bool create_account_to_xdr_object(const struct CreateAccountOp *in,
   return true;
 }
 
+bool create_account_from_xdr_object(const stellarxdr_OperationBody *in,
+                                    struct CreateAccountOp *out) {
+  out->startingBalance =
+      in->stellarxdr_OperationBody_u.createAccountOp.startingBalance;
+  char k[ED25519_PUBLIC_KEY_LENGTH + 1];
+  if (!encode_ed25519_public_key(
+          &in->stellarxdr_OperationBody_u.createAccountOp.destination
+               .stellarxdr_PublicKey_u.ed25519,
+          k)) {
+    return false;
+  }
+  out->destination = malloc(ED25519_PUBLIC_KEY_LENGTH + 1);
+  memcpy(out->destination, k, ED25519_PUBLIC_KEY_LENGTH + 1);
+  return true;
+}
+
 // 2. Payment
 bool payment_to_xdr_object(const struct PaymentOp *in,
                            stellarxdr_OperationBody *out) {
@@ -49,19 +65,37 @@ bool payment_to_xdr_object(const struct PaymentOp *in,
   return true;
 }
 
-bool create_account_from_xdr_object(const stellarxdr_OperationBody *in,
-                                    struct CreateAccountOp *out) {
-  out->startingBalance =
-      in->stellarxdr_OperationBody_u.createAccountOp.startingBalance;
-  char k[ED25519_PUBLIC_KEY_LENGTH + 1];
-  if (!encode_ed25519_public_key(
-          &in->stellarxdr_OperationBody_u.createAccountOp.destination
-               .stellarxdr_PublicKey_u.ed25519,
-          k)) {
+bool payment_from_xdr_object(const struct stellarxdr_OperationBody *in,
+                             struct PaymentOp *out) {
+  out->amount = in->stellarxdr_OperationBody_u.paymentOp.amount;
+  struct Asset asset;
+  if (!asset_from_xdr_object(&in->stellarxdr_OperationBody_u.paymentOp.asset,
+                             &asset)) {
     return false;
   }
-  out->destination = malloc(ED25519_PUBLIC_KEY_LENGTH + 1);
-  memcpy(out->destination, k, ED25519_PUBLIC_KEY_LENGTH + 1);
+  out->asset = asset;
+  switch (in->stellarxdr_OperationBody_u.paymentOp.destination.type) {
+  case stellarxdr_KEY_TYPE_ED25519:
+    out->destination = malloc(ED25519_PUBLIC_KEY_LENGTH + 1);
+    if (!encode_ed25519_public_key(
+            &in->stellarxdr_OperationBody_u.paymentOp.destination
+                 .stellarxdr_MuxedAccount_u.ed25519,
+            out->destination)) {
+      return false;
+    }
+    break;
+  case stellarxdr_KEY_TYPE_MUXED_ED25519:
+    out->destination = malloc(MED25519_PUBLIC_KEY_LENGTH + 1);
+    if (!encode_med25519_public_key(
+            &in->stellarxdr_OperationBody_u.paymentOp.destination
+                 .stellarxdr_MuxedAccount_u.med25519,
+            out->destination)) {
+      return false;
+    }
+    break;
+  default:
+    return false;
+  }
   return true;
 }
 
@@ -165,6 +199,8 @@ bool operation_from_xdr_object(const stellarxdr_Operation *in,
     create_account_from_xdr_object(&in->body, &out->createAccountOp);
     break;
   case stellarxdr_PAYMENT:
+    out->type = PAYMENT;
+    payment_from_xdr_object(&in->body, &out->paymentOp);
     break;
   case stellarxdr_PATH_PAYMENT_STRICT_RECEIVE:
     break;

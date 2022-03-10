@@ -51,8 +51,6 @@ void test_payment(void **state) {
                                 .paymentOp = {.destination = destination,
                                               .asset = asset,
                                               .amount = 10000000}};
-  stellarxdr_Operation to;
-
   char *buf = NULL;
   size_t buf_size = 0;
   assert_true(operation_to_xdr(&operation, &buf, &buf_size));
@@ -64,6 +62,16 @@ void test_payment(void **state) {
                 0x0,  0x0,  0x0,  0x98, 0x96, 0x80};
   assert_int_equal(buf_size, 56);
   assert_memory_equal(buf, xdr, buf_size);
+
+  stellarxdr_Operation to;
+  assert_true(operation_to_xdr_object(&operation, &to));
+  struct Operation from;
+  assert_true(operation_from_xdr_object(&to, &from));
+  assert_false(from.source_account_present);
+  assert_int_equal(from.type, PAYMENT);
+  assert_int_equal(from.paymentOp.amount, 10000000);
+  assert_int_equal(from.paymentOp.asset.type, asset.type);
+  assert_string_equal(from.paymentOp.destination, destination);
 }
 
 void test_payment_with_muxed_account(void **state) {
@@ -88,6 +96,16 @@ void test_payment_with_muxed_account(void **state) {
                 0x0,  0x98, 0x96, 0x80};
   assert_int_equal(buf_size, 64);
   assert_memory_equal(buf, xdr, buf_size);
+
+  stellarxdr_Operation to;
+  assert_true(operation_to_xdr_object(&operation, &to));
+  struct Operation from;
+  assert_true(operation_from_xdr_object(&to, &from));
+  assert_false(from.source_account_present);
+  assert_int_equal(from.type, PAYMENT);
+  assert_int_equal(from.paymentOp.amount, 10000000);
+  assert_int_equal(from.paymentOp.asset.type, asset.type);
+  assert_string_equal(from.paymentOp.destination, destination);
 }
 
 void test_bump_sequence(void **state) {
