@@ -99,6 +99,86 @@ bool payment_from_xdr_object(const struct stellarxdr_OperationBody *in,
   return true;
 }
 
+// 3. Path Payment Strict Receive
+bool path_payment_strict_receive_to_xdr_object(
+    const struct PathPaymentStrictReceiveOp *in,
+    stellarxdr_OperationBody *out) {
+  out->type = stellarxdr_PATH_PAYMENT_STRICT_RECEIVE;
+  out->stellarxdr_OperationBody_u.pathPaymentStrictReceiveOp.destination;
+
+  if (!asset_to_xdr_object(&in->sendAsset,
+                           &out->stellarxdr_OperationBody_u
+                                .pathPaymentStrictReceiveOp.sendAsset)) {
+    return false;
+  }
+  out->stellarxdr_OperationBody_u.pathPaymentStrictReceiveOp.sendMax =
+      in->sendMax;
+  if (!muxed_account_to_xdr_object(
+          &in->destination, &out->stellarxdr_OperationBody_u
+                                 .pathPaymentStrictReceiveOp.destination)) {
+    return false;
+  }
+  if (!asset_to_xdr_object(&in->destAsset,
+                           &out->stellarxdr_OperationBody_u
+                                .pathPaymentStrictReceiveOp.destAsset)) {
+    return false;
+  }
+  out->stellarxdr_OperationBody_u.pathPaymentStrictReceiveOp.destAmount =
+      in->destAmount;
+  out->stellarxdr_OperationBody_u.pathPaymentStrictReceiveOp.path.path_len =
+      in->pathLen;
+  out->stellarxdr_OperationBody_u.pathPaymentStrictReceiveOp.path.path_val =
+      malloc(in->pathLen * sizeof(stellarxdr_Asset));
+  for (int i = 0; i < in->pathLen; i++) {
+    if (!asset_to_xdr_object(&in->path[i],
+                             out->stellarxdr_OperationBody_u
+                                     .pathPaymentStrictReceiveOp.path.path_val +
+                                 i)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+bool path_payment_strict_receive_from_xdr_object(
+    const stellarxdr_OperationBody *in,
+    struct PathPaymentStrictReceiveOp *out) {
+
+  if (!asset_from_xdr_object(
+          &in->stellarxdr_OperationBody_u.pathPaymentStrictReceiveOp.sendAsset,
+          &out->sendAsset)) {
+    return false;
+  }
+  out->sendMax =
+      in->stellarxdr_OperationBody_u.pathPaymentStrictReceiveOp.sendMax;
+  if (!asset_from_xdr_object(
+          &in->stellarxdr_OperationBody_u.pathPaymentStrictReceiveOp.destAsset,
+          &out->destAsset)) {
+    return false;
+  }
+  if (!muxed_account_from_xdr_object(
+          &in->stellarxdr_OperationBody_u.pathPaymentStrictReceiveOp
+               .destination,
+          &out->destination)) {
+    return false;
+  }
+  out->destAmount =
+      in->stellarxdr_OperationBody_u.pathPaymentStrictReceiveOp.destAmount;
+  out->pathLen =
+      in->stellarxdr_OperationBody_u.pathPaymentStrictReceiveOp.path.path_len;
+  for (int i = 0; i < out->pathLen; i++) {
+    if (!asset_from_xdr_object(
+            in->stellarxdr_OperationBody_u.pathPaymentStrictReceiveOp.path
+                    .path_val +
+                i,
+            &out->path[i])) {
+      return false;
+    }
+  }
+  return true;
+}
+
 // 11. Bump Sequence
 bool bump_sequence_to_xdr_object(const struct BumpSequenceOp *in,
                                  stellarxdr_OperationBody *out) {
@@ -124,6 +204,8 @@ bool operation_to_xdr_object(const struct Operation *in,
     payment_to_xdr_object(&in->paymentOp, &operation_body);
     break;
   case PATH_PAYMENT_STRICT_RECEIVE:
+    path_payment_strict_receive_to_xdr_object(&in->pathPaymentStrictReceiveOp,
+                                              &operation_body);
     break;
   case MANAGE_SELL_OFFER:
     break;
@@ -203,6 +285,9 @@ bool operation_from_xdr_object(const stellarxdr_Operation *in,
     payment_from_xdr_object(&in->body, &out->paymentOp);
     break;
   case stellarxdr_PATH_PAYMENT_STRICT_RECEIVE:
+    out->type = PATH_PAYMENT_STRICT_RECEIVE;
+    path_payment_strict_receive_from_xdr_object(
+        &in->body, &out->pathPaymentStrictReceiveOp);
     break;
   case stellarxdr_MANAGE_SELL_OFFER:
     break;

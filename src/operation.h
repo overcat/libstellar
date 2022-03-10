@@ -45,6 +45,19 @@ struct PaymentOp {
   int64_t amount;     // amount they end up with
 };
 
+struct PathPaymentStrictReceiveOp {
+  struct Asset sendAsset; // asset we pay with
+  int64_t sendMax;        // the maximum amount of sendAsset to
+                          // send (excluding fees).
+                          // The operation will fail if can't be met
+
+  struct MuxedAccount destination; // recipient of the payment
+  struct Asset destAsset;          // what they end up with
+  int64_t destAmount;              // amount they end up with
+  uint8_t pathLen;
+  struct Asset path[5]; // additional hops it must go through to get there
+};
+
 struct BumpSequenceOp {
   int64_t bump_to;
 };
@@ -56,6 +69,7 @@ struct Operation {
   union {
     struct CreateAccountOp createAccountOp;
     struct PaymentOp paymentOp;
+    struct PathPaymentStrictReceiveOp pathPaymentStrictReceiveOp;
     struct BumpSequenceOp bump_sequence_op;
   };
 };
