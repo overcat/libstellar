@@ -3,6 +3,7 @@
 #include "asset.h"
 #include "keypair.h"
 #include "muxed_account.h"
+#include "price.h"
 #include "stellarxdr.h"
 #include "strkey.h"
 #include <stdbool.h>
@@ -58,6 +59,15 @@ struct PathPaymentStrictReceiveOp {
   struct Asset path[5]; // additional hops it must go through to get there
 };
 
+struct ManageSellOfferOp {
+  struct Asset selling;
+  struct Asset buying;
+  int64_t amount; // amount being sold. if set to 0, delete the offer
+  struct Price
+      price;       // price of thing being sold in terms of what you are buying
+  int64_t offerID; // 0=create a new offer, otherwise edit an existing offer
+};
+
 struct PathPaymentStrictSendOp {
   struct Asset sendAsset; // asset we pay with
   int64_t sendAmount;     // amount of sendAsset to send (excluding fees)
@@ -83,6 +93,7 @@ struct Operation {
     struct CreateAccountOp createAccountOp;
     struct PaymentOp paymentOp;
     struct PathPaymentStrictReceiveOp pathPaymentStrictReceiveOp;
+    struct ManageSellOfferOp manageSellOfferOp;
     struct PathPaymentStrictSendOp pathPaymentStrictSendOp;
     struct BumpSequenceOp bump_sequence_op;
   };

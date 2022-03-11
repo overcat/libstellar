@@ -177,6 +177,51 @@ void test_path_payment_strict_receive(void **state) {
   assert_memory_equal(buf1, xdr, buf_size1);
 }
 
+void test_manage_sell_offer(void **state) {
+  struct Asset selling = {.type = ASSET_TYPE_NATIVE};
+  struct Asset buying = {
+      .type = ASSET_TYPE_CREDIT_ALPHANUM4,
+      .code = "USDC",
+      .issuer = "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN"};
+  int64_t amount = 50000000;
+  struct Price price = {.n = 1, .d = 2};
+  int64_t offerID = 1234567;
+
+  struct Operation operation = {.source_account_present = false,
+                                .type = MANAGE_SELL_OFFER,
+                                .manageSellOfferOp = {
+                                    .selling = selling,
+                                    .buying = buying,
+                                    .amount = amount,
+                                    .price = price,
+                                    .offerID = offerID,
+                                }};
+
+  char *buf0 = NULL;
+  size_t buf_size0 = 0;
+  assert_true(operation_to_xdr(&operation, &buf0, &buf_size0));
+  char xdr[] = {0x0,  0x0,  0x0,  0x0,  0x0,  0x0,  0x0,  0x3,  0x0,  0x0,
+                0x0,  0x0,  0x0,  0x0,  0x0,  0x1,  0x55, 0x53, 0x44, 0x43,
+                0x0,  0x0,  0x0,  0x0,  0x3b, 0x99, 0x11, 0x38, 0xe,  0xfe,
+                0x98, 0x8b, 0xa0, 0xa8, 0x90, 0xe,  0xb1, 0xcf, 0xe4, 0x4f,
+                0x36, 0x6f, 0x7d, 0xbe, 0x94, 0x6b, 0xed, 0x7,  0x72, 0x40,
+                0xf7, 0xf6, 0x24, 0xdf, 0x15, 0xc5, 0x0,  0x0,  0x0,  0x0,
+                0x2,  0xfa, 0xf0, 0x80, 0x0,  0x0,  0x0,  0x1,  0x0,  0x0,
+                0x0,  0x2,  0x0,  0x0,  0x0,  0x0,  0x0,  0x12, 0xd6, 0x87};
+  assert_int_equal(buf_size0, 80);
+  assert_memory_equal(buf0, xdr, buf_size0);
+
+  stellarxdr_Operation to;
+  assert_true(operation_to_xdr_object(&operation, &to));
+  struct Operation from;
+  assert_true(operation_from_xdr_object(&to, &from));
+  char *buf1 = NULL;
+  size_t buf_size1 = 0;
+  assert_true(operation_to_xdr(&from, &buf1, &buf_size1));
+  assert_int_equal(buf_size1, 80);
+  assert_memory_equal(buf1, xdr, buf_size1);
+}
+
 void test_bump_sequence(void **state) {
   struct Operation operation = {.source_account_present = false,
                                 .type = BUMP_SEQUENCE,
@@ -235,9 +280,9 @@ void test_path_payment_strict_send(void **state) {
   operation.pathPaymentStrictSendOp.path[0] = asset0;
   operation.pathPaymentStrictSendOp.path[1] = asset1;
 
-  char *buf = NULL;
-  size_t buf_size = 0;
-  assert_true(operation_to_xdr(&operation, &buf, &buf_size));
+  char *buf0 = NULL;
+  size_t buf_size0 = 0;
+  assert_true(operation_to_xdr(&operation, &buf0, &buf_size0));
   char xdr[] = {
       0x0,  0x0,  0x0,  0x0,  0x0,  0x0,  0x0,  0xd,  0x0,  0x0,  0x0,  0x0,
       0x0,  0x0,  0x0,  0x0,  0x2,  0xfa, 0xf0, 0x80, 0x0,  0x0,  0x0,  0x0,
@@ -257,8 +302,8 @@ void test_path_payment_strict_send(void **state) {
       0xe,  0xfe, 0x98, 0x8b, 0xa0, 0xa8, 0x90, 0xe,  0xb1, 0xcf, 0xe4, 0x4f,
       0x36, 0x6f, 0x7d, 0xbe, 0x94, 0x6b, 0xed, 0x7,  0x72, 0x40, 0xf7, 0xf6,
       0x24, 0xdf, 0x15, 0xc5};
-  assert_int_equal(buf_size, 208);
-  assert_memory_equal(buf, xdr, buf_size);
+  assert_int_equal(buf_size0, 208);
+  assert_memory_equal(buf0, xdr, buf_size0);
 
   stellarxdr_Operation to;
   assert_true(operation_to_xdr_object(&operation, &to));
@@ -277,6 +322,7 @@ int main() {
       cmocka_unit_test(test_payment),
       cmocka_unit_test(test_payment_with_muxed_account),
       cmocka_unit_test(test_path_payment_strict_receive),
+      cmocka_unit_test(test_manage_sell_offer),
       cmocka_unit_test(test_bump_sequence),
       cmocka_unit_test(test_path_payment_strict_send),
 

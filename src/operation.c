@@ -178,6 +178,53 @@ bool path_payment_strict_receive_from_xdr_object(
   return true;
 }
 
+// 4. Manage Sell Offer
+bool manage_sell_offer_to_xdr_object(const struct ManageSellOfferOp *in,
+                                     stellarxdr_OperationBody *out) {
+  out->type = stellarxdr_MANAGE_SELL_OFFER;
+
+  if (!asset_to_xdr_object(
+          &in->selling,
+          &out->stellarxdr_OperationBody_u.manageSellOfferOp.selling)) {
+    return false;
+  }
+  if (!asset_to_xdr_object(
+          &in->buying,
+          &out->stellarxdr_OperationBody_u.manageSellOfferOp.buying)) {
+    return false;
+  }
+  out->stellarxdr_OperationBody_u.manageSellOfferOp.amount = in->amount;
+  if (!price_to_xdr_object(
+          &in->price,
+          &out->stellarxdr_OperationBody_u.manageSellOfferOp.price)) {
+    return false;
+  }
+  out->stellarxdr_OperationBody_u.manageSellOfferOp.offerID = in->offerID;
+  return true;
+}
+
+bool manage_sell_offer_from_xdr_object(const stellarxdr_OperationBody *in,
+                                       struct ManageSellOfferOp *out) {
+  if (!asset_from_xdr_object(
+          &in->stellarxdr_OperationBody_u.manageSellOfferOp.selling,
+          &out->selling)) {
+    return false;
+  }
+  if (!asset_from_xdr_object(
+          &in->stellarxdr_OperationBody_u.manageSellOfferOp.buying,
+          &out->buying)) {
+    return false;
+  }
+  out->amount = in->stellarxdr_OperationBody_u.manageSellOfferOp.amount;
+  if (!price_from_xdr_object(
+          &in->stellarxdr_OperationBody_u.manageSellOfferOp.price,
+          &out->price)) {
+    return false;
+  }
+  out->offerID = in->stellarxdr_OperationBody_u.manageSellOfferOp.offerID;
+  return true;
+}
+
 // 11. Bump Sequence
 bool bump_sequence_to_xdr_object(const struct BumpSequenceOp *in,
                                  stellarxdr_OperationBody *out) {
@@ -280,6 +327,7 @@ bool operation_to_xdr_object(const struct Operation *in,
                                               &operation_body);
     break;
   case MANAGE_SELL_OFFER:
+    manage_sell_offer_to_xdr_object(&in->manageSellOfferOp, &operation_body);
     break;
   case CREATE_PASSIVE_SELL_OFFER:
     break;
@@ -364,6 +412,8 @@ bool operation_from_xdr_object(const stellarxdr_Operation *in,
         &in->body, &out->pathPaymentStrictReceiveOp);
     break;
   case stellarxdr_MANAGE_SELL_OFFER:
+    out->type = MANAGE_SELL_OFFER;
+    manage_sell_offer_from_xdr_object(&in->body, &out->manageSellOfferOp);
     break;
   case stellarxdr_CREATE_PASSIVE_SELL_OFFER:
     break;
