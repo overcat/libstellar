@@ -225,6 +225,51 @@ bool manage_sell_offer_from_xdr_object(const stellarxdr_OperationBody *in,
   return true;
 }
 
+// 5. Create Passive Sell Offer
+bool create_passive_sell_offer_to_xdr_object(
+    const struct CreatePassiveSellOfferOp *in, stellarxdr_OperationBody *out) {
+  out->type = stellarxdr_CREATE_PASSIVE_SELL_OFFER;
+
+  if (!asset_to_xdr_object(
+          &in->selling,
+          &out->stellarxdr_OperationBody_u.createPassiveSellOfferOp.selling)) {
+    return false;
+  }
+  if (!asset_to_xdr_object(
+          &in->buying,
+          &out->stellarxdr_OperationBody_u.createPassiveSellOfferOp.buying)) {
+    return false;
+  }
+  out->stellarxdr_OperationBody_u.createPassiveSellOfferOp.amount = in->amount;
+  if (!price_to_xdr_object(
+          &in->price,
+          &out->stellarxdr_OperationBody_u.createPassiveSellOfferOp.price)) {
+    return false;
+  }
+  return true;
+}
+
+bool create_passive_sell_offer_from_xdr_object(
+    const stellarxdr_OperationBody *in, struct CreatePassiveSellOfferOp *out) {
+  if (!asset_from_xdr_object(
+          &in->stellarxdr_OperationBody_u.createPassiveSellOfferOp.selling,
+          &out->selling)) {
+    return false;
+  }
+  if (!asset_from_xdr_object(
+          &in->stellarxdr_OperationBody_u.createPassiveSellOfferOp.buying,
+          &out->buying)) {
+    return false;
+  }
+  out->amount = in->stellarxdr_OperationBody_u.createPassiveSellOfferOp.amount;
+  if (!price_from_xdr_object(
+          &in->stellarxdr_OperationBody_u.createPassiveSellOfferOp.price,
+          &out->price)) {
+    return false;
+  }
+  return true;
+}
+
 // 11. Bump Sequence
 bool bump_sequence_to_xdr_object(const struct BumpSequenceOp *in,
                                  stellarxdr_OperationBody *out) {
@@ -330,6 +375,8 @@ bool operation_to_xdr_object(const struct Operation *in,
     manage_sell_offer_to_xdr_object(&in->manageSellOfferOp, &operation_body);
     break;
   case CREATE_PASSIVE_SELL_OFFER:
+    create_passive_sell_offer_to_xdr_object(&in->createPassiveSellOfferOp,
+                                            &operation_body);
     break;
   case SET_OPTIONS:
     break;
@@ -416,6 +463,9 @@ bool operation_from_xdr_object(const stellarxdr_Operation *in,
     manage_sell_offer_from_xdr_object(&in->body, &out->manageSellOfferOp);
     break;
   case stellarxdr_CREATE_PASSIVE_SELL_OFFER:
+    out->type = CREATE_PASSIVE_SELL_OFFER;
+    create_passive_sell_offer_from_xdr_object(&in->body,
+                                              &out->createPassiveSellOfferOp);
     break;
   case stellarxdr_SET_OPTIONS:
     break;

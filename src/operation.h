@@ -68,6 +68,13 @@ struct ManageSellOfferOp {
   int64_t offerID; // 0=create a new offer, otherwise edit an existing offer
 };
 
+struct CreatePassiveSellOfferOp {
+  struct Asset selling; // A
+  struct Asset buying;  // B
+  int64_t amount;       // amount taker gets
+  struct Price price;   // cost of A in terms of B
+};
+
 struct PathPaymentStrictSendOp {
   struct Asset sendAsset; // asset we pay with
   int64_t sendAmount;     // amount of sendAsset to send (excluding fees)
@@ -94,6 +101,7 @@ struct Operation {
     struct PaymentOp paymentOp;
     struct PathPaymentStrictReceiveOp pathPaymentStrictReceiveOp;
     struct ManageSellOfferOp manageSellOfferOp;
+    struct CreatePassiveSellOfferOp createPassiveSellOfferOp;
     struct PathPaymentStrictSendOp pathPaymentStrictSendOp;
     struct BumpSequenceOp bump_sequence_op;
   };
