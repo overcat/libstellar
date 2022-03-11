@@ -284,6 +284,53 @@ bool bump_sequence_from_xdr_object(const stellarxdr_OperationBody *in,
   return true;
 }
 
+// 12. Manage Buy Offer
+bool manage_buy_offer_to_xdr_object(const struct ManageBuyOfferOp *in,
+                                     stellarxdr_OperationBody *out) {
+  out->type = stellarxdr_MANAGE_BUY_OFFER;
+
+  if (!asset_to_xdr_object(
+          &in->selling,
+          &out->stellarxdr_OperationBody_u.manageBuyOfferOp.selling)) {
+    return false;
+  }
+  if (!asset_to_xdr_object(
+          &in->buying,
+          &out->stellarxdr_OperationBody_u.manageBuyOfferOp.buying)) {
+    return false;
+  }
+  out->stellarxdr_OperationBody_u.manageBuyOfferOp.buyAmount = in->buyAmount;
+  if (!price_to_xdr_object(
+          &in->price,
+          &out->stellarxdr_OperationBody_u.manageBuyOfferOp.price)) {
+    return false;
+  }
+  out->stellarxdr_OperationBody_u.manageBuyOfferOp.offerID = in->offerID;
+  return true;
+}
+
+bool manage_buy_offer_from_xdr_object(const stellarxdr_OperationBody *in,
+                                       struct ManageBuyOfferOp *out) {
+  if (!asset_from_xdr_object(
+          &in->stellarxdr_OperationBody_u.manageBuyOfferOp.selling,
+          &out->selling)) {
+    return false;
+  }
+  if (!asset_from_xdr_object(
+          &in->stellarxdr_OperationBody_u.manageBuyOfferOp.buying,
+          &out->buying)) {
+    return false;
+  }
+  out->buyAmount = in->stellarxdr_OperationBody_u.manageBuyOfferOp.buyAmount;
+  if (!price_from_xdr_object(
+          &in->stellarxdr_OperationBody_u.manageBuyOfferOp.price,
+          &out->price)) {
+    return false;
+  }
+  out->offerID = in->stellarxdr_OperationBody_u.manageBuyOfferOp.offerID;
+  return true;
+}
+
 // 13. Path Payment Strict Send
 bool path_payment_strict_send_to_xdr_object(
     const struct PathPaymentStrictSendOp *in, stellarxdr_OperationBody *out) {
@@ -394,6 +441,7 @@ bool operation_to_xdr_object(const struct Operation *in,
     bump_sequence_to_xdr_object(&in->bump_sequence_op, &operation_body);
     break;
   case MANAGE_BUY_OFFER:
+    manage_buy_offer_to_xdr_object(&in->manageBuyOfferOp, &operation_body);
     break;
   case PATH_PAYMENT_STRICT_SEND:
     path_payment_strict_send_to_xdr_object(&in->pathPaymentStrictSendOp,
@@ -484,6 +532,8 @@ bool operation_from_xdr_object(const stellarxdr_Operation *in,
     bump_sequence_from_xdr_object(&in->body, &out->bump_sequence_op);
     break;
   case stellarxdr_MANAGE_BUY_OFFER:
+    out->type = MANAGE_BUY_OFFER;
+    manage_buy_offer_from_xdr_object(&in->body, &out->manageBuyOfferOp);
     break;
   case stellarxdr_PATH_PAYMENT_STRICT_SEND:
     out->type = PATH_PAYMENT_STRICT_SEND;

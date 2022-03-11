@@ -92,6 +92,15 @@ struct BumpSequenceOp {
   int64_t bump_to;
 };
 
+struct ManageBuyOfferOp {
+  struct Asset selling;
+  struct Asset buying;
+  int64_t buyAmount; // amount being bought. if set to 0, delete the offer
+  struct Price
+      price; // price of thing being bought in terms of what you are selling
+  int64_t offerID; // 0=create a new offer, otherwise edit an existing offer
+};
+
 struct Operation {
   bool source_account_present;
   struct MuxedAccount source_account;
@@ -104,6 +113,7 @@ struct Operation {
     struct CreatePassiveSellOfferOp createPassiveSellOfferOp;
     struct PathPaymentStrictSendOp pathPaymentStrictSendOp;
     struct BumpSequenceOp bump_sequence_op;
+    struct ManageBuyOfferOp manageBuyOfferOp;
   };
 };
 
