@@ -67,7 +67,7 @@ struct PathPaymentStrictReceiveOp {
   struct MuxedAccount destination; // recipient of the payment
   struct Asset destAsset;          // what they end up with
   int64_t destAmount;              // amount they end up with
-  uint8_t pathLen;
+  uint8_t pathLen;                 // TODO: rename -> pathLength
   struct Asset path[5]; // additional hops it must go through to get there
 };
 
@@ -91,6 +91,12 @@ struct AllowTrustOp {
   char trustor[57];
   char assetCode[13]; // TODO: check
   enum TrustLineEntryFlag authorize;
+};
+
+struct ManageDataOp {
+  char dataName[65];
+  uint8_t dataValueLength;
+  uint8_t dataValue[64];
 };
 
 struct PathPaymentStrictSendOp {
@@ -133,6 +139,7 @@ struct Operation {
     struct BumpSequenceOp bump_sequence_op;
     struct ManageBuyOfferOp manageBuyOfferOp;
     struct AllowTrustOp allowTrustOp;
+    struct ManageDataOp manageDataOp;
   };
 };
 

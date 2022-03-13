@@ -344,6 +344,48 @@ bool inflation_to_xdr_object(stellarxdr_OperationBody *out) {
   return true;
 }
 
+// 10. Manage Data
+bool manage_data_to_xdr_object(const struct ManageDataOp *in,
+                               stellarxdr_OperationBody *out) {
+  out->type = stellarxdr_MANAGE_DATA;
+  unsigned long dataNameLength = strlen(in->dataName);
+  out->stellarxdr_OperationBody_u.manageDataOp.dataName =
+      malloc(dataNameLength);
+  memcpy(out->stellarxdr_OperationBody_u.manageDataOp.dataName, in->dataName,
+         dataNameLength);
+
+  if (in->dataValueLength != 0) {
+    stellarxdr_DataValue stellarxdrDataValue;
+    stellarxdrDataValue.stellarxdr_DataValue_len = in->dataValueLength;
+    stellarxdrDataValue.stellarxdr_DataValue_val = malloc(in->dataValueLength);
+    memcpy(stellarxdrDataValue.stellarxdr_DataValue_val, in->dataValue,
+           in->dataValueLength);
+    out->stellarxdr_OperationBody_u.manageDataOp.dataValue =
+        malloc(sizeof(stellarxdr_DataValue));
+    memcpy(out->stellarxdr_OperationBody_u.manageDataOp.dataValue,
+           &stellarxdrDataValue, sizeof(stellarxdr_DataValue));
+  }
+  return true;
+}
+
+bool manage_data_from_xdr_object(const stellarxdr_OperationBody *in,
+                                 struct ManageDataOp *out) {
+  memcpy(out->dataName, in->stellarxdr_OperationBody_u.manageDataOp.dataName,
+         64);
+  out->dataName[64] = '\0';
+  if (in->stellarxdr_OperationBody_u.manageDataOp.dataValue == NULL) {
+    out->dataValueLength = 0;
+  } else {
+    out->dataValueLength = in->stellarxdr_OperationBody_u.manageDataOp
+                               .dataValue->stellarxdr_DataValue_len;
+    memcpy(out->dataValue,
+           in->stellarxdr_OperationBody_u.manageDataOp.dataValue
+               ->stellarxdr_DataValue_val,
+           out->dataValueLength);
+  }
+  return true;
+}
+
 // 11. Bump Sequence
 bool bump_sequence_to_xdr_object(const struct BumpSequenceOp *in,
                                  stellarxdr_OperationBody *out) {
@@ -512,6 +554,7 @@ bool operation_to_xdr_object(const struct Operation *in,
     inflation_to_xdr_object(&operation_body);
     break;
   case MANAGE_DATA:
+    manage_data_to_xdr_object(&in->manageDataOp, &operation_body);
     break;
   case BUMP_SEQUENCE:
     bump_sequence_to_xdr_object(&in->bump_sequence_op, &operation_body);
@@ -605,6 +648,8 @@ bool operation_from_xdr_object(const stellarxdr_Operation *in,
     out->type = INFLATION;
     break;
   case stellarxdr_MANAGE_DATA:
+    out->type = MANAGE_DATA;
+    manage_data_from_xdr_object(&in->body, &out->manageDataOp);
     break;
   case stellarxdr_BUMP_SEQUENCE:
     out->type = BUMP_SEQUENCE;
