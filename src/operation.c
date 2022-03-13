@@ -270,6 +270,74 @@ bool create_passive_sell_offer_from_xdr_object(
   return true;
 }
 
+// 7. Allow Trust
+bool allow_trust_to_xdr_object(const struct AllowTrustOp *in,
+                               stellarxdr_OperationBody *out) {
+  out->type = stellarxdr_ALLOW_TRUST;
+  if (strlen(in->assetCode) <= 4) {
+    out->stellarxdr_OperationBody_u.allowTrustOp.asset.type =
+        stellarxdr_ASSET_TYPE_CREDIT_ALPHANUM4;
+    for (int i = 0; i < 4; i++) {
+      if (i < strlen(in->assetCode)) {
+        out->stellarxdr_OperationBody_u.allowTrustOp.asset
+            .stellarxdr_AssetCode_u.assetCode4[i] = in->assetCode[i];
+      } else {
+        out->stellarxdr_OperationBody_u.allowTrustOp.asset
+            .stellarxdr_AssetCode_u.assetCode4[i] = '\0';
+      }
+    }
+  } else {
+    out->stellarxdr_OperationBody_u.allowTrustOp.asset.type =
+        stellarxdr_ASSET_TYPE_CREDIT_ALPHANUM12;
+    for (int i = 0; i < 12; i++) {
+      if (i < strlen(in->assetCode)) {
+        out->stellarxdr_OperationBody_u.allowTrustOp.asset
+            .stellarxdr_AssetCode_u.assetCode4[i] = in->assetCode[i];
+      } else {
+        out->stellarxdr_OperationBody_u.allowTrustOp.asset
+            .stellarxdr_AssetCode_u.assetCode4[i] = '\0';
+      }
+    }
+  }
+  out->stellarxdr_OperationBody_u.allowTrustOp.authorize = in->authorize;
+
+  struct Keypair keypair;
+  keypair_from_address(&keypair, in->trustor);
+  stellarxdr_AccountID accountId;
+  keypair_xdr_account_id(&keypair, &accountId);
+  out->stellarxdr_OperationBody_u.allowTrustOp.trustor = accountId;
+  return true;
+}
+
+bool allow_trust_from_xdr_object(const stellarxdr_OperationBody *in,
+                                 struct AllowTrustOp *out) {
+  out->authorize = in->stellarxdr_OperationBody_u.allowTrustOp.authorize;
+  if (!encode_ed25519_public_key(&in->stellarxdr_OperationBody_u.allowTrustOp
+                                      .trustor.stellarxdr_PublicKey_u.ed25519,
+                                 out->trustor)) {
+    return false;
+  }
+  switch (in->stellarxdr_OperationBody_u.allowTrustOp.asset.type) {
+  case stellarxdr_ASSET_TYPE_CREDIT_ALPHANUM4:
+    memcpy(out->assetCode,
+           in->stellarxdr_OperationBody_u.allowTrustOp.asset
+               .stellarxdr_AssetCode_u.assetCode4,
+           4);
+    out->assetCode[4] = '\0';
+    break;
+  case stellarxdr_ASSET_TYPE_CREDIT_ALPHANUM12:
+    memcpy(out->assetCode,
+           in->stellarxdr_OperationBody_u.allowTrustOp.asset
+               .stellarxdr_AssetCode_u.assetCode4,
+           12);
+    out->assetCode[12] = '\0';
+    break;
+  default:
+    return false;
+  }
+  return true;
+}
+
 // 11. Bump Sequence
 bool bump_sequence_to_xdr_object(const struct BumpSequenceOp *in,
                                  stellarxdr_OperationBody *out) {
@@ -286,7 +354,7 @@ bool bump_sequence_from_xdr_object(const stellarxdr_OperationBody *in,
 
 // 12. Manage Buy Offer
 bool manage_buy_offer_to_xdr_object(const struct ManageBuyOfferOp *in,
-                                     stellarxdr_OperationBody *out) {
+                                    stellarxdr_OperationBody *out) {
   out->type = stellarxdr_MANAGE_BUY_OFFER;
 
   if (!asset_to_xdr_object(
@@ -310,7 +378,7 @@ bool manage_buy_offer_to_xdr_object(const struct ManageBuyOfferOp *in,
 }
 
 bool manage_buy_offer_from_xdr_object(const stellarxdr_OperationBody *in,
-                                       struct ManageBuyOfferOp *out) {
+                                      struct ManageBuyOfferOp *out) {
   if (!asset_from_xdr_object(
           &in->stellarxdr_OperationBody_u.manageBuyOfferOp.selling,
           &out->selling)) {
@@ -430,6 +498,7 @@ bool operation_to_xdr_object(const struct Operation *in,
   case CHANGE_TRUST:
     break;
   case ALLOW_TRUST:
+    allow_trust_to_xdr_object(&in->allowTrustOp, &operation_body);
     break;
   case ACCOUNT_MERGE:
     break;
@@ -520,6 +589,8 @@ bool operation_from_xdr_object(const stellarxdr_Operation *in,
   case stellarxdr_CHANGE_TRUST:
     break;
   case stellarxdr_ALLOW_TRUST:
+    out->type = ALLOW_TRUST;
+    allow_trust_from_xdr_object(&in->body, &out->allowTrustOp);
     break;
   case stellarxdr_ACCOUNT_MERGE:
     break;
