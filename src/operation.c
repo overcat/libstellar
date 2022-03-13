@@ -338,6 +338,12 @@ bool allow_trust_from_xdr_object(const stellarxdr_OperationBody *in,
   return true;
 }
 
+// 9. Inflation
+bool inflation_to_xdr_object(stellarxdr_OperationBody *out) {
+  out->type = stellarxdr_INFLATION;
+  return true;
+}
+
 // 11. Bump Sequence
 bool bump_sequence_to_xdr_object(const struct BumpSequenceOp *in,
                                  stellarxdr_OperationBody *out) {
@@ -503,6 +509,7 @@ bool operation_to_xdr_object(const struct Operation *in,
   case ACCOUNT_MERGE:
     break;
   case INFLATION:
+    inflation_to_xdr_object(&operation_body);
     break;
   case MANAGE_DATA:
     break;
@@ -595,6 +602,7 @@ bool operation_from_xdr_object(const stellarxdr_Operation *in,
   case stellarxdr_ACCOUNT_MERGE:
     break;
   case stellarxdr_INFLATION:
+    out->type = INFLATION;
     break;
   case stellarxdr_MANAGE_DATA:
     break;
