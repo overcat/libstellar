@@ -338,6 +338,26 @@ bool allow_trust_from_xdr_object(const stellarxdr_OperationBody *in,
   return true;
 }
 
+// 8. Account Merge
+bool account_merge_to_xdr_object(const struct AccountMergeOp *in,
+                                 stellarxdr_OperationBody *out) {
+  out->type = stellarxdr_ACCOUNT_MERGE;
+  if (!muxed_account_to_xdr_object(
+          &in->destination, &out->stellarxdr_OperationBody_u.destination)) {
+    return false;
+  }
+  return true;
+}
+
+bool account_merge_from_xdr_object(const stellarxdr_OperationBody *in,
+                                   struct AccountMergeOp *out) {
+  if (!muxed_account_from_xdr_object(
+          &in->stellarxdr_OperationBody_u.destination, &out->destination)) {
+    return false;
+  }
+  return true;
+}
+
 // 9. Inflation
 bool inflation_to_xdr_object(stellarxdr_OperationBody *out) {
   out->type = stellarxdr_INFLATION;
@@ -549,6 +569,7 @@ bool operation_to_xdr_object(const struct Operation *in,
     allow_trust_to_xdr_object(&in->allowTrustOp, &operation_body);
     break;
   case ACCOUNT_MERGE:
+    account_merge_to_xdr_object(&in->accountMergeOp, &operation_body);
     break;
   case INFLATION:
     inflation_to_xdr_object(&operation_body);
@@ -643,6 +664,8 @@ bool operation_from_xdr_object(const stellarxdr_Operation *in,
     allow_trust_from_xdr_object(&in->body, &out->allowTrustOp);
     break;
   case stellarxdr_ACCOUNT_MERGE:
+    out->type = ACCOUNT_MERGE;
+    account_merge_from_xdr_object(&in->body, &out->accountMergeOp);
     break;
   case stellarxdr_INFLATION:
     out->type = INFLATION;

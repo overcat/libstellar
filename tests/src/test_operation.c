@@ -491,6 +491,39 @@ void test_manage_data(void **state) {
   assert_memory_equal(buf1, xdr, buf_size1);
 }
 
+void test_account_merge(void **state) {
+  struct MuxedAccount destination = {
+      .type = KEY_TYPE_ED25519,
+      .ed25519 = "GB777MJSHL7QOVZ3S52M2MROORDKLSJQL6MUSBV57R2NW7LODWORELJO"};
+
+  struct Operation operation = {.source_account_present = false,
+                                .type = ACCOUNT_MERGE,
+                                .accountMergeOp = {
+                                    .destination = destination,
+                                }};
+
+  char *buf0 = NULL;
+  size_t buf_size0 = 0;
+  assert_true(operation_to_xdr(&operation, &buf0, &buf_size0));
+  char xdr[] = {0x0,  0x0,  0x0,  0x0,  0x0,  0x0,  0x0,  0x8,  0x0,
+                0x0,  0x0,  0x0,  0x7f, 0xff, 0xb1, 0x32, 0x3a, 0xff,
+                0x7,  0x57, 0x3b, 0x97, 0x74, 0xcd, 0x32, 0x2e, 0x74,
+                0x46, 0xa5, 0xc9, 0x30, 0x5f, 0x99, 0x49, 0x6,  0xbd,
+                0xfc, 0x74, 0xdb, 0x7d, 0x6e, 0x1d, 0x9d, 0x12};
+  assert_int_equal(buf_size0, 44);
+  assert_memory_equal(buf0, xdr, buf_size0);
+
+  stellarxdr_Operation to;
+  assert_true(operation_to_xdr_object(&operation, &to));
+  struct Operation from;
+  assert_true(operation_from_xdr_object(&to, &from));
+  char *buf1 = NULL;
+  size_t buf_size1 = 0;
+  assert_true(operation_to_xdr(&from, &buf1, &buf_size1));
+  assert_int_equal(buf_size1, 44);
+  assert_memory_equal(buf1, xdr, buf_size1);
+}
+
 int main() {
   const struct CMUnitTest tests[] = {
       cmocka_unit_test(test_create_account),
@@ -505,6 +538,7 @@ int main() {
       cmocka_unit_test(test_path_payment_strict_send),
       cmocka_unit_test(test_inflation),
       cmocka_unit_test(test_manage_data),
+      cmocka_unit_test(test_account_merge),
   };
   return cmocka_run_group_tests(tests, NULL, NULL);
 }

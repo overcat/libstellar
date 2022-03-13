@@ -16,10 +16,10 @@ enum OperationType {
   CREATE_PASSIVE_SELL_OFFER = 4,   // done
   SET_OPTIONS = 5,
   CHANGE_TRUST = 6,
-  ALLOW_TRUST = 7,
-  ACCOUNT_MERGE = 8,
-  INFLATION = 9,
-  MANAGE_DATA = 10,
+  ALLOW_TRUST = 7,               // done
+  ACCOUNT_MERGE = 8,             // done
+  INFLATION = 9,                 // done
+  MANAGE_DATA = 10,              // done
   BUMP_SEQUENCE = 11,            // done
   MANAGE_BUY_OFFER = 12,         // done
   PATH_PAYMENT_STRICT_SEND = 13, // done
@@ -125,6 +125,10 @@ struct ManageBuyOfferOp {
   int64_t offerID; // 0=create a new offer, otherwise edit an existing offer
 };
 
+struct AccountMergeOp {
+  struct MuxedAccount destination;
+};
+
 struct Operation {
   bool source_account_present;
   struct MuxedAccount source_account;
@@ -140,6 +144,7 @@ struct Operation {
     struct ManageBuyOfferOp manageBuyOfferOp;
     struct AllowTrustOp allowTrustOp;
     struct ManageDataOp manageDataOp;
+    struct AccountMergeOp accountMergeOp;
   };
 };
 
