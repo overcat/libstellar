@@ -129,6 +129,10 @@ struct AccountMergeOp {
   struct MuxedAccount destination;
 };
 
+struct BeginSponsoringFutureReservesOp {
+  char sponsoredID[57];
+};
+
 struct Operation {
   bool source_account_present;
   struct MuxedAccount source_account;
@@ -145,6 +149,7 @@ struct Operation {
     struct AllowTrustOp allowTrustOp;
     struct ManageDataOp manageDataOp;
     struct AccountMergeOp accountMergeOp;
+    struct BeginSponsoringFutureReservesOp beginSponsoringFutureReservesOp;
   };
 };
 

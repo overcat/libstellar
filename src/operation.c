@@ -540,6 +540,32 @@ bool path_payment_strict_send_from_xdr_object(
   return true;
 }
 
+// 16. Begin Sponsoring Future Reserves
+bool begin_sponsoring_future_reserves_to_xdr_object(
+    const struct BeginSponsoringFutureReservesOp *in,
+    stellarxdr_OperationBody *out) {
+  out->type = stellarxdr_BEGIN_SPONSORING_FUTURE_RESERVES;
+  struct Keypair keypair;
+  keypair_from_address(&keypair, in->sponsoredID);
+  stellarxdr_AccountID accountId;
+  keypair_xdr_account_id(&keypair, &accountId);
+  out->stellarxdr_OperationBody_u.beginSponsoringFutureReservesOp.sponsoredID =
+      accountId;
+  return true;
+}
+
+bool begin_sponsoring_future_reserves_from_xdr_object(
+    const stellarxdr_OperationBody *in,
+    struct BeginSponsoringFutureReservesOp *out) {
+  if (!encode_ed25519_public_key(
+          &in->stellarxdr_OperationBody_u.beginSponsoringFutureReservesOp
+               .sponsoredID.stellarxdr_PublicKey_u.ed25519,
+          out->sponsoredID)) {
+    return false;
+  }
+  return true;
+}
+
 bool operation_to_xdr_object(const struct Operation *in,
                              stellarxdr_Operation *out) {
   stellarxdr_OperationBody operation_body;
@@ -592,6 +618,8 @@ bool operation_to_xdr_object(const struct Operation *in,
   case CLAIM_CLAIMABLE_BALANCE:
     break;
   case BEGIN_SPONSORING_FUTURE_RESERVES:
+    begin_sponsoring_future_reserves_to_xdr_object(
+        &in->beginSponsoringFutureReservesOp, &operation_body);
     break;
   case END_SPONSORING_FUTURE_RESERVES:
     break;
@@ -692,6 +720,9 @@ bool operation_from_xdr_object(const stellarxdr_Operation *in,
   case stellarxdr_CLAIM_CLAIMABLE_BALANCE:
     break;
   case stellarxdr_BEGIN_SPONSORING_FUTURE_RESERVES:
+    out->type = BEGIN_SPONSORING_FUTURE_RESERVES;
+    begin_sponsoring_future_reserves_from_xdr_object(
+        &in->body, &out->beginSponsoringFutureReservesOp);
     break;
   case stellarxdr_END_SPONSORING_FUTURE_RESERVES:
     break;
