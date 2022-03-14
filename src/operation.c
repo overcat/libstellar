@@ -566,6 +566,13 @@ bool begin_sponsoring_future_reserves_from_xdr_object(
   return true;
 }
 
+// 17. End Sponsoring Future Reserves
+bool end_sponsoring_future_reserves_to_xdr_object(
+    stellarxdr_OperationBody *out) {
+  out->type = stellarxdr_END_SPONSORING_FUTURE_RESERVES;
+  return true;
+}
+
 bool operation_to_xdr_object(const struct Operation *in,
                              stellarxdr_Operation *out) {
   stellarxdr_OperationBody operation_body;
@@ -622,6 +629,7 @@ bool operation_to_xdr_object(const struct Operation *in,
         &in->beginSponsoringFutureReservesOp, &operation_body);
     break;
   case END_SPONSORING_FUTURE_RESERVES:
+    end_sponsoring_future_reserves_to_xdr_object(&operation_body);
     break;
   case REVOKE_SPONSORSHIP:
     break;
@@ -725,6 +733,7 @@ bool operation_from_xdr_object(const stellarxdr_Operation *in,
         &in->body, &out->beginSponsoringFutureReservesOp);
     break;
   case stellarxdr_END_SPONSORING_FUTURE_RESERVES:
+    out->type = END_SPONSORING_FUTURE_RESERVES;
     break;
   case stellarxdr_REVOKE_SPONSORSHIP:
     break;

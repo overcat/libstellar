@@ -556,6 +556,31 @@ void test_begin_sponsoring_future_reserves(void **state) {
   assert_memory_equal(buf1, xdr, buf_size1);
 }
 
+void test_end_sponsoring_future_reserves(void **state) {
+
+  struct Operation operation = {
+      .source_account_present = false,
+      .type = END_SPONSORING_FUTURE_RESERVES,
+  };
+
+  char *buf0 = NULL;
+  size_t buf_size0 = 0;
+  assert_true(operation_to_xdr(&operation, &buf0, &buf_size0));
+  char xdr[] = {0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x11};
+  assert_int_equal(buf_size0, 8);
+  assert_memory_equal(buf0, xdr, buf_size0);
+
+  stellarxdr_Operation to;
+  assert_true(operation_to_xdr_object(&operation, &to));
+  struct Operation from;
+  assert_true(operation_from_xdr_object(&to, &from));
+  char *buf1 = NULL;
+  size_t buf_size1 = 0;
+  assert_true(operation_to_xdr(&from, &buf1, &buf_size1));
+  assert_int_equal(buf_size1, 8);
+  assert_memory_equal(buf1, xdr, buf_size1);
+}
+
 int main() {
   const struct CMUnitTest tests[] = {
       cmocka_unit_test(test_create_account),
@@ -572,6 +597,7 @@ int main() {
       cmocka_unit_test(test_manage_data),
       cmocka_unit_test(test_account_merge),
       cmocka_unit_test(test_begin_sponsoring_future_reserves),
+      cmocka_unit_test(test_end_sponsoring_future_reserves),
   };
   return cmocka_run_group_tests(tests, NULL, NULL);
 }
