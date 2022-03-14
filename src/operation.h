@@ -25,8 +25,8 @@ enum OperationType {
   PATH_PAYMENT_STRICT_SEND = 13, // done
   CREATE_CLAIMABLE_BALANCE = 14,
   CLAIM_CLAIMABLE_BALANCE = 15,
-  BEGIN_SPONSORING_FUTURE_RESERVES = 16,
-  END_SPONSORING_FUTURE_RESERVES = 17,
+  BEGIN_SPONSORING_FUTURE_RESERVES = 16, // done
+  END_SPONSORING_FUTURE_RESERVES = 17,   // done
   REVOKE_SPONSORSHIP = 18,
   CLAWBACK = 19,
   CLAWBACK_CLAIMABLE_BALANCE = 20,
@@ -133,6 +133,9 @@ struct BeginSponsoringFutureReservesOp {
   char sponsoredID[57];
 };
 
+struct ClaimClaimableBalanceOp {
+  char balanceID[73];
+};
 struct Operation {
   bool source_account_present;
   struct MuxedAccount source_account;
@@ -150,6 +153,7 @@ struct Operation {
     struct ManageDataOp manageDataOp;
     struct AccountMergeOp accountMergeOp;
     struct BeginSponsoringFutureReservesOp beginSponsoringFutureReservesOp;
+    struct ClaimClaimableBalanceOp claimClaimableBalanceOp;
   };
 };
 

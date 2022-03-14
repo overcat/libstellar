@@ -581,6 +581,37 @@ void test_end_sponsoring_future_reserves(void **state) {
   assert_memory_equal(buf1, xdr, buf_size1);
 }
 
+void test_claim_claimable_balance(void **state) {
+
+  struct Operation operation = {
+      .source_account_present = false,
+      .type = CLAIM_CLAIMABLE_BALANCE,
+      .claimClaimableBalanceOp = {.balanceID =
+                                      "00000000da0d57da7d4850e7fc10d2a9d0ebc731"
+                                      "f7afb40574c03395b17d49149b91f5be"}};
+
+  char *buf0 = NULL;
+  size_t buf_size0 = 0;
+  assert_true(operation_to_xdr(&operation, &buf0, &buf_size0));
+  char xdr[] = {0x0,  0x0,  0x0,  0x0,  0x0,  0x0,  0x0,  0xf,  0x0,
+                0x0,  0x0,  0x0,  0xda, 0xd,  0x57, 0xda, 0x7d, 0x48,
+                0x50, 0xe7, 0xfc, 0x10, 0xd2, 0xa9, 0xd0, 0xeb, 0xc7,
+                0x31, 0xf7, 0xaf, 0xb4, 0x5,  0x74, 0xc0, 0x33, 0x95,
+                0xb1, 0x7d, 0x49, 0x14, 0x9b, 0x91, 0xf5, 0xbe};
+  assert_int_equal(buf_size0, 44);
+  assert_memory_equal(buf0, xdr, buf_size0);
+
+  stellarxdr_Operation to;
+  assert_true(operation_to_xdr_object(&operation, &to));
+  struct Operation from;
+  assert_true(operation_from_xdr_object(&to, &from));
+  char *buf1 = NULL;
+  size_t buf_size1 = 0;
+  assert_true(operation_to_xdr(&from, &buf1, &buf_size1));
+  assert_int_equal(buf_size1, 44);
+  assert_memory_equal(buf1, xdr, buf_size1);
+}
+
 int main() {
   const struct CMUnitTest tests[] = {
       cmocka_unit_test(test_create_account),
@@ -598,6 +629,7 @@ int main() {
       cmocka_unit_test(test_account_merge),
       cmocka_unit_test(test_begin_sponsoring_future_reserves),
       cmocka_unit_test(test_end_sponsoring_future_reserves),
+      cmocka_unit_test(test_claim_claimable_balance),
   };
   return cmocka_run_group_tests(tests, NULL, NULL);
 }

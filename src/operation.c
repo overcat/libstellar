@@ -540,6 +540,57 @@ bool path_payment_strict_send_from_xdr_object(
   return true;
 }
 
+// 15. Claim Claimable Balance
+bool claim_claimable_balance_to_xdr_object(
+    const struct ClaimClaimableBalanceOp *in, stellarxdr_OperationBody *out) {
+  out->type = stellarxdr_CLAIM_CLAIMABLE_BALANCE;
+
+  // 36
+  if (strlen(in->balanceID) != 72) {
+    return false;
+  }
+
+  unsigned char decodedId[36];
+  for (size_t i = 0, j = 0; j < 36; i += 2, j++)
+    decodedId[j] = (in->balanceID[i] % 32 + 9) % 25 * 16 +
+                   (in->balanceID[i + 1] % 32 + 9) % 25;
+  // TODO: support other type
+  out->stellarxdr_OperationBody_u.claimClaimableBalanceOp.balanceID.type =
+      stellarxdr_CLAIMABLE_BALANCE_ID_TYPE_V0;
+  for (size_t i = 0; i < 32; i++) {
+    out->stellarxdr_OperationBody_u.claimClaimableBalanceOp.balanceID
+        .stellarxdr_ClaimableBalanceID_u.v0[i] = decodedId[i + 4];
+  }
+  return true;
+}
+
+bool claim_claimable_balance_from_xdr_object(
+    const stellarxdr_OperationBody *in, struct ClaimClaimableBalanceOp *out) {
+  unsigned char encodeId[36];
+  encodeId[0] =
+      in->stellarxdr_OperationBody_u.claimClaimableBalanceOp.balanceID.type >>
+      24;
+  encodeId[1] =
+      in->stellarxdr_OperationBody_u.claimClaimableBalanceOp.balanceID.type >>
+      16;
+  encodeId[2] =
+      in->stellarxdr_OperationBody_u.claimClaimableBalanceOp.balanceID.type >>
+      8;
+  encodeId[3] =
+      in->stellarxdr_OperationBody_u.claimClaimableBalanceOp.balanceID.type;
+
+  for (size_t i = 0; i < 32; i++) {
+    encodeId[i + 4] = in->stellarxdr_OperationBody_u.claimClaimableBalanceOp
+                          .balanceID.stellarxdr_ClaimableBalanceID_u.v0[i];
+  }
+
+  for (size_t i = 0; i < 36; i++) {
+    sprintf(out->balanceID + (i * 2), "%.2x", encodeId[i]);
+  }
+  out->balanceID[73] = '\0';
+  return true;
+}
+
 // 16. Begin Sponsoring Future Reserves
 bool begin_sponsoring_future_reserves_to_xdr_object(
     const struct BeginSponsoringFutureReservesOp *in,
@@ -623,6 +674,8 @@ bool operation_to_xdr_object(const struct Operation *in,
   case CREATE_CLAIMABLE_BALANCE:
     break;
   case CLAIM_CLAIMABLE_BALANCE:
+    claim_claimable_balance_to_xdr_object(&in->claimClaimableBalanceOp,
+                                          &operation_body);
     break;
   case BEGIN_SPONSORING_FUTURE_RESERVES:
     begin_sponsoring_future_reserves_to_xdr_object(
@@ -726,6 +779,9 @@ bool operation_from_xdr_object(const stellarxdr_Operation *in,
   case stellarxdr_CREATE_CLAIMABLE_BALANCE:
     break;
   case stellarxdr_CLAIM_CLAIMABLE_BALANCE:
+    out->type = CLAIM_CLAIMABLE_BALANCE;
+    claim_claimable_balance_from_xdr_object(&in->body,
+                                            &out->claimClaimableBalanceOp);
     break;
   case stellarxdr_BEGIN_SPONSORING_FUTURE_RESERVES:
     out->type = BEGIN_SPONSORING_FUTURE_RESERVES;
