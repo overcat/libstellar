@@ -29,8 +29,8 @@ enum OperationType {
   END_SPONSORING_FUTURE_RESERVES = 17,   // done
   REVOKE_SPONSORSHIP = 18,
   CLAWBACK = 19,
-  CLAWBACK_CLAIMABLE_BALANCE = 20,
-  SET_TRUST_LINE_FLAGS = 21, // done
+  CLAWBACK_CLAIMABLE_BALANCE = 20, // done
+  SET_TRUST_LINE_FLAGS = 21,       // done
   LIQUIDITY_POOL_DEPOSIT = 22,
   LIQUIDITY_POOL_WITHDRAW = 23,
 };
@@ -156,6 +156,10 @@ struct SetTrustLineFlagsOp {
   uint32_t setFlags;   // which flags to set
 };
 
+struct ClawbackClaimableBalanceOp {
+  char balanceID[73];
+};
+
 struct Operation {
   bool source_account_present;
   struct MuxedAccount source_account;
@@ -175,6 +179,7 @@ struct Operation {
     struct BeginSponsoringFutureReservesOp beginSponsoringFutureReservesOp;
     struct ClaimClaimableBalanceOp claimClaimableBalanceOp;
     struct SetTrustLineFlagsOp setTrustLineFlagsOp;
+    struct ClawbackClaimableBalanceOp clawbackClaimableBalanceOp;
   };
 };
 
