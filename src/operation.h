@@ -24,13 +24,13 @@ enum OperationType {
   MANAGE_BUY_OFFER = 12,         // done
   PATH_PAYMENT_STRICT_SEND = 13, // done
   CREATE_CLAIMABLE_BALANCE = 14,
-  CLAIM_CLAIMABLE_BALANCE = 15,
+  CLAIM_CLAIMABLE_BALANCE = 15,          // done
   BEGIN_SPONSORING_FUTURE_RESERVES = 16, // done
   END_SPONSORING_FUTURE_RESERVES = 17,   // done
   REVOKE_SPONSORSHIP = 18,
   CLAWBACK = 19,
   CLAWBACK_CLAIMABLE_BALANCE = 20,
-  SET_TRUST_LINE_FLAGS = 21,
+  SET_TRUST_LINE_FLAGS = 21, // done
   LIQUIDITY_POOL_DEPOSIT = 22,
   LIQUIDITY_POOL_WITHDRAW = 23,
 };
@@ -45,6 +45,18 @@ enum TrustLineEntryFlag {
   TRUST_LINE_ENTRY_ALLOW_TRUST_OP_AUTHORIZED_TO_MAINTAIN_LIABILITIES_FLAG =
       2, // The account can hold a balance and maintain offers but cannot
          // receive payments, send payments or manage offers
+};
+
+enum TrustLineFlags {
+  TRUST_LINE_ALLOW_TRUST_OP_AUTHORIZED_FLAG =
+      1, // The account can hold a balance, receive payments, send
+         // payments, maintain offers or manage offers
+  TRUST_LINE_ALLOW_TRUST_OP_AUTHORIZED_TO_MAINTAIN_LIABILITIES_FLAG =
+      2, // The account can hold a balance and maintain offers but cannot
+         // receive payments, send payments or manage offers
+  TRUST_LINE_CLAWBACK_ENABLED_FLAG =
+      4 // issuer has specified that it may clawback its credit, and that
+        // claimable balances created with its credit may also be clawed back
 };
 
 struct CreateAccountOp {
@@ -89,8 +101,8 @@ struct CreatePassiveSellOfferOp {
 
 struct AllowTrustOp {
   char trustor[57];
-  char assetCode[13]; // TODO: check
-  enum TrustLineEntryFlag authorize;
+  char assetCode[13];                // TODO: check
+  enum TrustLineEntryFlag authorize; // fixme
 };
 
 struct ManageDataOp {
@@ -136,6 +148,14 @@ struct BeginSponsoringFutureReservesOp {
 struct ClaimClaimableBalanceOp {
   char balanceID[73];
 };
+
+struct SetTrustLineFlagsOp {
+  char trustor[57];
+  struct Asset asset;
+  uint32_t clearFlags; // which flags to clear
+  uint32_t setFlags;   // which flags to set
+};
+
 struct Operation {
   bool source_account_present;
   struct MuxedAccount source_account;
@@ -154,6 +174,7 @@ struct Operation {
     struct AccountMergeOp accountMergeOp;
     struct BeginSponsoringFutureReservesOp beginSponsoringFutureReservesOp;
     struct ClaimClaimableBalanceOp claimClaimableBalanceOp;
+    struct SetTrustLineFlagsOp setTrustLineFlagsOp;
   };
 };
 

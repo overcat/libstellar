@@ -624,6 +624,49 @@ bool end_sponsoring_future_reserves_to_xdr_object(
   return true;
 }
 
+// 21. Set Trust Line Flags
+bool set_trust_line_flags_to_xdr_object(const struct SetTrustLineFlagsOp *in,
+                                        stellarxdr_OperationBody *out) {
+  out->type = stellarxdr_SET_TRUST_LINE_FLAGS;
+  struct Keypair keypair;
+  keypair_from_address(&keypair, in->trustor);
+  stellarxdr_AccountID accountId;
+  keypair_xdr_account_id(&keypair, &accountId);
+  out->stellarxdr_OperationBody_u.setTrustLineFlagsOp.trustor = accountId;
+
+  if (!asset_to_xdr_object(
+          &in->asset,
+          &out->stellarxdr_OperationBody_u.setTrustLineFlagsOp.asset)) {
+    return false;
+  }
+
+  out->stellarxdr_OperationBody_u.setTrustLineFlagsOp.setFlags = in->setFlags;
+  out->stellarxdr_OperationBody_u.setTrustLineFlagsOp.clearFlags =
+      in->clearFlags;
+  return true;
+}
+
+bool set_trustline_flags_from_xdr_object(const stellarxdr_OperationBody *in,
+                                         struct SetTrustLineFlagsOp *out) {
+  if (!encode_ed25519_public_key(
+          &in->stellarxdr_OperationBody_u.setTrustLineFlagsOp.trustor
+               .stellarxdr_PublicKey_u.ed25519,
+          out->trustor)) {
+    return false;
+  }
+
+  if (!asset_from_xdr_object(
+          &in->stellarxdr_OperationBody_u.setTrustLineFlagsOp.asset,
+          &out->asset)) {
+    return false;
+  }
+
+  out->setFlags = in->stellarxdr_OperationBody_u.setTrustLineFlagsOp.setFlags;
+  out->clearFlags =
+      in->stellarxdr_OperationBody_u.setTrustLineFlagsOp.clearFlags;
+  return true;
+}
+
 bool operation_to_xdr_object(const struct Operation *in,
                              stellarxdr_Operation *out) {
   stellarxdr_OperationBody operation_body;
@@ -691,6 +734,8 @@ bool operation_to_xdr_object(const struct Operation *in,
   case CLAWBACK_CLAIMABLE_BALANCE:
     break;
   case SET_TRUST_LINE_FLAGS:
+    set_trust_line_flags_to_xdr_object(&in->setTrustLineFlagsOp,
+                                       &operation_body);
     break;
   case LIQUIDITY_POOL_DEPOSIT:
     break;
@@ -798,6 +843,8 @@ bool operation_from_xdr_object(const stellarxdr_Operation *in,
   case stellarxdr_CLAWBACK_CLAIMABLE_BALANCE:
     break;
   case stellarxdr_SET_TRUST_LINE_FLAGS:
+    out->type = SET_TRUST_LINE_FLAGS;
+    set_trustline_flags_from_xdr_object(&in->body, &out->setTrustLineFlagsOp);
     break;
   case stellarxdr_LIQUIDITY_POOL_DEPOSIT:
     break;
