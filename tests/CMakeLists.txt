@@ -100,3 +100,7 @@ add_test(test_transaction_envelope test_transaction_envelope)
 add_executable(test_asset src/test_asset.c)
 target_link_libraries(test_asset PRIVATE cmocka stellar_base)
 add_test(test_asset test_asset)
+
+add_executable(test_liquidity_pool_asset src/test_liquidity_pool_asset.c)
+target_link_libraries(test_liquidity_pool_asset PRIVATE cmocka stellar_base)
+add_test(test_liquidity_pool_asset test_asset)
