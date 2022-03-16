@@ -39,7 +39,7 @@ bool liquidity_pool_asset_from_change_trust_asset_xdr_object(
   }
 
   out->fee = in->stellarxdr_ChangeTrustAsset_u.liquidityPool
-                .stellarxdr_LiquidityPoolParameters_u.constantProduct.fee;
+                 .stellarxdr_LiquidityPoolParameters_u.constantProduct.fee;
   if (!asset_from_xdr_object(
           &in->stellarxdr_ChangeTrustAsset_u.liquidityPool
                .stellarxdr_LiquidityPoolParameters_u.constantProduct.assetA,
@@ -57,7 +57,38 @@ bool liquidity_pool_asset_from_change_trust_asset_xdr_object(
 
 bool liquidity_pool_asset_is_valid_lexicographic_order(struct Asset assetA,
                                                        struct Asset assetB) {
-  return true;
+  if (assetA.type == ASSET_TYPE_NATIVE && assetB.type == ASSET_TYPE_NATIVE) {
+    return false;
+  }
+  if ((assetA.type == ASSET_TYPE_CREDIT_ALPHANUM4 &&
+       assetB.type == ASSET_TYPE_CREDIT_ALPHANUM4) ||
+      (assetA.type == ASSET_TYPE_CREDIT_ALPHANUM12 &&
+       assetB.type == ASSET_TYPE_CREDIT_ALPHANUM12)) {
+    if (strcmp(assetA.code, assetB.code) == 0 &&
+        strcmp(assetA.issuer, assetB.issuer) == 0) {
+      return false;
+    }
+  }
+  if (assetA.type == ASSET_TYPE_NATIVE) {
+    return true;
+  } else if (assetA.type == ASSET_TYPE_CREDIT_ALPHANUM4) {
+    if (assetB.type == ASSET_TYPE_NATIVE) {
+      return false;
+    }
+    if (assetB.type == ASSET_TYPE_CREDIT_ALPHANUM12) {
+      return true;
+    }
+  } else {
+    if (assetB.type != ASSET_TYPE_CREDIT_ALPHANUM12) {
+      return false;
+    }
+  }
+
+  if (strcmp(assetA.code, assetB.code) != 0) {
+    return strcmp(assetA.code, assetB.code) < 0;
+  }
+
+  return strcmp(assetA.issuer, assetB.issuer) < 0;
 }
 
 bool liquidity_pool_asset_liquidity_pool_id(const struct LiquidityPoolAsset *in,
