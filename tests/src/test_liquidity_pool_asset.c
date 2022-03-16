@@ -62,9 +62,100 @@ void test_liquidity_pool_asset_change_trust_asset_xdr_object(void **state) {
   assert_memory_equal(buf1, xdr, buf_size1);
 }
 
+void test_liquidity_pool_asset_liquidity_pool_id(void **state) {
+  struct Asset assetA = {
+      .type = ASSET_TYPE_CREDIT_ALPHANUM4,
+      .code = "USD",
+      .issuer = "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN"};
+
+  struct Asset assetB = {
+      .type = ASSET_TYPE_CREDIT_ALPHANUM4,
+      .code = "USDC",
+      .issuer = "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN"};
+  struct LiquidityPoolAsset liquidityPoolAsset = {
+      .assetA = assetA, .assetB = assetB, .fee = LIQUIDITY_POOL_FEE_V18};
+
+  char expectID[] =
+      "3441bd8b84f0bab631fe3fb01a0b31b588cb04cdf55cffbd30b79e4286fd8689";
+  char poolID[65];
+  assert_true(
+      liquidity_pool_asset_liquidity_pool_id(&liquidityPoolAsset, poolID));
+  assert_string_equal(expectID, poolID);
+}
+
+void test_liquidity_pool_asset_is_valid_lexicographic_order_asset_types(
+    void **state) {
+  struct Asset xlm = {.type = ASSET_TYPE_NATIVE};
+  struct Asset anum4 = {
+      .type = ASSET_TYPE_CREDIT_ALPHANUM4,
+      .code = "USD",
+      .issuer = "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN"};
+  struct Asset anum12 = {
+      .type = ASSET_TYPE_CREDIT_ALPHANUM12,
+      .code = "BANANA",
+      .issuer = "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN"};
+
+  assert_false(liquidity_pool_asset_is_valid_lexicographic_order(xlm, xlm));
+  assert_false(liquidity_pool_asset_is_valid_lexicographic_order(anum4, xlm));
+  assert_false(liquidity_pool_asset_is_valid_lexicographic_order(anum4, anum4));
+  assert_false(liquidity_pool_asset_is_valid_lexicographic_order(anum12, xlm));
+  assert_false(
+      liquidity_pool_asset_is_valid_lexicographic_order(anum12, anum4));
+  assert_false(
+      liquidity_pool_asset_is_valid_lexicographic_order(anum12, anum12));
+  assert_true(liquidity_pool_asset_is_valid_lexicographic_order(xlm, anum4));
+  assert_true(liquidity_pool_asset_is_valid_lexicographic_order(xlm, anum12));
+  assert_true(liquidity_pool_asset_is_valid_lexicographic_order(anum4, anum12));
+}
+
+void test_liquidity_pool_asset_is_valid_lexicographic_order_asset_code(
+    void **state) {
+  struct Asset arst = {
+      .type = ASSET_TYPE_CREDIT_ALPHANUM4,
+      .code = "ARST",
+      .issuer = "GB7TAYRUZGE6TVT7NHP5SMIZRNQA6PLM423EYISAOAP3MKYIQMVYP2JO"};
+  struct Asset usdx = {
+      .type = ASSET_TYPE_CREDIT_ALPHANUM4,
+      .code = "USDX",
+      .issuer = "GB7TAYRUZGE6TVT7NHP5SMIZRNQA6PLM423EYISAOAP3MKYIQMVYP2JO"};
+
+  assert_false(liquidity_pool_asset_is_valid_lexicographic_order(arst, arst));
+  assert_false(liquidity_pool_asset_is_valid_lexicographic_order(usdx, arst));
+  assert_false(liquidity_pool_asset_is_valid_lexicographic_order(usdx, arst));
+  assert_true(liquidity_pool_asset_is_valid_lexicographic_order(arst, usdx));
+}
+
+void test_liquidity_pool_asset_is_valid_lexicographic_order_asset_issuer(
+    void **state) {
+  struct Asset issuerA = {
+      .type = ASSET_TYPE_CREDIT_ALPHANUM4,
+      .code = "ARST",
+      .issuer = "GB7TAYRUZGE6TVT7NHP5SMIZRNQA6PLM423EYISAOAP3MKYIQMVYP2JO"};
+  struct Asset issuerB = {
+      .type = ASSET_TYPE_CREDIT_ALPHANUM4,
+      .code = "ARST",
+      .issuer = "GCEZWKCA5VLDNRLN3RPRJMRZOX3Z6G5CHCGSNFHEYVXM3XOJMDS674JZ"};
+
+  assert_false(
+      liquidity_pool_asset_is_valid_lexicographic_order(issuerA, issuerA));
+  assert_false(
+      liquidity_pool_asset_is_valid_lexicographic_order(issuerB, issuerA));
+  assert_false(
+      liquidity_pool_asset_is_valid_lexicographic_order(issuerB, issuerB));
+  assert_true(
+      liquidity_pool_asset_is_valid_lexicographic_order(issuerA, issuerB));
+}
+
 int main() {
   const struct CMUnitTest tests[] = {
       cmocka_unit_test(test_liquidity_pool_asset_change_trust_asset_xdr_object),
+      cmocka_unit_test(test_liquidity_pool_asset_liquidity_pool_id),
+      cmocka_unit_test(
+          test_liquidity_pool_asset_is_valid_lexicographic_order_asset_types),
+      cmocka_unit_test(
+          test_liquidity_pool_asset_is_valid_lexicographic_order_asset_code),
+      cmocka_unit_test(
+          test_liquidity_pool_asset_is_valid_lexicographic_order_asset_issuer),
   };
   return cmocka_run_group_tests(tests, NULL, NULL);
 }

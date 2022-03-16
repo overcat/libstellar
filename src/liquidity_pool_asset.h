@@ -1,5 +1,5 @@
 #include "asset.h"
-
+#include "vendor/sha256/sha256.h"
 struct LiquidityPoolAsset {
   struct Asset assetA;
   struct Asset assetB;

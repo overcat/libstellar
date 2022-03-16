@@ -93,5 +93,32 @@ bool liquidity_pool_asset_is_valid_lexicographic_order(struct Asset assetA,
 
 bool liquidity_pool_asset_liquidity_pool_id(const struct LiquidityPoolAsset *in,
                                             char *liquidityPoolID) {
+  stellarxdr_LiquidityPoolParameters liquidityPoolParameters;
+  if (!liquidity_pool_asset_liquidity_pool_parameters(
+          in, &liquidityPoolParameters)) {
+    return false;
+  }
+
+  char *buf = NULL;
+  size_t buf_size = 0;
+  FILE *fp = open_memstream(&buf, &buf_size);
+  XDR xdr;
+  xdrstdio_create(&xdr, fp, XDR_ENCODE);
+  if (!xdr_stellarxdr_LiquidityPoolParameters(&xdr, &liquidityPoolParameters)) {
+    fclose(fp);
+    return false;
+  }
+  fclose(fp);
+
+  unsigned char liquidityPoolIDHash[32];
+  SHA256_CTX sha256;
+  sha256_init(&sha256);
+  sha256_update(&sha256, buf, buf_size);
+  sha256_final(&sha256, liquidityPoolIDHash);
+
+  for (size_t i = 0; i < 32; i++) {
+    sprintf(liquidityPoolID + (i * 2), "%.2x", liquidityPoolIDHash[i]);
+  }
+  liquidityPoolID[64] = '\0';
   return true;
 }
