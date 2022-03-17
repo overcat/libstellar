@@ -1,6 +1,6 @@
 # c-stellar-base
 
-**This project is under development.**
+**This project is under development, you can find the progress list [here](https://github.com/overcat/c-stellar-base/issues/1).**
 
 `c-stellar-base` is a pure C library for parsing and building Stellar transactions, our goal is to make it run on embedded devices, such as hardware wallets.
 

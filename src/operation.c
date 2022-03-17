@@ -338,6 +338,54 @@ bool allow_trust_from_xdr_object(const stellarxdr_OperationBody *in,
   return true;
 }
 
+// 7. Change Trust
+bool change_trust_to_xdr_object(const struct ChangeTrustOp *in,
+                                stellarxdr_OperationBody *out) {
+  out->type = stellarxdr_CHANGE_TRUST;
+  out->stellarxdr_OperationBody_u.changeTrustOp.limit = in->limit;
+  switch (in->assetType) {
+  case CHANGE_TRUST_ASSET_TYPE_ASSET:
+    if (!asset_to_change_trust_asset_xdr_object(
+            &in->line.asset,
+            &out->stellarxdr_OperationBody_u.changeTrustOp.line)) {
+      return false;
+    }
+    break;
+  case CHANGE_TRUST_ASSET_TYPE_LIQUIDITY_POOL_ASSET:
+    if (!liquidity_pool_asset_to_change_trust_asset_xdr_object(
+            &in->line.liquidityPoolAsset,
+            &out->stellarxdr_OperationBody_u.changeTrustOp.line)) {
+      return false;
+    }
+    break;
+  }
+  return true;
+}
+
+bool change_trust_from_xdr_object(const stellarxdr_OperationBody *in,
+                                  struct ChangeTrustOp *out) {
+  out->limit = in->stellarxdr_OperationBody_u.changeTrustOp.limit;
+  switch (in->stellarxdr_OperationBody_u.changeTrustOp.line.type) {
+  case stellarxdr_ASSET_TYPE_NATIVE:
+  case stellarxdr_ASSET_TYPE_CREDIT_ALPHANUM4:
+  case stellarxdr_ASSET_TYPE_CREDIT_ALPHANUM12:
+    if (!asset_from_change_trust_asset_xdr_object(&in->stellarxdr_OperationBody_u.changeTrustOp.line, &out->line.asset)) {
+      return false;
+    }
+    out->assetType = CHANGE_TRUST_ASSET_TYPE_ASSET;
+    break;
+  case stellarxdr_ASSET_TYPE_POOL_SHARE:
+    if (!liquidity_pool_asset_from_change_trust_asset_xdr_object(&in->stellarxdr_OperationBody_u.changeTrustOp.line, &out->line.liquidityPoolAsset)) {
+      return false;
+    }
+    out->assetType = CHANGE_TRUST_ASSET_TYPE_LIQUIDITY_POOL_ASSET;
+    break;
+  default:
+    return false;
+  }
+  return true;
+}
+
 // 8. Account Merge
 bool account_merge_to_xdr_object(const struct AccountMergeOp *in,
                                  stellarxdr_OperationBody *out) {
@@ -826,6 +874,7 @@ bool operation_to_xdr_object(const struct Operation *in,
   case SET_OPTIONS:
     break;
   case CHANGE_TRUST:
+    change_trust_to_xdr_object(&in->changeTrustOp, &operation_body);
     break;
   case ALLOW_TRUST:
     allow_trust_to_xdr_object(&in->allowTrustOp, &operation_body);
@@ -933,6 +982,8 @@ bool operation_from_xdr_object(const stellarxdr_Operation *in,
   case stellarxdr_SET_OPTIONS:
     break;
   case stellarxdr_CHANGE_TRUST:
+    out->type = CHANGE_TRUST;
+    change_trust_from_xdr_object(&in->body, &out->changeTrustOp);
     break;
   case stellarxdr_ALLOW_TRUST:
     out->type = ALLOW_TRUST;

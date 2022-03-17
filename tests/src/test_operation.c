@@ -754,6 +754,82 @@ void test_liquidity_pool_withdraw() {
   assert_memory_equal(buf1, xdr, buf_size1);
 }
 
+void test_change_trust_asset() {
+  struct Asset asset = {
+      .type = ASSET_TYPE_CREDIT_ALPHANUM4,
+      .code = "USDC",
+      .issuer = "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN"};
+  struct Operation operation = {
+      .source_account_present = false,
+      .type = CHANGE_TRUST,
+      .changeTrustOp = {.assetType = CHANGE_TRUST_ASSET_TYPE_ASSET,
+                        .limit = 10000000,
+                        .line = {.asset = asset}}};
+
+  char *buf0 = NULL;
+  size_t buf_size0 = 0;
+  assert_true(operation_to_xdr(&operation, &buf0, &buf_size0));
+  char xdr[] = {0x0,  0x0,  0x0,  0x0,  0x0,  0x0,  0x0,  0x6,  0x0,  0x0,
+                0x0,  0x1,  0x55, 0x53, 0x44, 0x43, 0x0,  0x0,  0x0,  0x0,
+                0x3b, 0x99, 0x11, 0x38, 0xe,  0xfe, 0x98, 0x8b, 0xa0, 0xa8,
+                0x90, 0xe,  0xb1, 0xcf, 0xe4, 0x4f, 0x36, 0x6f, 0x7d, 0xbe,
+                0x94, 0x6b, 0xed, 0x7,  0x72, 0x40, 0xf7, 0xf6, 0x24, 0xdf,
+                0x15, 0xc5, 0x0,  0x0,  0x0,  0x0,  0x0,  0x98, 0x96, 0x80};
+  assert_int_equal(buf_size0, 60);
+  assert_memory_equal(buf0, xdr, buf_size0);
+
+  stellarxdr_Operation to;
+  assert_true(operation_to_xdr_object(&operation, &to));
+  struct Operation from;
+  assert_true(operation_from_xdr_object(&to, &from));
+  char *buf1 = NULL;
+  size_t buf_size1 = 0;
+  assert_true(operation_to_xdr(&from, &buf1, &buf_size1));
+  assert_int_equal(buf_size1, 60);
+  assert_memory_equal(buf1, xdr, buf_size1);
+}
+
+void test_change_trust_liquidity_pool_asset() {
+  struct Asset assetA = {.type = ASSET_TYPE_NATIVE};
+  struct Asset assetB = {
+      .type = ASSET_TYPE_CREDIT_ALPHANUM4,
+      .code = "USDC",
+      .issuer = "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN"};
+  struct LiquidityPoolAsset liquidityPoolAsset = {
+      .fee = 30, .assetA = assetA, .assetB = assetB};
+  struct Operation operation = {
+      .source_account_present = false,
+      .type = CHANGE_TRUST,
+      .changeTrustOp = {.assetType =
+                            CHANGE_TRUST_ASSET_TYPE_LIQUIDITY_POOL_ASSET,
+                        .limit = 10000000,
+                        .line = {.liquidityPoolAsset = liquidityPoolAsset}}};
+
+  char *buf0 = NULL;
+  size_t buf_size0 = 0;
+  assert_true(operation_to_xdr(&operation, &buf0, &buf_size0));
+  char xdr[] = {0x0,  0x0,  0x0,  0x0,  0x0,  0x0,  0x0,  0x6,  0x0,  0x0,
+                0x0,  0x3,  0x0,  0x0,  0x0,  0x0,  0x0,  0x0,  0x0,  0x0,
+                0x0,  0x0,  0x0,  0x1,  0x55, 0x53, 0x44, 0x43, 0x0,  0x0,
+                0x0,  0x0,  0x3b, 0x99, 0x11, 0x38, 0xe,  0xfe, 0x98, 0x8b,
+                0xa0, 0xa8, 0x90, 0xe,  0xb1, 0xcf, 0xe4, 0x4f, 0x36, 0x6f,
+                0x7d, 0xbe, 0x94, 0x6b, 0xed, 0x7,  0x72, 0x40, 0xf7, 0xf6,
+                0x24, 0xdf, 0x15, 0xc5, 0x0,  0x0,  0x0,  0x1e, 0x0,  0x0,
+                0x0,  0x0,  0x0,  0x98, 0x96, 0x80};
+  assert_int_equal(buf_size0, 76);
+  assert_memory_equal(buf0, xdr, buf_size0);
+
+  stellarxdr_Operation to;
+  assert_true(operation_to_xdr_object(&operation, &to));
+  struct Operation from;
+  assert_true(operation_from_xdr_object(&to, &from));
+  char *buf1 = NULL;
+  size_t buf_size1 = 0;
+  assert_true(operation_to_xdr(&from, &buf1, &buf_size1));
+  assert_int_equal(buf_size1, 76);
+  assert_memory_equal(buf1, xdr, buf_size1);
+}
+
 int main() {
   const struct CMUnitTest tests[] = {
       cmocka_unit_test(test_create_account),
@@ -776,6 +852,8 @@ int main() {
       cmocka_unit_test(test_clawback_claimable_balance),
       cmocka_unit_test(test_liquidity_pool_deposit),
       cmocka_unit_test(test_liquidity_pool_withdraw),
+      cmocka_unit_test(test_change_trust_asset),
+      cmocka_unit_test(test_change_trust_liquidity_pool_asset),
   };
   return cmocka_run_group_tests(tests, NULL, NULL);
 }

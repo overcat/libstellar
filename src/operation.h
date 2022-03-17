@@ -2,6 +2,7 @@
 #define OPERATION_H
 #include "asset.h"
 #include "keypair.h"
+#include "liquidity_pool_asset.h"
 #include "muxed_account.h"
 #include "price.h"
 #include "stellarxdr.h"
@@ -175,6 +176,17 @@ struct LiquidityPoolWithdrawOp {
   int64_t minAmountB; // minimum amount of second asset to withdraw
 };
 
+enum ChangeTrustAssetType { CHANGE_TRUST_ASSET_TYPE_ASSET = 0, CHANGE_TRUST_ASSET_TYPE_LIQUIDITY_POOL_ASSET = 1 };
+struct ChangeTrustOp {
+  enum ChangeTrustAssetType assetType;
+  union {
+    struct Asset asset;
+    struct LiquidityPoolAsset liquidityPoolAsset;
+  } line;
+  // if limit is set to 0, deletes the trust line
+  int64_t limit;
+};
+
 struct Operation {
   bool source_account_present;
   struct MuxedAccount source_account;
@@ -197,6 +209,7 @@ struct Operation {
     struct ClawbackClaimableBalanceOp clawbackClaimableBalanceOp;
     struct LiquidityPoolDepositOp liquidityPoolDepositOp;
     struct LiquidityPoolWithdrawOp liquidityPoolWithdrawOp;
+    struct ChangeTrustOp changeTrustOp;
   };
 };
 
