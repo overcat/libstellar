@@ -699,8 +699,8 @@ bool set_trust_line_flags_to_xdr_object(const struct SetTrustLineFlagsOp *in,
   return true;
 }
 
-bool set_trustline_flags_from_xdr_object(const stellarxdr_OperationBody *in,
-                                         struct SetTrustLineFlagsOp *out) {
+bool set_trust_line_flags_from_xdr_object(const stellarxdr_OperationBody *in,
+                                          struct SetTrustLineFlagsOp *out) {
   if (!encode_ed25519_public_key(
           &in->stellarxdr_OperationBody_u.setTrustLineFlagsOp.trustor
                .stellarxdr_PublicKey_u.ed25519,
@@ -717,6 +717,56 @@ bool set_trustline_flags_from_xdr_object(const stellarxdr_OperationBody *in,
   out->setFlags = in->stellarxdr_OperationBody_u.setTrustLineFlagsOp.setFlags;
   out->clearFlags =
       in->stellarxdr_OperationBody_u.setTrustLineFlagsOp.clearFlags;
+  return true;
+}
+
+// 22. Liquidity Pool Deposit
+bool liquidity_pool_deposit_to_xdr_object(
+    const struct LiquidityPoolDepositOp *in, stellarxdr_OperationBody *out) {
+  out->type = stellarxdr_LIQUIDITY_POOL_DEPOSIT;
+  out->stellarxdr_OperationBody_u.liquidityPoolDepositOp.maxAmountA =
+      in->maxAmountA;
+  out->stellarxdr_OperationBody_u.liquidityPoolDepositOp.maxAmountB =
+      in->maxAmountB;
+  if (!price_to_xdr_object(
+          &in->maxPrice,
+          &out->stellarxdr_OperationBody_u.liquidityPoolDepositOp.maxPrice)) {
+    return false;
+  }
+  if (!price_to_xdr_object(
+          &in->minPrice,
+          &out->stellarxdr_OperationBody_u.liquidityPoolDepositOp.minPrice)) {
+    return false;
+  }
+  for (size_t i = 0, j = 0; j < 32; i += 2, j++)
+    out->stellarxdr_OperationBody_u.liquidityPoolDepositOp.liquidityPoolID[j] =
+        (in->liquidityPoolID[i] % 32 + 9) % 25 * 16 +
+        (in->liquidityPoolID[i + 1] % 32 + 9) % 25;
+  return true;
+}
+
+bool liquidity_pool_deposit_from_xdr_object(
+    const stellarxdr_OperationBody *in, struct LiquidityPoolDepositOp *out) {
+  out->maxAmountA =
+      in->stellarxdr_OperationBody_u.liquidityPoolDepositOp.maxAmountA;
+  out->maxAmountB =
+      in->stellarxdr_OperationBody_u.liquidityPoolDepositOp.maxAmountB;
+  if (!price_from_xdr_object(
+          &in->stellarxdr_OperationBody_u.liquidityPoolDepositOp.maxPrice,
+          &out->maxPrice)) {
+    return false;
+  }
+  if (!price_from_xdr_object(
+          &in->stellarxdr_OperationBody_u.liquidityPoolDepositOp.minPrice,
+          &out->minPrice)) {
+    return false;
+  }
+  for (size_t i = 0; i < 32; i++) {
+    sprintf(out->liquidityPoolID + (i * 2), "%.2x",
+            (unsigned char)in->stellarxdr_OperationBody_u.liquidityPoolDepositOp
+                .liquidityPoolID[i]);
+  }
+  out->liquidityPoolID[64] = '\0';
   return true;
 }
 
@@ -793,6 +843,8 @@ bool operation_to_xdr_object(const struct Operation *in,
                                        &operation_body);
     break;
   case LIQUIDITY_POOL_DEPOSIT:
+    liquidity_pool_deposit_to_xdr_object(&in->liquidityPoolDepositOp,
+                                         &operation_body);
     break;
   case LIQUIDITY_POOL_WITHDRAW:
     break;
@@ -902,9 +954,12 @@ bool operation_from_xdr_object(const stellarxdr_Operation *in,
     break;
   case stellarxdr_SET_TRUST_LINE_FLAGS:
     out->type = SET_TRUST_LINE_FLAGS;
-    set_trustline_flags_from_xdr_object(&in->body, &out->setTrustLineFlagsOp);
+    set_trust_line_flags_from_xdr_object(&in->body, &out->setTrustLineFlagsOp);
     break;
   case stellarxdr_LIQUIDITY_POOL_DEPOSIT:
+    out->type = LIQUIDITY_POOL_DEPOSIT;
+    liquidity_pool_deposit_from_xdr_object(&in->body,
+                                           &out->liquidityPoolDepositOp);
     break;
   case stellarxdr_LIQUIDITY_POOL_WITHDRAW:
     break;

@@ -682,6 +682,42 @@ void test_clawback_claimable_balance(void **state) {
   assert_memory_equal(buf1, xdr, buf_size1);
 }
 
+void test_liquidity_pool_deposit() {
+  struct Operation operation = {
+      .source_account_present = false,
+      .type = LIQUIDITY_POOL_DEPOSIT,
+      .liquidityPoolDepositOp = {.liquidityPoolID =
+                                     "3441bd8b84f0bab631fe3fb01a0b31b588cb04cdf"
+                                     "55cffbd30b79e4286fd8689",
+                                 .maxAmountA = 50000000,
+                                 .maxAmountB = 10000000,
+                                 .minPrice = {.n = 1, .d = 2},
+                                 .maxPrice = {.n = 2, .d = 1}}};
+
+  char *buf0 = NULL;
+  size_t buf_size0 = 0;
+  assert_true(operation_to_xdr(&operation, &buf0, &buf_size0));
+  char xdr[] = {
+      0x0,  0x0,  0x0,  0x0,  0x0,  0x0,  0x0,  0x16, 0x34, 0x41, 0xbd, 0x8b,
+      0x84, 0xf0, 0xba, 0xb6, 0x31, 0xfe, 0x3f, 0xb0, 0x1a, 0xb,  0x31, 0xb5,
+      0x88, 0xcb, 0x4,  0xcd, 0xf5, 0x5c, 0xff, 0xbd, 0x30, 0xb7, 0x9e, 0x42,
+      0x86, 0xfd, 0x86, 0x89, 0x0,  0x0,  0x0,  0x0,  0x2,  0xfa, 0xf0, 0x80,
+      0x0,  0x0,  0x0,  0x0,  0x0,  0x98, 0x96, 0x80, 0x0,  0x0,  0x0,  0x1,
+      0x0,  0x0,  0x0,  0x2,  0x0,  0x0,  0x0,  0x2,  0x0,  0x0,  0x0,  0x1};
+  assert_int_equal(buf_size0, 72);
+  assert_memory_equal(buf0, xdr, buf_size0);
+
+  stellarxdr_Operation to;
+  assert_true(operation_to_xdr_object(&operation, &to));
+  struct Operation from;
+  assert_true(operation_from_xdr_object(&to, &from));
+  char *buf1 = NULL;
+  size_t buf_size1 = 0;
+  assert_true(operation_to_xdr(&from, &buf1, &buf_size1));
+  assert_int_equal(buf_size1, 72);
+  assert_memory_equal(buf1, xdr, buf_size1);
+}
+
 int main() {
   const struct CMUnitTest tests[] = {
       cmocka_unit_test(test_create_account),
@@ -702,6 +738,7 @@ int main() {
       cmocka_unit_test(test_claim_claimable_balance),
       cmocka_unit_test(test_set_trust_line_flags),
       cmocka_unit_test(test_clawback_claimable_balance),
+      cmocka_unit_test(test_liquidity_pool_deposit),
   };
   return cmocka_run_group_tests(tests, NULL, NULL);
 }

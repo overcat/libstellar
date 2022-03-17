@@ -160,6 +160,14 @@ struct ClawbackClaimableBalanceOp {
   char balanceID[73];
 };
 
+struct LiquidityPoolDepositOp {
+  char liquidityPoolID[65];
+  int64_t maxAmountA;    // maximum amount of first asset to deposit
+  int64_t maxAmountB;    // maximum amount of second asset to deposit
+  struct Price minPrice; // minimum depositA/depositB
+  struct Price maxPrice; // maximum depositA/depositB
+};
+
 struct Operation {
   bool source_account_present;
   struct MuxedAccount source_account;
@@ -180,6 +188,7 @@ struct Operation {
     struct ClaimClaimableBalanceOp claimClaimableBalanceOp;
     struct SetTrustLineFlagsOp setTrustLineFlagsOp;
     struct ClawbackClaimableBalanceOp clawbackClaimableBalanceOp;
+    struct LiquidityPoolDepositOp liquidityPoolDepositOp;
   };
 };
 
