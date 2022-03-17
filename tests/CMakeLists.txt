@@ -104,3 +104,7 @@ add_test(test_asset test_asset)
 add_executable(test_liquidity_pool_asset src/test_liquidity_pool_asset.c)
 target_link_libraries(test_liquidity_pool_asset PRIVATE cmocka stellar_base)
 add_test(test_liquidity_pool_asset test_liquidity_pool_asset)
+
+add_executable(test_fee_bump_transaction src/test_fee_bump_transaction.c)
+target_link_libraries(test_fee_bump_transaction PRIVATE cmocka stellar_base)
+add_test(test_fee_bump_transaction test_fee_bump_transaction)
