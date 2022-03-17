@@ -770,6 +770,38 @@ bool liquidity_pool_deposit_from_xdr_object(
   return true;
 }
 
+// 23. Liquidity Pool Withdraw
+bool liquidity_pool_withdraw_to_xdr_object(
+    const struct LiquidityPoolWithdrawOp *in, stellarxdr_OperationBody *out) {
+  out->type = stellarxdr_LIQUIDITY_POOL_WITHDRAW;
+  out->stellarxdr_OperationBody_u.liquidityPoolWithdrawOp.amount = in->amount;
+  out->stellarxdr_OperationBody_u.liquidityPoolWithdrawOp.minAmountA =
+      in->minAmountA;
+  out->stellarxdr_OperationBody_u.liquidityPoolWithdrawOp.minAmountB =
+      in->minAmountB;
+  for (size_t i = 0, j = 0; j < 32; i += 2, j++)
+    out->stellarxdr_OperationBody_u.liquidityPoolWithdrawOp.liquidityPoolID[j] =
+        (in->liquidityPoolID[i] % 32 + 9) % 25 * 16 +
+        (in->liquidityPoolID[i + 1] % 32 + 9) % 25;
+  return true;
+}
+
+bool liquidity_pool_withdraw_from_xdr_object(
+    const stellarxdr_OperationBody *in, struct LiquidityPoolWithdrawOp *out) {
+  out->amount = in->stellarxdr_OperationBody_u.liquidityPoolWithdrawOp.amount;
+  out->minAmountA =
+      in->stellarxdr_OperationBody_u.liquidityPoolWithdrawOp.minAmountA;
+  out->minAmountB =
+      in->stellarxdr_OperationBody_u.liquidityPoolWithdrawOp.minAmountB;
+  for (size_t i = 0; i < 32; i++) {
+    sprintf(out->liquidityPoolID + (i * 2), "%.2x",
+            (unsigned char)in->stellarxdr_OperationBody_u
+                .liquidityPoolWithdrawOp.liquidityPoolID[i]);
+  }
+  out->liquidityPoolID[64] = '\0';
+  return true;
+}
+
 bool operation_to_xdr_object(const struct Operation *in,
                              stellarxdr_Operation *out) {
   stellarxdr_OperationBody operation_body;
@@ -847,6 +879,8 @@ bool operation_to_xdr_object(const struct Operation *in,
                                          &operation_body);
     break;
   case LIQUIDITY_POOL_WITHDRAW:
+    liquidity_pool_withdraw_to_xdr_object(&in->liquidityPoolWithdrawOp,
+                                          &operation_body);
     break;
   default:
     return false;
@@ -962,6 +996,9 @@ bool operation_from_xdr_object(const stellarxdr_Operation *in,
                                            &out->liquidityPoolDepositOp);
     break;
   case stellarxdr_LIQUIDITY_POOL_WITHDRAW:
+    out->type = LIQUIDITY_POOL_WITHDRAW;
+    liquidity_pool_withdraw_from_xdr_object(&in->body,
+                                            &out->liquidityPoolWithdrawOp);
     break;
   default:
     return false;

@@ -31,8 +31,8 @@ enum OperationType {
   CLAWBACK = 19,
   CLAWBACK_CLAIMABLE_BALANCE = 20, // done
   SET_TRUST_LINE_FLAGS = 21,       // done
-  LIQUIDITY_POOL_DEPOSIT = 22,
-  LIQUIDITY_POOL_WITHDRAW = 23,
+  LIQUIDITY_POOL_DEPOSIT = 22,     // done
+  LIQUIDITY_POOL_WITHDRAW = 23,    // done
 };
 
 enum TrustLineEntryFlag {
@@ -168,6 +168,13 @@ struct LiquidityPoolDepositOp {
   struct Price maxPrice; // maximum depositA/depositB
 };
 
+struct LiquidityPoolWithdrawOp {
+  char liquidityPoolID[65];
+  int64_t amount;     // amount of pool shares to withdraw
+  int64_t minAmountA; // minimum amount of first asset to withdraw
+  int64_t minAmountB; // minimum amount of second asset to withdraw
+};
+
 struct Operation {
   bool source_account_present;
   struct MuxedAccount source_account;
@@ -189,6 +196,7 @@ struct Operation {
     struct SetTrustLineFlagsOp setTrustLineFlagsOp;
     struct ClawbackClaimableBalanceOp clawbackClaimableBalanceOp;
     struct LiquidityPoolDepositOp liquidityPoolDepositOp;
+    struct LiquidityPoolWithdrawOp liquidityPoolWithdrawOp;
   };
 };
 
