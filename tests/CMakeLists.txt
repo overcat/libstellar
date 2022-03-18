@@ -112,3 +112,7 @@ add_test(test_fee_bump_transaction test_fee_bump_transaction)
 add_executable(test_fee_bump_transaction_envelope src/test_fee_bump_transaction_envelope.c)
 target_link_libraries(test_fee_bump_transaction_envelope PRIVATE cmocka stellar_base)
 add_test(test_fee_bump_transaction_envelope test_fee_bump_transaction_envelope)
+
+add_executable(test_signer_key src/test_signer_key.c)
+target_link_libraries(test_signer_key PRIVATE cmocka stellar_base)
+add_test(test_signer_key test_signer_key)
