@@ -5,6 +5,7 @@
 #include "liquidity_pool_asset.h"
 #include "muxed_account.h"
 #include "price.h"
+#include "signer.h"
 #include "stellarxdr.h"
 #include "strkey.h"
 #include <stdbool.h>
@@ -16,7 +17,7 @@ enum OperationType {
   MANAGE_SELL_OFFER = 3,           // done
   CREATE_PASSIVE_SELL_OFFER = 4,   // done
   SET_OPTIONS = 5,
-  CHANGE_TRUST = 6,
+  CHANGE_TRUST = 6,              // done
   ALLOW_TRUST = 7,               // done
   ACCOUNT_MERGE = 8,             // done
   INFLATION = 9,                 // done
@@ -176,7 +177,10 @@ struct LiquidityPoolWithdrawOp {
   int64_t minAmountB; // minimum amount of second asset to withdraw
 };
 
-enum ChangeTrustAssetType { CHANGE_TRUST_ASSET_TYPE_ASSET = 0, CHANGE_TRUST_ASSET_TYPE_LIQUIDITY_POOL_ASSET = 1 };
+enum ChangeTrustAssetType {
+  CHANGE_TRUST_ASSET_TYPE_ASSET = 0,
+  CHANGE_TRUST_ASSET_TYPE_LIQUIDITY_POOL_ASSET = 1
+};
 struct ChangeTrustOp {
   enum ChangeTrustAssetType assetType;
   union {
@@ -185,6 +189,38 @@ struct ChangeTrustOp {
   } line;
   // if limit is set to 0, deletes the trust line
   int64_t limit;
+};
+
+struct SetOptionsOp {
+  bool inflationDestPresent;
+  char inflationDest[57]; // sets the inflation destination
+
+  bool clearFlagsPresent;
+  uint clearFlags; // which flags to clear
+
+  bool setFlagsPresent;
+  uint setFlags; // which flags to set
+
+  // account threshold manipulation
+  bool masterWeightPresent;
+  uint masterWeight; // weight of the master account
+
+  bool lowThresholdPresent;
+  uint lowThreshold;
+
+  bool medThresholdPresent;
+  uint medThreshold;
+
+  bool highThresholdPresent;
+  uint highThreshold;
+
+  bool homeDomainPresent;
+  char homeDomain[33]; // sets the home domain
+
+  // Add, update or remove a signer for the account
+  // signer is deleted if the weight is 0
+  bool signerPresent;
+  struct Signer signer;
 };
 
 struct Operation {
@@ -210,6 +246,7 @@ struct Operation {
     struct LiquidityPoolDepositOp liquidityPoolDepositOp;
     struct LiquidityPoolWithdrawOp liquidityPoolWithdrawOp;
     struct ChangeTrustOp changeTrustOp;
+    struct SetOptionsOp setOptionsOp;
   };
 };
 

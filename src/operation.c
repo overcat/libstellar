@@ -270,7 +270,173 @@ bool create_passive_sell_offer_from_xdr_object(
   return true;
 }
 
-// 7. Allow Trust
+// 5. Set Options
+bool set_options_to_xdr_object(const struct SetOptionsOp *in,
+                               stellarxdr_OperationBody *out) {
+  out->type = stellarxdr_SET_OPTIONS;
+  if (in->inflationDestPresent) {
+    struct Keypair keypair;
+    keypair_from_address(&keypair, in->inflationDest);
+    out->stellarxdr_OperationBody_u.setOptionsOp.inflationDest =
+        malloc(sizeof(stellarxdr_PublicKey));
+    stellarxdr_PublicKey publicKey = {.type =
+                                          stellarxdr_PUBLIC_KEY_TYPE_ED25519};
+    memcpy(publicKey.stellarxdr_PublicKey_u.ed25519, keypair.public_key, 32);
+    memcpy(out->stellarxdr_OperationBody_u.setOptionsOp.inflationDest,
+           &publicKey, sizeof(stellarxdr_PublicKey));
+  } else {
+    out->stellarxdr_OperationBody_u.setOptionsOp.inflationDest = NULL;
+  }
+  if (in->clearFlagsPresent) {
+    out->stellarxdr_OperationBody_u.setOptionsOp.clearFlags =
+        malloc(sizeof(stellarxdr_uint32));
+    *out->stellarxdr_OperationBody_u.setOptionsOp.clearFlags = in->clearFlags;
+  } else {
+    out->stellarxdr_OperationBody_u.setOptionsOp.clearFlags = NULL;
+  }
+
+  if (in->setFlagsPresent) {
+    out->stellarxdr_OperationBody_u.setOptionsOp.setFlags =
+        malloc(sizeof(stellarxdr_uint32));
+    *out->stellarxdr_OperationBody_u.setOptionsOp.setFlags = in->setFlags;
+  } else {
+    out->stellarxdr_OperationBody_u.setOptionsOp.setFlags = NULL;
+  }
+
+  if (in->masterWeightPresent) {
+    out->stellarxdr_OperationBody_u.setOptionsOp.masterWeight =
+        malloc(sizeof(stellarxdr_uint32));
+    *out->stellarxdr_OperationBody_u.setOptionsOp.masterWeight =
+        in->masterWeight;
+  } else {
+    out->stellarxdr_OperationBody_u.setOptionsOp.masterWeight = NULL;
+  }
+
+  if (in->lowThresholdPresent) {
+    out->stellarxdr_OperationBody_u.setOptionsOp.lowThreshold =
+        malloc(sizeof(stellarxdr_uint32));
+    *out->stellarxdr_OperationBody_u.setOptionsOp.lowThreshold =
+        in->lowThreshold;
+  } else {
+    out->stellarxdr_OperationBody_u.setOptionsOp.lowThreshold = NULL;
+  }
+
+  if (in->medThresholdPresent) {
+    out->stellarxdr_OperationBody_u.setOptionsOp.medThreshold =
+        malloc(sizeof(stellarxdr_uint32));
+    *out->stellarxdr_OperationBody_u.setOptionsOp.medThreshold =
+        in->medThreshold;
+  } else {
+    out->stellarxdr_OperationBody_u.setOptionsOp.medThreshold = NULL;
+  }
+  if (in->highThresholdPresent) {
+    out->stellarxdr_OperationBody_u.setOptionsOp.highThreshold =
+        malloc(sizeof(stellarxdr_uint32));
+    *out->stellarxdr_OperationBody_u.setOptionsOp.highThreshold =
+        in->highThreshold;
+  } else {
+    out->stellarxdr_OperationBody_u.setOptionsOp.highThreshold = NULL;
+  }
+  if (in->homeDomainPresent) {
+    out->stellarxdr_OperationBody_u.setOptionsOp.homeDomain =
+        malloc(sizeof(stellarxdr_string32));
+    *out->stellarxdr_OperationBody_u.setOptionsOp.homeDomain =
+        malloc(strlen(in->homeDomain) + 1);
+    strcpy(*out->stellarxdr_OperationBody_u.setOptionsOp.homeDomain,
+           in->homeDomain);
+  } else {
+    out->stellarxdr_OperationBody_u.setOptionsOp.homeDomain = NULL;
+  }
+  if (in->signerPresent) {
+    out->stellarxdr_OperationBody_u.setOptionsOp.signer =
+        malloc(sizeof(stellarxdr_Signer));
+    if (signer_to_xdr_object(
+            &in->signer, out->stellarxdr_OperationBody_u.setOptionsOp.signer)) {
+      return false;
+    }
+  } else {
+    out->stellarxdr_OperationBody_u.setOptionsOp.signer = NULL;
+  }
+  return true;
+}
+
+bool set_options_from_xdr_object(const stellarxdr_OperationBody *in,
+                                 struct SetOptionsOp *out) {
+  if (in->stellarxdr_OperationBody_u.setOptionsOp.inflationDest) {
+    out->inflationDestPresent = true;
+    if (!encode_ed25519_public_key(
+            &in->stellarxdr_OperationBody_u.setOptionsOp.inflationDest
+                 ->stellarxdr_PublicKey_u.ed25519,
+            out->inflationDest)) {
+      return false;
+    }
+  } else {
+    out->inflationDestPresent = false;
+  }
+  if (in->stellarxdr_OperationBody_u.setOptionsOp.clearFlags) {
+    out->clearFlagsPresent = true;
+    out->clearFlags = *in->stellarxdr_OperationBody_u.setOptionsOp.clearFlags;
+  } else {
+    out->clearFlagsPresent = false;
+  }
+  if (in->stellarxdr_OperationBody_u.setOptionsOp.setFlags) {
+    out->setFlagsPresent = true;
+    out->setFlags = *in->stellarxdr_OperationBody_u.setOptionsOp.setFlags;
+  } else {
+    out->setFlagsPresent = false;
+  }
+  if (in->stellarxdr_OperationBody_u.setOptionsOp.masterWeight) {
+    out->masterWeightPresent = true;
+    out->masterWeight =
+        *in->stellarxdr_OperationBody_u.setOptionsOp.masterWeight;
+  } else {
+    out->masterWeightPresent = false;
+  }
+  if (in->stellarxdr_OperationBody_u.setOptionsOp.lowThreshold) {
+    out->lowThresholdPresent = true;
+    out->lowThreshold =
+        *in->stellarxdr_OperationBody_u.setOptionsOp.lowThreshold;
+  } else {
+    out->lowThresholdPresent = false;
+  }
+  if (in->stellarxdr_OperationBody_u.setOptionsOp.medThreshold) {
+    out->medThresholdPresent = true;
+    out->medThreshold =
+        *in->stellarxdr_OperationBody_u.setOptionsOp.medThreshold;
+  } else {
+    out->medThresholdPresent = false;
+  }
+  if (in->stellarxdr_OperationBody_u.setOptionsOp.highThreshold) {
+    out->highThresholdPresent = true;
+    out->highThreshold =
+        *in->stellarxdr_OperationBody_u.setOptionsOp.highThreshold;
+  } else {
+    out->highThresholdPresent = false;
+  }
+  if (in->stellarxdr_OperationBody_u.setOptionsOp.homeDomain) {
+    if (strlen(*in->stellarxdr_OperationBody_u.setOptionsOp.homeDomain)) {
+      out->homeDomainPresent = true;
+      strcpy(out->homeDomain,
+             *in->stellarxdr_OperationBody_u.setOptionsOp.homeDomain);
+    } else {
+      out->homeDomainPresent = false;
+    }
+  } else {
+    out->homeDomainPresent = false;
+  }
+  if (in->stellarxdr_OperationBody_u.setOptionsOp.signer) {
+    out->signerPresent = true;
+    if (!signer_from_xdr_object(
+            in->stellarxdr_OperationBody_u.setOptionsOp.signer, &out->signer)) {
+      return false;
+    }
+  } else {
+    out->signerPresent = false;
+  }
+  return true;
+}
+
+// 6. Allow Trust
 bool allow_trust_to_xdr_object(const struct AllowTrustOp *in,
                                stellarxdr_OperationBody *out) {
   out->type = stellarxdr_ALLOW_TRUST;
@@ -369,13 +535,17 @@ bool change_trust_from_xdr_object(const stellarxdr_OperationBody *in,
   case stellarxdr_ASSET_TYPE_NATIVE:
   case stellarxdr_ASSET_TYPE_CREDIT_ALPHANUM4:
   case stellarxdr_ASSET_TYPE_CREDIT_ALPHANUM12:
-    if (!asset_from_change_trust_asset_xdr_object(&in->stellarxdr_OperationBody_u.changeTrustOp.line, &out->line.asset)) {
+    if (!asset_from_change_trust_asset_xdr_object(
+            &in->stellarxdr_OperationBody_u.changeTrustOp.line,
+            &out->line.asset)) {
       return false;
     }
     out->assetType = CHANGE_TRUST_ASSET_TYPE_ASSET;
     break;
   case stellarxdr_ASSET_TYPE_POOL_SHARE:
-    if (!liquidity_pool_asset_from_change_trust_asset_xdr_object(&in->stellarxdr_OperationBody_u.changeTrustOp.line, &out->line.liquidityPoolAsset)) {
+    if (!liquidity_pool_asset_from_change_trust_asset_xdr_object(
+            &in->stellarxdr_OperationBody_u.changeTrustOp.line,
+            &out->line.liquidityPoolAsset)) {
       return false;
     }
     out->assetType = CHANGE_TRUST_ASSET_TYPE_LIQUIDITY_POOL_ASSET;
@@ -872,6 +1042,7 @@ bool operation_to_xdr_object(const struct Operation *in,
                                             &operation_body);
     break;
   case SET_OPTIONS:
+    set_options_to_xdr_object(&in->setOptionsOp, &operation_body);
     break;
   case CHANGE_TRUST:
     change_trust_to_xdr_object(&in->changeTrustOp, &operation_body);
@@ -980,6 +1151,8 @@ bool operation_from_xdr_object(const stellarxdr_Operation *in,
                                               &out->createPassiveSellOfferOp);
     break;
   case stellarxdr_SET_OPTIONS:
+    out->type = SET_OPTIONS;
+    set_options_from_xdr_object(&in->body, &out->setOptionsOp);
     break;
   case stellarxdr_CHANGE_TRUST:
     out->type = CHANGE_TRUST;
