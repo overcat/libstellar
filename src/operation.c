@@ -350,7 +350,7 @@ bool set_options_to_xdr_object(const struct SetOptionsOp *in,
   if (in->signerPresent) {
     out->stellarxdr_OperationBody_u.setOptionsOp.signer =
         malloc(sizeof(stellarxdr_Signer));
-    if (signer_to_xdr_object(
+    if (!signer_to_xdr_object(
             &in->signer, out->stellarxdr_OperationBody_u.setOptionsOp.signer)) {
       return false;
     }
@@ -1023,86 +1023,95 @@ bool liquidity_pool_withdraw_from_xdr_object(
 bool operation_to_xdr_object(const struct Operation *in,
                              stellarxdr_Operation *out) {
   stellarxdr_OperationBody operation_body;
+  bool opSuccess;
   switch (in->type) {
   case CREATE_ACCOUNT:
-    create_account_to_xdr_object(&in->createAccountOp, &operation_body);
+    opSuccess =
+        create_account_to_xdr_object(&in->createAccountOp, &operation_body);
     break;
   case PAYMENT:
-    payment_to_xdr_object(&in->paymentOp, &operation_body);
+    opSuccess = payment_to_xdr_object(&in->paymentOp, &operation_body);
     break;
   case PATH_PAYMENT_STRICT_RECEIVE:
-    path_payment_strict_receive_to_xdr_object(&in->pathPaymentStrictReceiveOp,
-                                              &operation_body);
+    opSuccess = path_payment_strict_receive_to_xdr_object(
+        &in->pathPaymentStrictReceiveOp, &operation_body);
     break;
   case MANAGE_SELL_OFFER:
-    manage_sell_offer_to_xdr_object(&in->manageSellOfferOp, &operation_body);
+    opSuccess = manage_sell_offer_to_xdr_object(&in->manageSellOfferOp,
+                                                &operation_body);
     break;
   case CREATE_PASSIVE_SELL_OFFER:
-    create_passive_sell_offer_to_xdr_object(&in->createPassiveSellOfferOp,
-                                            &operation_body);
+    opSuccess = create_passive_sell_offer_to_xdr_object(
+        &in->createPassiveSellOfferOp, &operation_body);
     break;
   case SET_OPTIONS:
-    set_options_to_xdr_object(&in->setOptionsOp, &operation_body);
+    opSuccess = set_options_to_xdr_object(&in->setOptionsOp, &operation_body);
     break;
   case CHANGE_TRUST:
-    change_trust_to_xdr_object(&in->changeTrustOp, &operation_body);
+    opSuccess = change_trust_to_xdr_object(&in->changeTrustOp, &operation_body);
     break;
   case ALLOW_TRUST:
-    allow_trust_to_xdr_object(&in->allowTrustOp, &operation_body);
+    opSuccess = allow_trust_to_xdr_object(&in->allowTrustOp, &operation_body);
     break;
   case ACCOUNT_MERGE:
-    account_merge_to_xdr_object(&in->accountMergeOp, &operation_body);
+    opSuccess =
+        account_merge_to_xdr_object(&in->accountMergeOp, &operation_body);
     break;
   case INFLATION:
-    inflation_to_xdr_object(&operation_body);
+    opSuccess = inflation_to_xdr_object(&operation_body);
     break;
   case MANAGE_DATA:
-    manage_data_to_xdr_object(&in->manageDataOp, &operation_body);
+    opSuccess = manage_data_to_xdr_object(&in->manageDataOp, &operation_body);
     break;
   case BUMP_SEQUENCE:
-    bump_sequence_to_xdr_object(&in->bump_sequence_op, &operation_body);
+    opSuccess =
+        bump_sequence_to_xdr_object(&in->bump_sequence_op, &operation_body);
     break;
   case MANAGE_BUY_OFFER:
-    manage_buy_offer_to_xdr_object(&in->manageBuyOfferOp, &operation_body);
+    opSuccess =
+        manage_buy_offer_to_xdr_object(&in->manageBuyOfferOp, &operation_body);
     break;
   case PATH_PAYMENT_STRICT_SEND:
-    path_payment_strict_send_to_xdr_object(&in->pathPaymentStrictSendOp,
-                                           &operation_body);
+    opSuccess = path_payment_strict_send_to_xdr_object(
+        &in->pathPaymentStrictSendOp, &operation_body);
     break;
   case CREATE_CLAIMABLE_BALANCE:
     break;
   case CLAIM_CLAIMABLE_BALANCE:
-    claim_claimable_balance_to_xdr_object(&in->claimClaimableBalanceOp,
-                                          &operation_body);
+    opSuccess = claim_claimable_balance_to_xdr_object(
+        &in->claimClaimableBalanceOp, &operation_body);
     break;
   case BEGIN_SPONSORING_FUTURE_RESERVES:
-    begin_sponsoring_future_reserves_to_xdr_object(
+    opSuccess = begin_sponsoring_future_reserves_to_xdr_object(
         &in->beginSponsoringFutureReservesOp, &operation_body);
     break;
   case END_SPONSORING_FUTURE_RESERVES:
-    end_sponsoring_future_reserves_to_xdr_object(&operation_body);
+    opSuccess = end_sponsoring_future_reserves_to_xdr_object(&operation_body);
     break;
   case REVOKE_SPONSORSHIP:
     break;
   case CLAWBACK:
     break;
   case CLAWBACK_CLAIMABLE_BALANCE:
-    clawback_claimable_balance_to_xdr_object(&in->clawbackClaimableBalanceOp,
-                                             &operation_body);
+    opSuccess = clawback_claimable_balance_to_xdr_object(
+        &in->clawbackClaimableBalanceOp, &operation_body);
     break;
   case SET_TRUST_LINE_FLAGS:
-    set_trust_line_flags_to_xdr_object(&in->setTrustLineFlagsOp,
-                                       &operation_body);
+    opSuccess = set_trust_line_flags_to_xdr_object(&in->setTrustLineFlagsOp,
+                                                   &operation_body);
     break;
   case LIQUIDITY_POOL_DEPOSIT:
-    liquidity_pool_deposit_to_xdr_object(&in->liquidityPoolDepositOp,
-                                         &operation_body);
+    opSuccess = liquidity_pool_deposit_to_xdr_object(
+        &in->liquidityPoolDepositOp, &operation_body);
     break;
   case LIQUIDITY_POOL_WITHDRAW:
-    liquidity_pool_withdraw_to_xdr_object(&in->liquidityPoolWithdrawOp,
-                                          &operation_body);
+    opSuccess = liquidity_pool_withdraw_to_xdr_object(
+        &in->liquidityPoolWithdrawOp, &operation_body);
     break;
   default:
+    return false;
+  }
+  if (!opSuccess) {
     return false;
   }
   if (in->source_account_present) {
@@ -1118,6 +1127,7 @@ bool operation_to_xdr_object(const struct Operation *in,
 
 bool operation_from_xdr_object(const stellarxdr_Operation *in,
                                struct Operation *out) {
+  bool opSuccess;
   if (in->sourceAccount == NULL) {
     out->source_account_present = false;
   } else {
@@ -1130,76 +1140,82 @@ bool operation_from_xdr_object(const stellarxdr_Operation *in,
   switch (in->body.type) {
   case stellarxdr_CREATE_ACCOUNT:
     out->type = CREATE_ACCOUNT;
-    create_account_from_xdr_object(&in->body, &out->createAccountOp);
+    opSuccess =
+        create_account_from_xdr_object(&in->body, &out->createAccountOp);
     break;
   case stellarxdr_PAYMENT:
     out->type = PAYMENT;
-    payment_from_xdr_object(&in->body, &out->paymentOp);
+    opSuccess = payment_from_xdr_object(&in->body, &out->paymentOp);
     break;
   case stellarxdr_PATH_PAYMENT_STRICT_RECEIVE:
     out->type = PATH_PAYMENT_STRICT_RECEIVE;
-    path_payment_strict_receive_from_xdr_object(
+    opSuccess = path_payment_strict_receive_from_xdr_object(
         &in->body, &out->pathPaymentStrictReceiveOp);
     break;
   case stellarxdr_MANAGE_SELL_OFFER:
     out->type = MANAGE_SELL_OFFER;
-    manage_sell_offer_from_xdr_object(&in->body, &out->manageSellOfferOp);
+    opSuccess =
+        manage_sell_offer_from_xdr_object(&in->body, &out->manageSellOfferOp);
     break;
   case stellarxdr_CREATE_PASSIVE_SELL_OFFER:
     out->type = CREATE_PASSIVE_SELL_OFFER;
-    create_passive_sell_offer_from_xdr_object(&in->body,
-                                              &out->createPassiveSellOfferOp);
+    opSuccess = create_passive_sell_offer_from_xdr_object(
+        &in->body, &out->createPassiveSellOfferOp);
     break;
   case stellarxdr_SET_OPTIONS:
     out->type = SET_OPTIONS;
-    set_options_from_xdr_object(&in->body, &out->setOptionsOp);
+    opSuccess = set_options_from_xdr_object(&in->body, &out->setOptionsOp);
     break;
   case stellarxdr_CHANGE_TRUST:
     out->type = CHANGE_TRUST;
-    change_trust_from_xdr_object(&in->body, &out->changeTrustOp);
+    opSuccess = change_trust_from_xdr_object(&in->body, &out->changeTrustOp);
     break;
   case stellarxdr_ALLOW_TRUST:
     out->type = ALLOW_TRUST;
-    allow_trust_from_xdr_object(&in->body, &out->allowTrustOp);
+    opSuccess = allow_trust_from_xdr_object(&in->body, &out->allowTrustOp);
     break;
   case stellarxdr_ACCOUNT_MERGE:
     out->type = ACCOUNT_MERGE;
-    account_merge_from_xdr_object(&in->body, &out->accountMergeOp);
+    opSuccess = account_merge_from_xdr_object(&in->body, &out->accountMergeOp);
     break;
   case stellarxdr_INFLATION:
+    opSuccess = true;
     out->type = INFLATION;
     break;
   case stellarxdr_MANAGE_DATA:
     out->type = MANAGE_DATA;
-    manage_data_from_xdr_object(&in->body, &out->manageDataOp);
+    opSuccess = manage_data_from_xdr_object(&in->body, &out->manageDataOp);
     break;
   case stellarxdr_BUMP_SEQUENCE:
     out->type = BUMP_SEQUENCE;
-    bump_sequence_from_xdr_object(&in->body, &out->bump_sequence_op);
+    opSuccess =
+        bump_sequence_from_xdr_object(&in->body, &out->bump_sequence_op);
     break;
   case stellarxdr_MANAGE_BUY_OFFER:
     out->type = MANAGE_BUY_OFFER;
-    manage_buy_offer_from_xdr_object(&in->body, &out->manageBuyOfferOp);
+    opSuccess =
+        manage_buy_offer_from_xdr_object(&in->body, &out->manageBuyOfferOp);
     break;
   case stellarxdr_PATH_PAYMENT_STRICT_SEND:
     out->type = PATH_PAYMENT_STRICT_SEND;
-    path_payment_strict_send_from_xdr_object(&in->body,
-                                             &out->pathPaymentStrictSendOp);
+    opSuccess = path_payment_strict_send_from_xdr_object(
+        &in->body, &out->pathPaymentStrictSendOp);
     break;
   case stellarxdr_CREATE_CLAIMABLE_BALANCE:
     break;
   case stellarxdr_CLAIM_CLAIMABLE_BALANCE:
     out->type = CLAIM_CLAIMABLE_BALANCE;
-    claim_claimable_balance_from_xdr_object(&in->body,
-                                            &out->claimClaimableBalanceOp);
+    opSuccess = claim_claimable_balance_from_xdr_object(
+        &in->body, &out->claimClaimableBalanceOp);
     break;
   case stellarxdr_BEGIN_SPONSORING_FUTURE_RESERVES:
     out->type = BEGIN_SPONSORING_FUTURE_RESERVES;
-    begin_sponsoring_future_reserves_from_xdr_object(
+    opSuccess = begin_sponsoring_future_reserves_from_xdr_object(
         &in->body, &out->beginSponsoringFutureReservesOp);
     break;
   case stellarxdr_END_SPONSORING_FUTURE_RESERVES:
     out->type = END_SPONSORING_FUTURE_RESERVES;
+    opSuccess = true;
     break;
   case stellarxdr_REVOKE_SPONSORSHIP:
     break;
@@ -1207,24 +1223,28 @@ bool operation_from_xdr_object(const stellarxdr_Operation *in,
     break;
   case stellarxdr_CLAWBACK_CLAIMABLE_BALANCE:
     out->type = CLAWBACK_CLAIMABLE_BALANCE;
-    clawback_claimable_balance_from_xdr_object(
+    opSuccess = clawback_claimable_balance_from_xdr_object(
         &in->body, &out->clawbackClaimableBalanceOp);
     break;
   case stellarxdr_SET_TRUST_LINE_FLAGS:
     out->type = SET_TRUST_LINE_FLAGS;
-    set_trust_line_flags_from_xdr_object(&in->body, &out->setTrustLineFlagsOp);
+    opSuccess = set_trust_line_flags_from_xdr_object(&in->body,
+                                                     &out->setTrustLineFlagsOp);
     break;
   case stellarxdr_LIQUIDITY_POOL_DEPOSIT:
     out->type = LIQUIDITY_POOL_DEPOSIT;
-    liquidity_pool_deposit_from_xdr_object(&in->body,
-                                           &out->liquidityPoolDepositOp);
+    opSuccess = liquidity_pool_deposit_from_xdr_object(
+        &in->body, &out->liquidityPoolDepositOp);
     break;
   case stellarxdr_LIQUIDITY_POOL_WITHDRAW:
     out->type = LIQUIDITY_POOL_WITHDRAW;
-    liquidity_pool_withdraw_from_xdr_object(&in->body,
-                                            &out->liquidityPoolWithdrawOp);
+    opSuccess = liquidity_pool_withdraw_from_xdr_object(
+        &in->body, &out->liquidityPoolWithdrawOp);
     break;
   default:
+    return false;
+  }
+  if (!opSuccess) {
     return false;
   }
   return true;
