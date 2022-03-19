@@ -223,6 +223,12 @@ struct SetOptionsOp {
   struct Signer signer;
 };
 
+struct ClawbackOp {
+  struct Asset asset;
+  struct MuxedAccount from;
+  int64_t amount;
+};
+
 struct Operation {
   bool source_account_present;
   struct MuxedAccount source_account;
@@ -247,6 +253,7 @@ struct Operation {
     struct LiquidityPoolWithdrawOp liquidityPoolWithdrawOp;
     struct ChangeTrustOp changeTrustOp;
     struct SetOptionsOp setOptionsOp;
+    struct ClawbackOp clawbackOp;
   };
 };
 

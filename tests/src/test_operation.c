@@ -921,6 +921,45 @@ void test_set_options_empty() {
   assert_memory_equal(buf1, xdr, buf_size1);
 }
 
+void test_clawback() {
+  struct MuxedAccount fromAccount = {
+      .type = KEY_TYPE_ED25519,
+      .ed25519 = "GDGU5OAPHNPU5UCLE5RDJHG7PXZFQYWKCFOEXSXNMR6KRQRI5T6XXCD7"};
+  struct Asset asset = {
+      .type = ASSET_TYPE_CREDIT_ALPHANUM4,
+      .code = "USDC",
+      .issuer = "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN"};
+  struct Operation operation = {
+      .source_account_present = false,
+      .type = CLAWBACK,
+      .clawbackOp = {.asset = asset, .from = fromAccount, .amount = 50000000}};
+
+  char *buf0 = NULL;
+  size_t buf_size0 = 0;
+  assert_true(operation_to_xdr(&operation, &buf0, &buf_size0));
+  char xdr[] = {
+      0x0,  0x0,  0x0,  0x0,  0x0,  0x0,  0x0,  0x13, 0x0,  0x0,  0x0,  0x1,
+      0x55, 0x53, 0x44, 0x43, 0x0,  0x0,  0x0,  0x0,  0x3b, 0x99, 0x11, 0x38,
+      0xe,  0xfe, 0x98, 0x8b, 0xa0, 0xa8, 0x90, 0xe,  0xb1, 0xcf, 0xe4, 0x4f,
+      0x36, 0x6f, 0x7d, 0xbe, 0x94, 0x6b, 0xed, 0x7,  0x72, 0x40, 0xf7, 0xf6,
+      0x24, 0xdf, 0x15, 0xc5, 0x0,  0x0,  0x0,  0x0,  0xcd, 0x4e, 0xb8, 0xf,
+      0x3b, 0x5f, 0x4e, 0xd0, 0x4b, 0x27, 0x62, 0x34, 0x9c, 0xdf, 0x7d, 0xf2,
+      0x58, 0x62, 0xca, 0x11, 0x5c, 0x4b, 0xca, 0xed, 0x64, 0x7c, 0xa8, 0xc2,
+      0x28, 0xec, 0xfd, 0x7b, 0x0,  0x0,  0x0,  0x0,  0x2,  0xfa, 0xf0, 0x80};
+  assert_int_equal(buf_size0, 96);
+  assert_memory_equal(buf0, xdr, buf_size0);
+
+  stellarxdr_Operation to;
+  assert_true(operation_to_xdr_object(&operation, &to));
+  struct Operation from;
+  assert_true(operation_from_xdr_object(&to, &from));
+  char *buf1 = NULL;
+  size_t buf_size1 = 0;
+  assert_true(operation_to_xdr(&from, &buf1, &buf_size1));
+  assert_int_equal(buf_size1, 96);
+  assert_memory_equal(buf1, xdr, buf_size1);
+}
+
 int main() {
   const struct CMUnitTest tests[] = {
       cmocka_unit_test(test_create_account),
@@ -947,6 +986,7 @@ int main() {
       cmocka_unit_test(test_change_trust_liquidity_pool_asset),
       cmocka_unit_test(test_set_options),
       cmocka_unit_test(test_set_options_empty),
+      cmocka_unit_test(test_clawback),
   };
   return cmocka_run_group_tests(tests, NULL, NULL);
 }

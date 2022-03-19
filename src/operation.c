@@ -842,6 +842,37 @@ bool end_sponsoring_future_reserves_to_xdr_object(
   return true;
 }
 
+// 19. Clawback
+bool clawback_to_xdr_object(const struct ClawbackOp *in,
+                            stellarxdr_OperationBody *out) {
+  out->type = stellarxdr_CLAWBACK;
+
+  if (!asset_to_xdr_object(&in->asset,
+                           &out->stellarxdr_OperationBody_u.clawbackOp.asset)) {
+    return false;
+  }
+  if (!muxed_account_to_xdr_object(
+          &in->from, &out->stellarxdr_OperationBody_u.clawbackOp.from)) {
+    return false;
+  }
+  out->stellarxdr_OperationBody_u.clawbackOp.amount = in->amount;
+  return true;
+}
+
+bool clawback_from_xdr_object(const struct stellarxdr_OperationBody *in,
+                              struct ClawbackOp *out) {
+  if (!asset_from_xdr_object(&in->stellarxdr_OperationBody_u.clawbackOp.asset,
+                             &out->asset)) {
+    return false;
+  }
+  if (!muxed_account_from_xdr_object(
+          &in->stellarxdr_OperationBody_u.clawbackOp.from, &out->from)) {
+    return false;
+  }
+  out->amount = in->stellarxdr_OperationBody_u.clawbackOp.amount;
+  return true;
+}
+
 // 20. Clawback Claimable Balance
 bool clawback_claimable_balance_to_xdr_object(
     const struct ClawbackClaimableBalanceOp *in,
@@ -1091,6 +1122,7 @@ bool operation_to_xdr_object(const struct Operation *in,
   case REVOKE_SPONSORSHIP:
     break;
   case CLAWBACK:
+    opSuccess = clawback_to_xdr_object(&in->clawbackOp, &operation_body);
     break;
   case CLAWBACK_CLAIMABLE_BALANCE:
     opSuccess = clawback_claimable_balance_to_xdr_object(
@@ -1220,6 +1252,8 @@ bool operation_from_xdr_object(const stellarxdr_Operation *in,
   case stellarxdr_REVOKE_SPONSORSHIP:
     break;
   case stellarxdr_CLAWBACK:
+    out->type = CLAWBACK;
+    opSuccess = clawback_from_xdr_object(&in->body, &out->clawbackOp);
     break;
   case stellarxdr_CLAWBACK_CLAIMABLE_BALANCE:
     out->type = CLAWBACK_CLAIMABLE_BALANCE;
