@@ -229,6 +229,58 @@ struct ClawbackOp {
   int64_t amount;
 };
 
+enum RevokeSponsorshipType {
+  REVOKE_SPONSORSHIP_TYPE_ACCOUNT = 0,
+  REVOKE_SPONSORSHIP_TYPE_TRUSTLINE = 1,
+  REVOKE_SPONSORSHIP_TYPE_OFFER = 2,
+  REVOKE_SPONSORSHIP_TYPE_DATA = 3,
+  REVOKE_SPONSORSHIP_TYPE_CLAIMABLE_BALANCE = 4,
+  REVOKE_SPONSORSHIP_TYPE_SIGNER = 5,
+  REVOKE_SPONSORSHIP_TYPE_LIQUIDITY_POOL = 6,
+};
+
+enum RevokeSponsorshipTrustLineType {
+  REVOKE_SPONSORSHIP_TRUST_LINE_TYPE_ASSET = 0,
+  REVOKE_SPONSORSHIP_TRUST_LINE_TYPE_LIQUIDITY_POOL_ID = 1,
+};
+
+struct RevokeSponsorshipTrustLine {
+  enum RevokeSponsorshipTrustLineType type;
+  char accountID[57];
+  union {
+    struct Asset asset;
+    char liquidityPoolId[65];
+  } trustLine;
+};
+
+struct RevokeSponsorshipOffer {
+  char sellerID[57];
+  int64_t offerID;
+};
+
+struct RevokeSponsorshipData {
+  char accountID[57];
+  char dataName[65];
+};
+
+struct RevokeSponsorshipSigner {
+  char accountID[57];
+  struct SignerKey signerKey;
+};
+
+struct RevokeSponsorshipOp {
+  enum RevokeSponsorshipType revokeSponsorshipType;
+  union {
+    char accountID[57];
+    struct RevokeSponsorshipTrustLine trustLine;
+    struct RevokeSponsorshipOffer offer;
+    struct RevokeSponsorshipData data;
+    char claimableBalanceID[73];
+    struct RevokeSponsorshipSigner signer;
+    char liquidityPoolID[65];
+  } sponsorship;
+};
+
 struct Operation {
   bool source_account_present;
   struct MuxedAccount source_account;
@@ -254,6 +306,7 @@ struct Operation {
     struct ChangeTrustOp changeTrustOp;
     struct SetOptionsOp setOptionsOp;
     struct ClawbackOp clawbackOp;
+    struct RevokeSponsorshipOp revokeSponsorshipOp;
   };
 };
 

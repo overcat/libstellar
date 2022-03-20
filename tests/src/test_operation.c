@@ -960,6 +960,296 @@ void test_clawback() {
   assert_memory_equal(buf1, xdr, buf_size1);
 }
 
+void test_revoke_sponsorship_account() {
+  struct Operation operation = {
+      .source_account_present = false,
+      .type = REVOKE_SPONSORSHIP,
+      .revokeSponsorshipOp = {
+          .revokeSponsorshipType = REVOKE_SPONSORSHIP_TYPE_ACCOUNT,
+          .sponsorship = {
+              .accountID =
+                  "GDGU5OAPHNPU5UCLE5RDJHG7PXZFQYWKCFOEXSXNMR6KRQRI5T6XXCD7"}}};
+
+  char *buf0 = NULL;
+  size_t buf_size0 = 0;
+  assert_true(operation_to_xdr(&operation, &buf0, &buf_size0));
+  char xdr[] = {0x0,  0x0,  0x0,  0x0,  0x0,  0x0,  0x0,  0x12, 0x0,
+                0x0,  0x0,  0x0,  0x0,  0x0,  0x0,  0x0,  0x0,  0x0,
+                0x0,  0x0,  0xcd, 0x4e, 0xb8, 0xf,  0x3b, 0x5f, 0x4e,
+                0xd0, 0x4b, 0x27, 0x62, 0x34, 0x9c, 0xdf, 0x7d, 0xf2,
+                0x58, 0x62, 0xca, 0x11, 0x5c, 0x4b, 0xca, 0xed, 0x64,
+                0x7c, 0xa8, 0xc2, 0x28, 0xec, 0xfd, 0x7b};
+  assert_int_equal(buf_size0, 52);
+  assert_memory_equal(buf0, xdr, buf_size0);
+
+  stellarxdr_Operation to;
+  assert_true(operation_to_xdr_object(&operation, &to));
+  struct Operation from;
+  assert_true(operation_from_xdr_object(&to, &from));
+  char *buf1 = NULL;
+  size_t buf_size1 = 0;
+  assert_true(operation_to_xdr(&from, &buf1, &buf_size1));
+  assert_int_equal(buf_size1, 52);
+  assert_memory_equal(buf1, xdr, buf_size1);
+}
+
+void test_revoke_sponsorship_asset_asset() {
+  struct Asset asset = {
+      .type = ASSET_TYPE_CREDIT_ALPHANUM4,
+      .code = "USDC",
+      .issuer = "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN"};
+  struct RevokeSponsorshipTrustLine revokeSponsorshipTrustLine = {
+      .type = REVOKE_SPONSORSHIP_TRUST_LINE_TYPE_ASSET,
+      .accountID = "GDGU5OAPHNPU5UCLE5RDJHG7PXZFQYWKCFOEXSXNMR6KRQRI5T6XXCD7",
+
+      .trustLine = {.asset = asset}};
+  struct Operation operation = {
+      .source_account_present = false,
+      .type = REVOKE_SPONSORSHIP,
+      .revokeSponsorshipOp = {
+          .revokeSponsorshipType = REVOKE_SPONSORSHIP_TYPE_TRUSTLINE,
+          .sponsorship = {.trustLine = revokeSponsorshipTrustLine}}};
+
+  char *buf0 = NULL;
+  size_t buf_size0 = 0;
+  assert_true(operation_to_xdr(&operation, &buf0, &buf_size0));
+  char xdr[] = {
+      0x0,  0x0,  0x0,  0x0,  0x0,  0x0,  0x0,  0x12, 0x0,  0x0,  0x0,  0x0,
+      0x0,  0x0,  0x0,  0x1,  0x0,  0x0,  0x0,  0x0,  0xcd, 0x4e, 0xb8, 0xf,
+      0x3b, 0x5f, 0x4e, 0xd0, 0x4b, 0x27, 0x62, 0x34, 0x9c, 0xdf, 0x7d, 0xf2,
+      0x58, 0x62, 0xca, 0x11, 0x5c, 0x4b, 0xca, 0xed, 0x64, 0x7c, 0xa8, 0xc2,
+      0x28, 0xec, 0xfd, 0x7b, 0x0,  0x0,  0x0,  0x1,  0x55, 0x53, 0x44, 0x43,
+      0x0,  0x0,  0x0,  0x0,  0x3b, 0x99, 0x11, 0x38, 0xe,  0xfe, 0x98, 0x8b,
+      0xa0, 0xa8, 0x90, 0xe,  0xb1, 0xcf, 0xe4, 0x4f, 0x36, 0x6f, 0x7d, 0xbe,
+      0x94, 0x6b, 0xed, 0x7,  0x72, 0x40, 0xf7, 0xf6, 0x24, 0xdf, 0x15, 0xc5};
+  assert_int_equal(buf_size0, 96);
+  assert_memory_equal(buf0, xdr, buf_size0);
+
+  stellarxdr_Operation to;
+  assert_true(operation_to_xdr_object(&operation, &to));
+  struct Operation from;
+  assert_true(operation_from_xdr_object(&to, &from));
+  char *buf1 = NULL;
+  size_t buf_size1 = 0;
+  assert_true(operation_to_xdr(&from, &buf1, &buf_size1));
+  assert_int_equal(buf_size1, 96);
+  assert_memory_equal(buf1, xdr, buf_size1);
+}
+
+void test_revoke_sponsorship_asset_liquidity_pool_id() {
+  struct RevokeSponsorshipTrustLine revokeSponsorshipTrustLine = {
+      .type = REVOKE_SPONSORSHIP_TRUST_LINE_TYPE_LIQUIDITY_POOL_ID,
+      .accountID = "GDGU5OAPHNPU5UCLE5RDJHG7PXZFQYWKCFOEXSXNMR6KRQRI5T6XXCD7",
+      .trustLine = {.liquidityPoolId = "3441bd8b84f0bab631fe3fb01a0b31b588cb04c"
+                                       "df55cffbd30b79e4286fd8689"}};
+  struct Operation operation = {
+      .source_account_present = false,
+      .type = REVOKE_SPONSORSHIP,
+      .revokeSponsorshipOp = {
+          .revokeSponsorshipType = REVOKE_SPONSORSHIP_TYPE_TRUSTLINE,
+          .sponsorship = {.trustLine = revokeSponsorshipTrustLine}}};
+
+  char *buf0 = NULL;
+  size_t buf_size0 = 0;
+  assert_true(operation_to_xdr(&operation, &buf0, &buf_size0));
+  char xdr[] = {0x0,  0x0,  0x0,  0x0,  0x0,  0x0,  0x0,  0x12, 0x0,  0x0,
+                0x0,  0x0,  0x0,  0x0,  0x0,  0x1,  0x0,  0x0,  0x0,  0x0,
+                0xcd, 0x4e, 0xb8, 0xf,  0x3b, 0x5f, 0x4e, 0xd0, 0x4b, 0x27,
+                0x62, 0x34, 0x9c, 0xdf, 0x7d, 0xf2, 0x58, 0x62, 0xca, 0x11,
+                0x5c, 0x4b, 0xca, 0xed, 0x64, 0x7c, 0xa8, 0xc2, 0x28, 0xec,
+                0xfd, 0x7b, 0x0,  0x0,  0x0,  0x3,  0x34, 0x41, 0xbd, 0x8b,
+                0x84, 0xf0, 0xba, 0xb6, 0x31, 0xfe, 0x3f, 0xb0, 0x1a, 0xb,
+                0x31, 0xb5, 0x88, 0xcb, 0x4,  0xcd, 0xf5, 0x5c, 0xff, 0xbd,
+                0x30, 0xb7, 0x9e, 0x42, 0x86, 0xfd, 0x86, 0x89};
+  assert_int_equal(buf_size0, 88);
+  assert_memory_equal(buf0, xdr, buf_size0);
+
+  stellarxdr_Operation to;
+  assert_true(operation_to_xdr_object(&operation, &to));
+  struct Operation from;
+  assert_true(operation_from_xdr_object(&to, &from));
+  char *buf1 = NULL;
+  size_t buf_size1 = 0;
+  assert_true(operation_to_xdr(&from, &buf1, &buf_size1));
+  assert_int_equal(buf_size1, 88);
+  assert_memory_equal(buf1, xdr, buf_size1);
+}
+
+void test_revoke_sponsorship_offer() {
+  struct Operation operation = {
+      .source_account_present = false,
+      .type = REVOKE_SPONSORSHIP,
+      .revokeSponsorshipOp = {
+          .revokeSponsorshipType = REVOKE_SPONSORSHIP_TYPE_OFFER,
+          .sponsorship = {.offer = {.sellerID = "GDGU5OAPHNPU5UCLE5RDJHG7PXZFQY"
+                                                "WKCFOEXSXNMR6KRQRI5T6XXCD7",
+                                    .offerID = 12345}}}};
+
+  char *buf0 = NULL;
+  size_t buf_size0 = 0;
+  assert_true(operation_to_xdr(&operation, &buf0, &buf_size0));
+  char xdr[] = {0x0,  0x0,  0x0,  0x0,  0x0,  0x0,  0x0,  0x12, 0x0,  0x0,
+                0x0,  0x0,  0x0,  0x0,  0x0,  0x2,  0x0,  0x0,  0x0,  0x0,
+                0xcd, 0x4e, 0xb8, 0xf,  0x3b, 0x5f, 0x4e, 0xd0, 0x4b, 0x27,
+                0x62, 0x34, 0x9c, 0xdf, 0x7d, 0xf2, 0x58, 0x62, 0xca, 0x11,
+                0x5c, 0x4b, 0xca, 0xed, 0x64, 0x7c, 0xa8, 0xc2, 0x28, 0xec,
+                0xfd, 0x7b, 0x0,  0x0,  0x0,  0x0,  0x0,  0x0,  0x30, 0x39};
+  assert_int_equal(buf_size0, 60);
+  assert_memory_equal(buf0, xdr, buf_size0);
+
+  stellarxdr_Operation to;
+  assert_true(operation_to_xdr_object(&operation, &to));
+  struct Operation from;
+  assert_true(operation_from_xdr_object(&to, &from));
+  char *buf1 = NULL;
+  size_t buf_size1 = 0;
+  assert_true(operation_to_xdr(&from, &buf1, &buf_size1));
+  assert_int_equal(buf_size1, 60);
+  assert_memory_equal(buf1, xdr, buf_size1);
+}
+
+void test_revoke_sponsorship_data() {
+  struct Operation operation = {
+      .source_account_present = false,
+      .type = REVOKE_SPONSORSHIP,
+      .revokeSponsorshipOp = {
+          .revokeSponsorshipType = REVOKE_SPONSORSHIP_TYPE_DATA,
+          .sponsorship = {.data = {.accountID = "GDGU5OAPHNPU5UCLE5RDJHG7PXZFQY"
+                                                "WKCFOEXSXNMR6KRQRI5T6XXCD7",
+                                   .dataName = "c stellar base"}}}};
+
+  char *buf0 = NULL;
+  size_t buf_size0 = 0;
+  assert_true(operation_to_xdr(&operation, &buf0, &buf_size0));
+  char xdr[] = {
+      0x0,  0x0,  0x0,  0x0,  0x0,  0x0,  0x0,  0x12, 0x0,  0x0,  0x0,  0x0,
+      0x0,  0x0,  0x0,  0x3,  0x0,  0x0,  0x0,  0x0,  0xcd, 0x4e, 0xb8, 0xf,
+      0x3b, 0x5f, 0x4e, 0xd0, 0x4b, 0x27, 0x62, 0x34, 0x9c, 0xdf, 0x7d, 0xf2,
+      0x58, 0x62, 0xca, 0x11, 0x5c, 0x4b, 0xca, 0xed, 0x64, 0x7c, 0xa8, 0xc2,
+      0x28, 0xec, 0xfd, 0x7b, 0x0,  0x0,  0x0,  0xe,  0x63, 0x20, 0x73, 0x74,
+      0x65, 0x6c, 0x6c, 0x61, 0x72, 0x20, 0x62, 0x61, 0x73, 0x65, 0x0,  0x0};
+  assert_int_equal(buf_size0, 72);
+  assert_memory_equal(buf0, xdr, buf_size0);
+
+  stellarxdr_Operation to;
+  assert_true(operation_to_xdr_object(&operation, &to));
+  struct Operation from;
+  assert_true(operation_from_xdr_object(&to, &from));
+  char *buf1 = NULL;
+  size_t buf_size1 = 0;
+  assert_true(operation_to_xdr(&from, &buf1, &buf_size1));
+  assert_int_equal(buf_size1, 72);
+  assert_memory_equal(buf1, xdr, buf_size1);
+}
+
+void test_revoke_sponsorship_claimable_balance() {
+  struct Operation operation = {
+      .source_account_present = false,
+      .type = REVOKE_SPONSORSHIP,
+      .revokeSponsorshipOp = {
+          .revokeSponsorshipType = REVOKE_SPONSORSHIP_TYPE_CLAIMABLE_BALANCE,
+          .sponsorship = {.claimableBalanceID =
+                              "00000000da0d57da7d4850e7fc10d2a9d0ebc731f7afb405"
+                              "74c03395b17d49149b91f5be"}}};
+
+  char *buf0 = NULL;
+  size_t buf_size0 = 0;
+  assert_true(operation_to_xdr(&operation, &buf0, &buf_size0));
+  char xdr[] = {0x0,  0x0,  0x0,  0x0,  0x0,  0x0,  0x0,  0x12, 0x0,
+                0x0,  0x0,  0x0,  0x0,  0x0,  0x0,  0x4,  0x0,  0x0,
+                0x0,  0x0,  0xda, 0xd,  0x57, 0xda, 0x7d, 0x48, 0x50,
+                0xe7, 0xfc, 0x10, 0xd2, 0xa9, 0xd0, 0xeb, 0xc7, 0x31,
+                0xf7, 0xaf, 0xb4, 0x5,  0x74, 0xc0, 0x33, 0x95, 0xb1,
+                0x7d, 0x49, 0x14, 0x9b, 0x91, 0xf5, 0xbe};
+  assert_int_equal(buf_size0, 52);
+  assert_memory_equal(buf0, xdr, buf_size0);
+
+  stellarxdr_Operation to;
+  assert_true(operation_to_xdr_object(&operation, &to));
+  struct Operation from;
+  assert_true(operation_from_xdr_object(&to, &from));
+  char *buf1 = NULL;
+  size_t buf_size1 = 0;
+  assert_true(operation_to_xdr(&from, &buf1, &buf_size1));
+  assert_int_equal(buf_size1, 52);
+  assert_memory_equal(buf1, xdr, buf_size1);
+}
+
+void test_revoke_sponsorship_signer() {
+  struct SignerKey signerKey = {
+      .signerKeyType = SIGNER_KEY_TYPE_ED25519,
+      .signerKey = {.ed25519 = {0xcd, 0x4e, 0xb8, 0xf,  0x3b, 0x5f, 0x4e,
+                                0xd0, 0x4b, 0x27, 0x62, 0x34, 0x9c, 0xdf,
+                                0x7d, 0xf2, 0x58, 0x62, 0xca, 0x11, 0x5c,
+                                0x4b, 0xca, 0xed, 0x64, 0x7c, 0xa8, 0xc2,
+                                0x28, 0xec, 0xfd, 0x7b}}};
+  struct Operation operation = {
+      .source_account_present = false,
+      .type = REVOKE_SPONSORSHIP,
+      .revokeSponsorshipOp = {
+          .revokeSponsorshipType = REVOKE_SPONSORSHIP_TYPE_SIGNER,
+          .sponsorship = {
+              .signer = {.accountID = "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IH"
+                                      "OJAPP5RE34K4KZVN",
+                         .signerKey = signerKey}}}};
+
+  char *buf0 = NULL;
+  size_t buf_size0 = 0;
+  assert_true(operation_to_xdr(&operation, &buf0, &buf_size0));
+  char xdr[] = {
+      0x0,  0x0,  0x0,  0x0,  0x0,  0x0,  0x0,  0x12, 0x0,  0x0,  0x0,  0x1,
+      0x0,  0x0,  0x0,  0x0,  0x3b, 0x99, 0x11, 0x38, 0xe,  0xfe, 0x98, 0x8b,
+      0xa0, 0xa8, 0x90, 0xe,  0xb1, 0xcf, 0xe4, 0x4f, 0x36, 0x6f, 0x7d, 0xbe,
+      0x94, 0x6b, 0xed, 0x7,  0x72, 0x40, 0xf7, 0xf6, 0x24, 0xdf, 0x15, 0xc5,
+      0x0,  0x0,  0x0,  0x0,  0xcd, 0x4e, 0xb8, 0xf,  0x3b, 0x5f, 0x4e, 0xd0,
+      0x4b, 0x27, 0x62, 0x34, 0x9c, 0xdf, 0x7d, 0xf2, 0x58, 0x62, 0xca, 0x11,
+      0x5c, 0x4b, 0xca, 0xed, 0x64, 0x7c, 0xa8, 0xc2, 0x28, 0xec, 0xfd, 0x7b};
+  assert_int_equal(buf_size0, 84);
+  assert_memory_equal(buf0, xdr, buf_size0);
+
+  stellarxdr_Operation to;
+  assert_true(operation_to_xdr_object(&operation, &to));
+  struct Operation from;
+  assert_true(operation_from_xdr_object(&to, &from));
+  char *buf1 = NULL;
+  size_t buf_size1 = 0;
+  assert_true(operation_to_xdr(&from, &buf1, &buf_size1));
+  assert_int_equal(buf_size1, 84);
+  assert_memory_equal(buf1, xdr, buf_size1);
+}
+
+void test_revoke_sponsorship_liquidity_pool() {
+  struct Operation operation = {
+      .source_account_present = false,
+      .type = REVOKE_SPONSORSHIP,
+      .revokeSponsorshipOp = {
+          .revokeSponsorshipType = REVOKE_SPONSORSHIP_TYPE_LIQUIDITY_POOL,
+          .sponsorship = {.liquidityPoolID =
+                              "3441bd8b84f0bab631fe3fb01a0b31b588cb04cdf55cffbd"
+                              "30b79e4286fd8689"}}};
+
+  char *buf0 = NULL;
+  size_t buf_size0 = 0;
+  assert_true(operation_to_xdr(&operation, &buf0, &buf_size0));
+  char xdr[] = {0x0,  0x0,  0x0,  0x0,  0x0,  0x0,  0x0,  0x12, 0x0,  0x0,
+                0x0,  0x0,  0x0,  0x0,  0x0,  0x5,  0x34, 0x41, 0xbd, 0x8b,
+                0x84, 0xf0, 0xba, 0xb6, 0x31, 0xfe, 0x3f, 0xb0, 0x1a, 0xb,
+                0x31, 0xb5, 0x88, 0xcb, 0x4,  0xcd, 0xf5, 0x5c, 0xff, 0xbd,
+                0x30, 0xb7, 0x9e, 0x42, 0x86, 0xfd, 0x86, 0x89};
+  assert_int_equal(buf_size0, 48);
+  assert_memory_equal(buf0, xdr, buf_size0);
+
+  stellarxdr_Operation to;
+  assert_true(operation_to_xdr_object(&operation, &to));
+  struct Operation from;
+  assert_true(operation_from_xdr_object(&to, &from));
+  char *buf1 = NULL;
+  size_t buf_size1 = 0;
+  assert_true(operation_to_xdr(&from, &buf1, &buf_size1));
+  assert_int_equal(buf_size1, 48);
+  assert_memory_equal(buf1, xdr, buf_size1);
+}
+
 int main() {
   const struct CMUnitTest tests[] = {
       cmocka_unit_test(test_create_account),
@@ -987,6 +1277,14 @@ int main() {
       cmocka_unit_test(test_set_options),
       cmocka_unit_test(test_set_options_empty),
       cmocka_unit_test(test_clawback),
+      cmocka_unit_test(test_revoke_sponsorship_account),
+      cmocka_unit_test(test_revoke_sponsorship_asset_asset),
+      cmocka_unit_test(test_revoke_sponsorship_asset_liquidity_pool_id),
+      cmocka_unit_test(test_revoke_sponsorship_offer),
+      cmocka_unit_test(test_revoke_sponsorship_data),
+      cmocka_unit_test(test_revoke_sponsorship_claimable_balance),
+      cmocka_unit_test(test_revoke_sponsorship_signer),
+      cmocka_unit_test(test_revoke_sponsorship_liquidity_pool),
   };
   return cmocka_run_group_tests(tests, NULL, NULL);
 }

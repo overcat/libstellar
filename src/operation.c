@@ -1,5 +1,11 @@
 #include "operation.h"
 #include "muxed_account.h"
+
+bool _to_xdr_account_id(const char *address, stellarxdr_AccountID *accountId) {
+  struct Keypair keypair;
+  keypair_from_address(&keypair, address);
+  keypair_xdr_account_id(&keypair, accountId);
+}
 // 1. Create Account
 bool create_account_to_xdr_object(const struct CreateAccountOp *in,
                                   stellarxdr_OperationBody *out) {
@@ -842,6 +848,316 @@ bool end_sponsoring_future_reserves_to_xdr_object(
   return true;
 }
 
+// 18. Revoke Sponsorship
+bool revoke_sponsorship_to_xdr_object(const struct RevokeSponsorshipOp *in,
+                                      stellarxdr_OperationBody *out) {
+  out->type = stellarxdr_REVOKE_SPONSORSHIP;
+  stellarxdr_AccountID accountId;
+
+  switch (in->revokeSponsorshipType) {
+  case REVOKE_SPONSORSHIP_TYPE_ACCOUNT:
+    out->stellarxdr_OperationBody_u.revokeSponsorshipOp.type =
+        stellarxdr_REVOKE_SPONSORSHIP_LEDGER_ENTRY;
+    out->stellarxdr_OperationBody_u.revokeSponsorshipOp
+        .stellarxdr_RevokeSponsorshipOp_u.ledgerKey.type = stellarxdr_ACCOUNT;
+    _to_xdr_account_id(in->sponsorship.accountID, &accountId);
+    stellarxdr_LedgerKeyAccount ledgerKeyAccount = {.accountID = accountId};
+    out->stellarxdr_OperationBody_u.revokeSponsorshipOp
+        .stellarxdr_RevokeSponsorshipOp_u.ledgerKey.stellarxdr_LedgerKey_u
+        .account = ledgerKeyAccount;
+    break;
+  case REVOKE_SPONSORSHIP_TYPE_TRUSTLINE:
+    out->stellarxdr_OperationBody_u.revokeSponsorshipOp.type =
+        stellarxdr_REVOKE_SPONSORSHIP_LEDGER_ENTRY;
+    out->stellarxdr_OperationBody_u.revokeSponsorshipOp
+        .stellarxdr_RevokeSponsorshipOp_u.ledgerKey.type = stellarxdr_TRUSTLINE;
+    _to_xdr_account_id(in->sponsorship.trustLine.accountID, &accountId);
+    out->stellarxdr_OperationBody_u.revokeSponsorshipOp
+        .stellarxdr_RevokeSponsorshipOp_u.ledgerKey.stellarxdr_LedgerKey_u
+        .trustLine.accountID = accountId;
+    switch (in->sponsorship.trustLine.type) {
+    case REVOKE_SPONSORSHIP_TRUST_LINE_TYPE_ASSET:
+      if (!asset_to_trust_line_asset_xdr_object(
+              &in->sponsorship.trustLine.trustLine.asset,
+              &out->stellarxdr_OperationBody_u.revokeSponsorshipOp
+                   .stellarxdr_RevokeSponsorshipOp_u.ledgerKey
+                   .stellarxdr_LedgerKey_u.trustLine.asset)) {
+        return false;
+      }
+      break;
+    case REVOKE_SPONSORSHIP_TRUST_LINE_TYPE_LIQUIDITY_POOL_ID:
+      out->stellarxdr_OperationBody_u.revokeSponsorshipOp
+          .stellarxdr_RevokeSponsorshipOp_u.ledgerKey.stellarxdr_LedgerKey_u
+          .trustLine.asset.type = stellarxdr_ASSET_TYPE_POOL_SHARE;
+      for (size_t i = 0, j = 0; j < 32; i += 2, j++)
+        out->stellarxdr_OperationBody_u.revokeSponsorshipOp
+            .stellarxdr_RevokeSponsorshipOp_u.ledgerKey.stellarxdr_LedgerKey_u
+            .trustLine.asset.stellarxdr_TrustLineAsset_u.liquidityPoolID[j] =
+            (in->sponsorship.trustLine.trustLine.liquidityPoolId[i] % 32 + 9) %
+                25 * 16 +
+            (in->sponsorship.trustLine.trustLine.liquidityPoolId[i + 1] % 32 +
+             9) %
+                25;
+      break;
+    default:
+      return false;
+    }
+    break;
+  case REVOKE_SPONSORSHIP_TYPE_OFFER:
+    out->stellarxdr_OperationBody_u.revokeSponsorshipOp.type =
+        stellarxdr_REVOKE_SPONSORSHIP_LEDGER_ENTRY;
+    out->stellarxdr_OperationBody_u.revokeSponsorshipOp
+        .stellarxdr_RevokeSponsorshipOp_u.ledgerKey.type = stellarxdr_OFFER;
+    _to_xdr_account_id(in->sponsorship.offer.sellerID, &accountId);
+    out->stellarxdr_OperationBody_u.revokeSponsorshipOp
+        .stellarxdr_RevokeSponsorshipOp_u.ledgerKey.stellarxdr_LedgerKey_u.offer
+        .offerID = in->sponsorship.offer.offerID;
+    out->stellarxdr_OperationBody_u.revokeSponsorshipOp
+        .stellarxdr_RevokeSponsorshipOp_u.ledgerKey.stellarxdr_LedgerKey_u.offer
+        .sellerID = accountId;
+    break;
+  case REVOKE_SPONSORSHIP_TYPE_DATA:
+    out->stellarxdr_OperationBody_u.revokeSponsorshipOp.type =
+        stellarxdr_REVOKE_SPONSORSHIP_LEDGER_ENTRY;
+    out->stellarxdr_OperationBody_u.revokeSponsorshipOp
+        .stellarxdr_RevokeSponsorshipOp_u.ledgerKey.type = stellarxdr_DATA;
+    _to_xdr_account_id(in->sponsorship.data.accountID, &accountId);
+    out->stellarxdr_OperationBody_u.revokeSponsorshipOp
+        .stellarxdr_RevokeSponsorshipOp_u.ledgerKey.stellarxdr_LedgerKey_u.data
+        .accountID = accountId;
+    unsigned long dataNameLength = strlen(in->sponsorship.data.dataName);
+    out->stellarxdr_OperationBody_u.revokeSponsorshipOp
+        .stellarxdr_RevokeSponsorshipOp_u.ledgerKey.stellarxdr_LedgerKey_u.data
+        .dataName = malloc(dataNameLength);
+    memcpy(out->stellarxdr_OperationBody_u.revokeSponsorshipOp
+               .stellarxdr_RevokeSponsorshipOp_u.ledgerKey
+               .stellarxdr_LedgerKey_u.data.dataName,
+           in->sponsorship.data.dataName, dataNameLength);
+    break;
+  case REVOKE_SPONSORSHIP_TYPE_CLAIMABLE_BALANCE:
+    out->stellarxdr_OperationBody_u.revokeSponsorshipOp.type =
+        stellarxdr_REVOKE_SPONSORSHIP_LEDGER_ENTRY;
+    out->stellarxdr_OperationBody_u.revokeSponsorshipOp
+        .stellarxdr_RevokeSponsorshipOp_u.ledgerKey.type =
+        stellarxdr_CLAIMABLE_BALANCE;
+    // 36
+    if (strlen(in->sponsorship.claimableBalanceID) != 72) {
+      return false;
+    }
+    unsigned char decodedId[36];
+    for (size_t i = 0, j = 0; j < 36; i += 2, j++)
+      decodedId[j] =
+          (in->sponsorship.claimableBalanceID[i] % 32 + 9) % 25 * 16 +
+          (in->sponsorship.claimableBalanceID[i + 1] % 32 + 9) % 25;
+    // TODO: support other type
+    out->stellarxdr_OperationBody_u.revokeSponsorshipOp
+        .stellarxdr_RevokeSponsorshipOp_u.ledgerKey.stellarxdr_LedgerKey_u
+        .claimableBalance.balanceID.type =
+        stellarxdr_CLAIMABLE_BALANCE_ID_TYPE_V0;
+    for (size_t i = 0; i < 32; i++) {
+      out->stellarxdr_OperationBody_u.revokeSponsorshipOp
+          .stellarxdr_RevokeSponsorshipOp_u.ledgerKey.stellarxdr_LedgerKey_u
+          .claimableBalance.balanceID.stellarxdr_ClaimableBalanceID_u.v0[i] =
+          decodedId[i + 4];
+    }
+    break;
+  case REVOKE_SPONSORSHIP_TYPE_SIGNER:
+    out->stellarxdr_OperationBody_u.revokeSponsorshipOp.type =
+        stellarxdr_REVOKE_SPONSORSHIP_SIGNER;
+    _to_xdr_account_id(in->sponsorship.signer.accountID, &accountId);
+    out->stellarxdr_OperationBody_u.revokeSponsorshipOp
+        .stellarxdr_RevokeSponsorshipOp_u.signer.accountID = accountId;
+    if (!signer_key_to_xdr_object(
+            &in->sponsorship.signer.signerKey,
+            &out->stellarxdr_OperationBody_u.revokeSponsorshipOp
+                 .stellarxdr_RevokeSponsorshipOp_u.signer.signerKey)) {
+      return false;
+    }
+    break;
+  case REVOKE_SPONSORSHIP_TYPE_LIQUIDITY_POOL:
+    out->stellarxdr_OperationBody_u.revokeSponsorshipOp.type =
+        stellarxdr_REVOKE_SPONSORSHIP_LEDGER_ENTRY;
+    out->stellarxdr_OperationBody_u.revokeSponsorshipOp
+        .stellarxdr_RevokeSponsorshipOp_u.ledgerKey.type =
+        stellarxdr_LIQUIDITY_POOL;
+    for (size_t i = 0, j = 0; j < 32; i += 2, j++)
+      out->stellarxdr_OperationBody_u.revokeSponsorshipOp
+          .stellarxdr_RevokeSponsorshipOp_u.ledgerKey.stellarxdr_LedgerKey_u
+          .liquidityPool.liquidityPoolID[j] =
+          (in->sponsorship.liquidityPoolID[i] % 32 + 9) % 25 * 16 +
+          (in->sponsorship.liquidityPoolID[i + 1] % 32 + 9) % 25;
+    break;
+  default:
+    return false;
+  }
+  return true;
+}
+
+bool revoke_sponsorship_from_xdr_object(
+    const struct stellarxdr_OperationBody *in,
+    struct RevokeSponsorshipOp *out) {
+  switch (in->stellarxdr_OperationBody_u.revokeSponsorshipOp.type) {
+
+  case stellarxdr_REVOKE_SPONSORSHIP_LEDGER_ENTRY:
+    switch (in->stellarxdr_OperationBody_u.revokeSponsorshipOp
+                .stellarxdr_RevokeSponsorshipOp_u.ledgerKey.type) {
+    case stellarxdr_ACCOUNT:
+      out->revokeSponsorshipType = REVOKE_SPONSORSHIP_TYPE_ACCOUNT;
+      if (!encode_ed25519_public_key(
+              &in->stellarxdr_OperationBody_u.revokeSponsorshipOp
+                   .stellarxdr_RevokeSponsorshipOp_u.ledgerKey
+                   .stellarxdr_LedgerKey_u.account.accountID
+                   .stellarxdr_PublicKey_u.ed25519,
+              out->sponsorship.accountID)) {
+        return false;
+      }
+      break;
+    case stellarxdr_TRUSTLINE:
+      out->revokeSponsorshipType = REVOKE_SPONSORSHIP_TYPE_TRUSTLINE;
+      if (!encode_ed25519_public_key(
+              &in->stellarxdr_OperationBody_u.revokeSponsorshipOp
+                   .stellarxdr_RevokeSponsorshipOp_u.ledgerKey
+                   .stellarxdr_LedgerKey_u.trustLine.accountID
+                   .stellarxdr_PublicKey_u.ed25519,
+              out->sponsorship.trustLine.accountID)) {
+        return false;
+      }
+      switch (in->stellarxdr_OperationBody_u.revokeSponsorshipOp
+                  .stellarxdr_RevokeSponsorshipOp_u.ledgerKey
+                  .stellarxdr_LedgerKey_u.trustLine.asset.type) {
+      case stellarxdr_ASSET_TYPE_NATIVE:
+      case stellarxdr_ASSET_TYPE_CREDIT_ALPHANUM4:
+      case stellarxdr_ASSET_TYPE_CREDIT_ALPHANUM12:
+        out->sponsorship.trustLine.type =
+            REVOKE_SPONSORSHIP_TRUST_LINE_TYPE_ASSET;
+        if (!asset_from_trust_line_asset_xdr_object(
+                &in->stellarxdr_OperationBody_u.revokeSponsorshipOp
+                     .stellarxdr_RevokeSponsorshipOp_u.ledgerKey
+                     .stellarxdr_LedgerKey_u.trustLine.asset,
+                &out->sponsorship.trustLine.trustLine.asset)) {
+          return false;
+        }
+        break;
+      case stellarxdr_ASSET_TYPE_POOL_SHARE:
+        out->sponsorship.trustLine.type =
+            REVOKE_SPONSORSHIP_TRUST_LINE_TYPE_LIQUIDITY_POOL_ID;
+        for (size_t i = 0; i < 32; i++) {
+          sprintf(out->sponsorship.trustLine.trustLine.liquidityPoolId +
+                      (i * 2),
+                  "%.2x",
+                  (unsigned char)in->stellarxdr_OperationBody_u
+                      .revokeSponsorshipOp.stellarxdr_RevokeSponsorshipOp_u
+                      .ledgerKey.stellarxdr_LedgerKey_u.trustLine.asset
+                      .stellarxdr_TrustLineAsset_u.liquidityPoolID[i]);
+        }
+        out->sponsorship.trustLine.trustLine.liquidityPoolId[64] = '\0';
+        break;
+      default:
+        return false;
+      }
+      break;
+    case stellarxdr_OFFER:
+      out->revokeSponsorshipType = REVOKE_SPONSORSHIP_TYPE_OFFER;
+      if (!encode_ed25519_public_key(
+              &in->stellarxdr_OperationBody_u.revokeSponsorshipOp
+                   .stellarxdr_RevokeSponsorshipOp_u.ledgerKey
+                   .stellarxdr_LedgerKey_u.offer.sellerID.stellarxdr_PublicKey_u
+                   .ed25519,
+              out->sponsorship.offer.sellerID)) {
+        return false;
+      }
+      out->sponsorship.offer.offerID =
+          in->stellarxdr_OperationBody_u.revokeSponsorshipOp
+              .stellarxdr_RevokeSponsorshipOp_u.ledgerKey.stellarxdr_LedgerKey_u
+              .offer.offerID;
+      break;
+    case stellarxdr_DATA:
+      out->revokeSponsorshipType = REVOKE_SPONSORSHIP_TYPE_DATA;
+      if (!encode_ed25519_public_key(
+              &in->stellarxdr_OperationBody_u.revokeSponsorshipOp
+                   .stellarxdr_RevokeSponsorshipOp_u.ledgerKey
+                   .stellarxdr_LedgerKey_u.data.accountID.stellarxdr_PublicKey_u
+                   .ed25519,
+              out->sponsorship.data.accountID)) {
+        return false;
+      }
+      memcpy(out->sponsorship.data.dataName,
+             in->stellarxdr_OperationBody_u.revokeSponsorshipOp
+                 .stellarxdr_RevokeSponsorshipOp_u.ledgerKey
+                 .stellarxdr_LedgerKey_u.data.dataName,
+             64);
+      out->sponsorship.data.dataName[64] = '\0';
+      break;
+    case stellarxdr_CLAIMABLE_BALANCE:
+      out->revokeSponsorshipType = REVOKE_SPONSORSHIP_TYPE_CLAIMABLE_BALANCE;
+      unsigned char encodeId[36];
+      encodeId[0] =
+          in->stellarxdr_OperationBody_u.revokeSponsorshipOp
+              .stellarxdr_RevokeSponsorshipOp_u.ledgerKey.stellarxdr_LedgerKey_u
+              .claimableBalance.balanceID.type >>
+          24;
+      encodeId[1] =
+          in->stellarxdr_OperationBody_u.revokeSponsorshipOp
+              .stellarxdr_RevokeSponsorshipOp_u.ledgerKey.stellarxdr_LedgerKey_u
+              .claimableBalance.balanceID.type >>
+          16;
+      encodeId[2] =
+          in->stellarxdr_OperationBody_u.revokeSponsorshipOp
+              .stellarxdr_RevokeSponsorshipOp_u.ledgerKey.stellarxdr_LedgerKey_u
+              .claimableBalance.balanceID.type >>
+          8;
+      encodeId[3] = in->stellarxdr_OperationBody_u.revokeSponsorshipOp
+                        .stellarxdr_RevokeSponsorshipOp_u.ledgerKey
+                        .stellarxdr_LedgerKey_u.claimableBalance.balanceID.type;
+
+      for (size_t i = 0; i < 32; i++) {
+        encodeId[i + 4] = in->stellarxdr_OperationBody_u.revokeSponsorshipOp
+                              .stellarxdr_RevokeSponsorshipOp_u.ledgerKey
+                              .stellarxdr_LedgerKey_u.claimableBalance.balanceID
+                              .stellarxdr_ClaimableBalanceID_u.v0[i];
+      }
+
+      for (size_t i = 0; i < 36; i++) {
+        sprintf(out->sponsorship.claimableBalanceID + (i * 2), "%.2x",
+                encodeId[i]);
+      }
+      out->sponsorship.claimableBalanceID[72] = '\0';
+      break;
+    case stellarxdr_LIQUIDITY_POOL:
+      out->revokeSponsorshipType = REVOKE_SPONSORSHIP_TYPE_LIQUIDITY_POOL;
+      for (size_t i = 0; i < 32; i++) {
+        sprintf(
+            out->sponsorship.liquidityPoolID + (i * 2), "%.2x",
+            (unsigned char)in->stellarxdr_OperationBody_u.revokeSponsorshipOp
+                .stellarxdr_RevokeSponsorshipOp_u.ledgerKey
+                .stellarxdr_LedgerKey_u.liquidityPool.liquidityPoolID[i]);
+      }
+      out->sponsorship.liquidityPoolID[64] = '\0';
+      break;
+    }
+    break;
+  case stellarxdr_REVOKE_SPONSORSHIP_SIGNER:
+    out->revokeSponsorshipType = REVOKE_SPONSORSHIP_TYPE_SIGNER;
+    if (!encode_ed25519_public_key(
+            &in->stellarxdr_OperationBody_u.revokeSponsorshipOp
+                 .stellarxdr_RevokeSponsorshipOp_u.signer.accountID
+                 .stellarxdr_PublicKey_u.ed25519,
+            out->sponsorship.signer.accountID)) {
+      return false;
+    }
+    if (!signer_key_from_xdr_object(
+            &in->stellarxdr_OperationBody_u.revokeSponsorshipOp
+                 .stellarxdr_RevokeSponsorshipOp_u.signer.signerKey,
+            &out->sponsorship.signer.signerKey)) {
+      return false;
+    }
+    break;
+  default:
+    return false;
+  }
+  return true;
+}
+
 // 19. Clawback
 bool clawback_to_xdr_object(const struct ClawbackOp *in,
                             stellarxdr_OperationBody *out) {
@@ -1120,6 +1436,8 @@ bool operation_to_xdr_object(const struct Operation *in,
     opSuccess = end_sponsoring_future_reserves_to_xdr_object(&operation_body);
     break;
   case REVOKE_SPONSORSHIP:
+    opSuccess = revoke_sponsorship_to_xdr_object(&in->revokeSponsorshipOp,
+                                                 &operation_body);
     break;
   case CLAWBACK:
     opSuccess = clawback_to_xdr_object(&in->clawbackOp, &operation_body);
@@ -1250,6 +1568,9 @@ bool operation_from_xdr_object(const stellarxdr_Operation *in,
     opSuccess = true;
     break;
   case stellarxdr_REVOKE_SPONSORSHIP:
+    out->type = REVOKE_SPONSORSHIP;
+    opSuccess = revoke_sponsorship_from_xdr_object(&in->body,
+                                                   &out->revokeSponsorshipOp);
     break;
   case stellarxdr_CLAWBACK:
     out->type = CLAWBACK;
