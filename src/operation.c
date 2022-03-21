@@ -5,7 +5,9 @@ bool _to_xdr_account_id(const char *address, stellarxdr_AccountID *accountId) {
   struct Keypair keypair;
   keypair_from_address(&keypair, address);
   keypair_xdr_account_id(&keypair, accountId);
+  return true;
 }
+
 // 1. Create Account
 bool create_account_to_xdr_object(const struct CreateAccountOp *in,
                                   stellarxdr_OperationBody *out) {
@@ -764,6 +766,207 @@ bool path_payment_strict_send_from_xdr_object(
   return true;
 }
 
+// 14. Create Claimable Balance
+bool to_claim_predicate_xdr_object(
+    const ClaimPredicate *claimPredicate,
+    stellarxdr_ClaimPredicate *stellarxdrClaimPredicate) {
+  switch (claimPredicate->type) {
+  case CLAIM_PREDICATE_UNCONDITIONAL:
+    stellarxdrClaimPredicate->type = stellarxdr_CLAIM_PREDICATE_UNCONDITIONAL;
+    break;
+  case CLAIM_PREDICATE_AND:
+    stellarxdrClaimPredicate->type = stellarxdr_CLAIM_PREDICATE_AND;
+    stellarxdrClaimPredicate->stellarxdr_ClaimPredicate_u.andPredicates
+        .andPredicates_len = 2;
+    stellarxdrClaimPredicate->stellarxdr_ClaimPredicate_u.andPredicates
+        .andPredicates_val = malloc(sizeof(ClaimPredicate) * 2);
+    to_claim_predicate_xdr_object(
+        claimPredicate->predicate.andPredicates.left,
+        stellarxdrClaimPredicate->stellarxdr_ClaimPredicate_u.andPredicates
+            .andPredicates_val);
+    to_claim_predicate_xdr_object(
+        claimPredicate->predicate.andPredicates.right,
+        stellarxdrClaimPredicate->stellarxdr_ClaimPredicate_u.andPredicates
+                .andPredicates_val +
+            1);
+    break;
+  case CLAIM_PREDICATE_OR:
+    stellarxdrClaimPredicate->type = stellarxdr_CLAIM_PREDICATE_OR;
+    stellarxdrClaimPredicate->stellarxdr_ClaimPredicate_u.orPredicates
+        .orPredicates_len = 2;
+    stellarxdrClaimPredicate->stellarxdr_ClaimPredicate_u.orPredicates
+        .orPredicates_val = malloc(sizeof(ClaimPredicate) * 2);
+    to_claim_predicate_xdr_object(
+        claimPredicate->predicate.orPredicates.left,
+        stellarxdrClaimPredicate->stellarxdr_ClaimPredicate_u.orPredicates
+            .orPredicates_val);
+    to_claim_predicate_xdr_object(
+        claimPredicate->predicate.orPredicates.right,
+        stellarxdrClaimPredicate->stellarxdr_ClaimPredicate_u.orPredicates
+                .orPredicates_val +
+            1);
+    break;
+  case CLAIM_PREDICATE_NOT:
+    stellarxdrClaimPredicate->type = stellarxdr_CLAIM_PREDICATE_NOT;
+    stellarxdrClaimPredicate->stellarxdr_ClaimPredicate_u.notPredicate =
+        malloc(sizeof(ClaimPredicate));
+    to_claim_predicate_xdr_object(
+        claimPredicate->predicate.notPredicate,
+        stellarxdrClaimPredicate->stellarxdr_ClaimPredicate_u.notPredicate);
+    break;
+  case CLAIM_PREDICATE_BEFORE_ABSOLUTE_TIME:
+    stellarxdrClaimPredicate->type =
+        stellarxdr_CLAIM_PREDICATE_BEFORE_ABSOLUTE_TIME;
+    stellarxdrClaimPredicate->stellarxdr_ClaimPredicate_u.absBefore =
+        claimPredicate->predicate.absBefore;
+    break;
+  case CLAIM_PREDICATE_BEFORE_RELATIVE_TIME:
+    stellarxdrClaimPredicate->type =
+        stellarxdr_CLAIM_PREDICATE_BEFORE_RELATIVE_TIME;
+    stellarxdrClaimPredicate->stellarxdr_ClaimPredicate_u.relBefore =
+        claimPredicate->predicate.relBefore;
+    break;
+  default:
+    return false;
+  }
+  return true;
+}
+
+bool create_claimable_balance_to_xdr_object(
+    const struct CreateClaimableBalanceOp *in, stellarxdr_OperationBody *out) {
+  out->type = stellarxdr_CREATE_CLAIMABLE_BALANCE;
+  out->stellarxdr_OperationBody_u.createClaimableBalanceOp.amount = in->amount;
+  if (!asset_to_xdr_object(
+          &in->asset,
+          &out->stellarxdr_OperationBody_u.createClaimableBalanceOp.asset)) {
+    return false;
+  }
+  out->stellarxdr_OperationBody_u.createClaimableBalanceOp.claimants
+      .claimants_len = in->claimantsLength;
+  out->stellarxdr_OperationBody_u.createClaimableBalanceOp.claimants
+      .claimants_val =
+      malloc(sizeof(stellarxdr_Claimant) * in->claimantsLength);
+  for (int i = 0; i < in->claimantsLength; i++) {
+    struct Keypair keypair;
+    keypair_from_address(&keypair, in->claimants[i].destination);
+    keypair_xdr_account_id(
+        &keypair, &(out->stellarxdr_OperationBody_u.createClaimableBalanceOp
+                        .claimants.claimants_val +
+                    i)
+                       ->stellarxdr_Claimant_u.v0.destination);
+    (out->stellarxdr_OperationBody_u.createClaimableBalanceOp.claimants
+         .claimants_val +
+     i)
+        ->type = stellarxdr_CLAIMANT_TYPE_V0;
+    if (!to_claim_predicate_xdr_object(
+            &in->claimants[i].predicate,
+            &(out->stellarxdr_OperationBody_u.createClaimableBalanceOp.claimants
+                  .claimants_val +
+              i)
+                 ->stellarxdr_Claimant_u.v0.predicate)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+bool from_claim_predicate_xdr_object(
+    const stellarxdr_ClaimPredicate *stellarxdrClaimPredicate,
+    ClaimPredicate *claimPredicate) {
+  switch (stellarxdrClaimPredicate->type) {
+  case stellarxdr_CLAIM_PREDICATE_UNCONDITIONAL:
+    claimPredicate->type = CLAIM_PREDICATE_UNCONDITIONAL;
+    break;
+  case stellarxdr_CLAIM_PREDICATE_AND:
+    claimPredicate->type = CLAIM_PREDICATE_AND;
+    claimPredicate->predicate.andPredicates.left =
+        malloc(sizeof(ClaimPredicate));
+    claimPredicate->predicate.andPredicates.right =
+        malloc(sizeof(ClaimPredicate));
+    from_claim_predicate_xdr_object(
+        stellarxdrClaimPredicate->stellarxdr_ClaimPredicate_u.andPredicates
+            .andPredicates_val,
+        claimPredicate->predicate.andPredicates.left);
+    from_claim_predicate_xdr_object(
+        stellarxdrClaimPredicate->stellarxdr_ClaimPredicate_u.andPredicates
+                .andPredicates_val +
+            1,
+        claimPredicate->predicate.andPredicates.right);
+    break;
+  case stellarxdr_CLAIM_PREDICATE_OR:
+    claimPredicate->type = CLAIM_PREDICATE_OR;
+    claimPredicate->predicate.orPredicates.left =
+        malloc(sizeof(ClaimPredicate));
+    claimPredicate->predicate.orPredicates.right =
+        malloc(sizeof(ClaimPredicate));
+    from_claim_predicate_xdr_object(
+        stellarxdrClaimPredicate->stellarxdr_ClaimPredicate_u.orPredicates
+            .orPredicates_val,
+        claimPredicate->predicate.orPredicates.left);
+    from_claim_predicate_xdr_object(
+        stellarxdrClaimPredicate->stellarxdr_ClaimPredicate_u.orPredicates
+                .orPredicates_val +
+            1,
+        claimPredicate->predicate.orPredicates.right);
+    break;
+  case stellarxdr_CLAIM_PREDICATE_NOT:
+    claimPredicate->type = CLAIM_PREDICATE_NOT;
+    claimPredicate->predicate.notPredicate = malloc(sizeof(ClaimPredicate));
+    from_claim_predicate_xdr_object(
+        stellarxdrClaimPredicate->stellarxdr_ClaimPredicate_u.notPredicate,
+        claimPredicate->predicate.notPredicate);
+    break;
+  case stellarxdr_CLAIM_PREDICATE_BEFORE_ABSOLUTE_TIME:
+    claimPredicate->type = CLAIM_PREDICATE_BEFORE_ABSOLUTE_TIME;
+    claimPredicate->predicate.absBefore =
+        stellarxdrClaimPredicate->stellarxdr_ClaimPredicate_u.absBefore;
+    break;
+  case stellarxdr_CLAIM_PREDICATE_BEFORE_RELATIVE_TIME:
+    claimPredicate->type = CLAIM_PREDICATE_BEFORE_RELATIVE_TIME;
+    claimPredicate->predicate.relBefore =
+        stellarxdrClaimPredicate->stellarxdr_ClaimPredicate_u.relBefore;
+    break;
+  default:
+    return false;
+  }
+  return true;
+}
+
+bool create_claimable_balance_from_xdr_object(
+    const stellarxdr_OperationBody *in, struct CreateClaimableBalanceOp *out) {
+  out->claimantsLength = in->stellarxdr_OperationBody_u.createClaimableBalanceOp
+                             .claimants.claimants_len;
+  out->amount = in->stellarxdr_OperationBody_u.createClaimableBalanceOp.amount;
+  if (!asset_from_xdr_object(
+          &in->stellarxdr_OperationBody_u.createClaimableBalanceOp.asset,
+          &out->asset)) {
+    return false;
+  }
+  for (int i = 0; i < in->stellarxdr_OperationBody_u.createClaimableBalanceOp
+                          .claimants.claimants_len;
+       i++) {
+    if (!encode_ed25519_public_key(
+            &(in->stellarxdr_OperationBody_u.createClaimableBalanceOp.claimants
+                  .claimants_val +
+              i)
+                 ->stellarxdr_Claimant_u.v0.destination.stellarxdr_PublicKey_u
+                 .ed25519,
+            out->claimants[i].destination)) {
+      return false;
+    }
+
+    if (!from_claim_predicate_xdr_object(
+            &(in->stellarxdr_OperationBody_u.createClaimableBalanceOp.claimants
+                  .claimants_val +
+              i)
+                 ->stellarxdr_Claimant_u.v0.predicate,
+            &out->claimants[i].predicate)) {
+      return false;
+    }
+  }
+  return true;
+}
+
 // 15. Claim Claimable Balance
 bool claim_claimable_balance_to_xdr_object(
     const struct ClaimClaimableBalanceOp *in, stellarxdr_OperationBody *out) {
@@ -1423,6 +1626,8 @@ bool operation_to_xdr_object(const struct Operation *in,
         &in->pathPaymentStrictSendOp, &operation_body);
     break;
   case CREATE_CLAIMABLE_BALANCE:
+    opSuccess = create_claimable_balance_to_xdr_object(
+        &in->createClaimableBalanceOp, &operation_body);
     break;
   case CLAIM_CLAIMABLE_BALANCE:
     opSuccess = claim_claimable_balance_to_xdr_object(
@@ -1552,6 +1757,9 @@ bool operation_from_xdr_object(const stellarxdr_Operation *in,
         &in->body, &out->pathPaymentStrictSendOp);
     break;
   case stellarxdr_CREATE_CLAIMABLE_BALANCE:
+    out->type = CREATE_CLAIMABLE_BALANCE;
+    opSuccess = create_claimable_balance_from_xdr_object(
+        &in->body, &out->createClaimableBalanceOp);
     break;
   case stellarxdr_CLAIM_CLAIMABLE_BALANCE:
     out->type = CLAIM_CLAIMABLE_BALANCE;

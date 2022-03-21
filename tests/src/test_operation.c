@@ -1250,6 +1250,109 @@ void test_revoke_sponsorship_liquidity_pool() {
   assert_memory_equal(buf1, xdr, buf_size1);
 }
 
+void test_create_claimable_balance() {
+  ClaimPredicate predicate1_left_left = {
+      .type = CLAIM_PREDICATE_BEFORE_ABSOLUTE_TIME,
+      .predicate = {.absBefore = 1600000000}};
+  ClaimPredicate predicate1_left_right = {
+      .type = CLAIM_PREDICATE_UNCONDITIONAL,
+  };
+  ClaimPredicate predicate1_left = {
+      .type = CLAIM_PREDICATE_AND,
+      .predicate = {.andPredicates = {.left = &predicate1_left_left,
+                                      .right = &predicate1_left_right}}};
+
+  ClaimPredicate predicate1_right_left = {
+      .type = CLAIM_PREDICATE_BEFORE_RELATIVE_TIME,
+      .predicate = {.relBefore = 50000}};
+
+  ClaimPredicate predicate1_right_right_not = {
+      .type = CLAIM_PREDICATE_BEFORE_ABSOLUTE_TIME,
+      .predicate = {.absBefore = 1700000000}};
+  ClaimPredicate predicate1_right_right = {
+      .type = CLAIM_PREDICATE_NOT,
+      .predicate = {.notPredicate = &predicate1_right_right_not}};
+  ClaimPredicate predicate1_right = {
+      .type = CLAIM_PREDICATE_OR,
+      .predicate = {.orPredicates = {.left = &predicate1_right_left,
+                                     .right = &predicate1_right_right}}};
+  ClaimPredicate predicate1 = {
+      .type = CLAIM_PREDICATE_AND,
+      .predicate = {.andPredicates = {.left = &predicate1_left,
+                                      .right = &predicate1_right}}};
+  ClaimPredicate predicate2 = {
+      .type = CLAIM_PREDICATE_UNCONDITIONAL,
+  };
+  ClaimPredicate predicate3 = {.type = CLAIM_PREDICATE_BEFORE_ABSOLUTE_TIME,
+                               .predicate = {.absBefore = 1601391266}};
+
+  struct Claimant claimant1 = {
+      .predicate = predicate1,
+      .destination =
+          "GCEZWKCA5VLDNRLN3RPRJMRZOX3Z6G5CHCGSNFHEYVXM3XOJMDS674JZ"};
+  struct Claimant claimant2 = {
+      .predicate = predicate2,
+      .destination =
+          "GBRSRPWAE26K5SZ5FQNCQ7Z3VW2Q7O7C64Z25NXJXWL4HBGS77X7CWTG"};
+  struct Claimant claimant3 = {
+      .predicate = predicate3,
+      .destination =
+          "GCXGGIREYPENNT3LYFRD5I2SDALFWM3NKKLIQD3DMJ63ML5N3FG4OQQG"};
+
+  struct Asset asset = {
+      .type = ASSET_TYPE_CREDIT_ALPHANUM4,
+      .code = "USDC",
+      .issuer = "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN"};
+  struct Operation operation = {
+      .source_account_present = false,
+      .type = CREATE_CLAIMABLE_BALANCE,
+      .createClaimableBalanceOp = {
+          .asset = asset,
+          .amount = 50000000,
+          .claimantsLength = 3,
+          .claimants = {claimant1, claimant2, claimant3}}};
+
+  char *buf0 = NULL;
+  size_t buf_size0 = 0;
+  assert_true(operation_to_xdr(&operation, &buf0, &buf_size0));
+  char xdr[] = {
+      0x0,  0x0,  0x0,  0x0,  0x0,  0x0,  0x0,  0xe,  0x0,  0x0,  0x0,  0x1,
+      0x55, 0x53, 0x44, 0x43, 0x0,  0x0,  0x0,  0x0,  0x3b, 0x99, 0x11, 0x38,
+      0xe,  0xfe, 0x98, 0x8b, 0xa0, 0xa8, 0x90, 0xe,  0xb1, 0xcf, 0xe4, 0x4f,
+      0x36, 0x6f, 0x7d, 0xbe, 0x94, 0x6b, 0xed, 0x7,  0x72, 0x40, 0xf7, 0xf6,
+      0x24, 0xdf, 0x15, 0xc5, 0x0,  0x0,  0x0,  0x0,  0x2,  0xfa, 0xf0, 0x80,
+      0x0,  0x0,  0x0,  0x3,  0x0,  0x0,  0x0,  0x0,  0x0,  0x0,  0x0,  0x0,
+      0x89, 0x9b, 0x28, 0x40, 0xed, 0x56, 0x36, 0xc5, 0x6d, 0xdc, 0x5f, 0x14,
+      0xb2, 0x39, 0x75, 0xf7, 0x9f, 0x1b, 0xa2, 0x38, 0x8d, 0x26, 0x94, 0xe4,
+      0xc5, 0x6e, 0xcd, 0xdd, 0xc9, 0x60, 0xe5, 0xef, 0x0,  0x0,  0x0,  0x1,
+      0x0,  0x0,  0x0,  0x2,  0x0,  0x0,  0x0,  0x1,  0x0,  0x0,  0x0,  0x2,
+      0x0,  0x0,  0x0,  0x4,  0x0,  0x0,  0x0,  0x0,  0x5f, 0x5e, 0x10, 0x0,
+      0x0,  0x0,  0x0,  0x0,  0x0,  0x0,  0x0,  0x2,  0x0,  0x0,  0x0,  0x2,
+      0x0,  0x0,  0x0,  0x5,  0x0,  0x0,  0x0,  0x0,  0x0,  0x0,  0xc3, 0x50,
+      0x0,  0x0,  0x0,  0x3,  0x0,  0x0,  0x0,  0x1,  0x0,  0x0,  0x0,  0x4,
+      0x0,  0x0,  0x0,  0x0,  0x65, 0x53, 0xf1, 0x0,  0x0,  0x0,  0x0,  0x0,
+      0x0,  0x0,  0x0,  0x0,  0x63, 0x28, 0xbe, 0xc0, 0x26, 0xbc, 0xae, 0xcb,
+      0x3d, 0x2c, 0x1a, 0x28, 0x7f, 0x3b, 0xad, 0xb5, 0xf,  0xbb, 0xe2, 0xf7,
+      0x33, 0xae, 0xb6, 0xe9, 0xbd, 0x97, 0xc3, 0x84, 0xd2, 0xff, 0xef, 0xf1,
+      0x0,  0x0,  0x0,  0x0,  0x0,  0x0,  0x0,  0x0,  0x0,  0x0,  0x0,  0x0,
+      0xae, 0x63, 0x22, 0x24, 0xc3, 0xc8, 0xd6, 0xcf, 0x6b, 0xc1, 0x62, 0x3e,
+      0xa3, 0x52, 0x18, 0x16, 0x5b, 0x33, 0x6d, 0x52, 0x96, 0x88, 0xf,  0x63,
+      0x62, 0x7d, 0xb6, 0x2f, 0xad, 0xd9, 0x4d, 0xc7, 0x0,  0x0,  0x0,  0x4,
+      0x0,  0x0,  0x0,  0x0,  0x5f, 0x73, 0x4a, 0xa2};
+  assert_int_equal(buf_size0, 272);
+  assert_memory_equal(buf0, xdr, buf_size0);
+
+  stellarxdr_Operation to;
+  assert_true(operation_to_xdr_object(&operation, &to));
+  struct Operation from;
+  assert_true(operation_from_xdr_object(&to, &from));
+  char *buf1 = NULL;
+  size_t buf_size1 = 0;
+  assert_true(operation_to_xdr(&from, &buf1, &buf_size1));
+  assert_int_equal(buf_size1, 272);
+  assert_memory_equal(buf1, xdr, buf_size1);
+}
+
 int main() {
   const struct CMUnitTest tests[] = {
       cmocka_unit_test(test_create_account),
@@ -1285,6 +1388,7 @@ int main() {
       cmocka_unit_test(test_revoke_sponsorship_claimable_balance),
       cmocka_unit_test(test_revoke_sponsorship_signer),
       cmocka_unit_test(test_revoke_sponsorship_liquidity_pool),
+      cmocka_unit_test(test_create_claimable_balance),
   };
   return cmocka_run_group_tests(tests, NULL, NULL);
 }

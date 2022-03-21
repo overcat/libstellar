@@ -281,6 +281,46 @@ struct RevokeSponsorshipOp {
   } sponsorship;
 };
 
+enum ClaimPredicateType {
+  CLAIM_PREDICATE_UNCONDITIONAL = 0,
+  CLAIM_PREDICATE_AND = 1,
+  CLAIM_PREDICATE_OR = 2,
+  CLAIM_PREDICATE_NOT = 3,
+  CLAIM_PREDICATE_BEFORE_ABSOLUTE_TIME = 4,
+  CLAIM_PREDICATE_BEFORE_RELATIVE_TIME = 5
+};
+
+typedef struct ClaimPredicate ClaimPredicate;
+
+struct ClaimPredicate {
+  enum ClaimPredicateType type;
+  union {
+    struct {
+      ClaimPredicate *left;
+      ClaimPredicate *right;
+    } andPredicates;
+    struct {
+      ClaimPredicate *left;
+      ClaimPredicate *right;
+    } orPredicates;
+    ClaimPredicate *notPredicate;
+    int64_t absBefore;
+    int64_t relBefore;
+  } predicate;
+};
+
+struct Claimant {
+  char destination[57];
+  ClaimPredicate predicate;
+};
+
+struct CreateClaimableBalanceOp {
+  struct Asset asset;
+  int64_t amount;
+  uint8_t claimantsLength;
+  struct Claimant claimants[10];
+};
+
 struct Operation {
   bool source_account_present;
   struct MuxedAccount source_account;
@@ -307,6 +347,7 @@ struct Operation {
     struct SetOptionsOp setOptionsOp;
     struct ClawbackOp clawbackOp;
     struct RevokeSponsorshipOp revokeSponsorshipOp;
+    struct CreateClaimableBalanceOp createClaimableBalanceOp;
   };
 };
 
