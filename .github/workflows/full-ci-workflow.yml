@@ -21,4 +21,5 @@ jobs:
 
       - name: Test
         run: |
+          cd full
           cmake -Btests/build -Htests/ && make -C tests/build/ && make -C tests/build test
