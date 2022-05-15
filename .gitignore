@@ -51,4 +51,6 @@ Module.symvers
 Mkfile.old
 dkms.conf
 
+full/tests/build/
+
 tests/build/
