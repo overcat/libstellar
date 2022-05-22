@@ -30,3 +30,12 @@ else ()
     target_link_libraries(test_utils PRIVATE cmocka libstellar)
 endif ()
 add_test(test_utils test_utils)
+
+
+add_executable(test_reader test_reader.c)
+if (UNIX AND NOT APPLE)
+    target_link_libraries(test_reader PRIVATE cmocka libstellar bsd)
+else ()
+    target_link_libraries(test_reader PRIVATE cmocka libstellar)
+endif ()
+add_test(test_reader test_reader)
