@@ -2,23 +2,23 @@
 
 void write_uint32(uint32_t value, sha256_update_func sha256_update_func) {
     uint8_t data[4] = {0};
-    data[3] = (value >> 24) & 0xFF;
-    data[2] = (value >> 16) & 0xFF;
-    data[1] = (value >> 8) & 0xFF;
-    data[0] = value & 0xFF;
+    data[0] = (value >> 24) & 0xFF;
+    data[1] = (value >> 16) & 0xFF;
+    data[2] = (value >> 8) & 0xFF;
+    data[3] = value & 0xFF;
     sha256_update_func(data, sizeof(data));
 }
 
 void write_uint64(uint64_t value, sha256_update_func sha256_update_func) {
     uint8_t data[8] = {0};
-    data[7] = (value >> 56) & 0xFF;
-    data[6] = (value >> 48) & 0xFF;
-    data[5] = (value >> 40) & 0xFF;
-    data[4] = (value >> 32) & 0xFF;
-    data[3] = (value >> 24) & 0xFF;
-    data[2] = (value >> 16) & 0xFF;
-    data[1] = (value >> 8) & 0xFF;
-    data[0] = value & 0xFF;
+    data[0] = (value >> 56) & 0xFF;
+    data[1] = (value >> 48) & 0xFF;
+    data[2] = (value >> 40) & 0xFF;
+    data[3] = (value >> 32) & 0xFF;
+    data[4] = (value >> 24) & 0xFF;
+    data[5] = (value >> 16) & 0xFF;
+    data[6] = (value >> 8) & 0xFF;
+    data[7] = value & 0xFF;
     sha256_update_func(data, sizeof(data));
 }
 
@@ -42,9 +42,9 @@ void write_string(const uint8_t *data, size_t len, sha256_update_func sha256_upd
     }
 }
 
-void write_account_id(const account_id_t *account_id, sha256_update_func sha256_update_func) {
+void write_account_id(account_id_t account_id, sha256_update_func sha256_update_func) {
     write_uint32(PUBLIC_KEY_TYPE_ED25519, sha256_update_func);
-    sha256_update_func((uint8_t *) account_id, 32);
+    sha256_update_func(account_id, 32);
 }
 
 void write_muxed_account_med25519(const muxed_account_med25519_t *med25519,
@@ -117,14 +117,14 @@ bool write_asset(const asset_t *asset, sha256_update_func sha256_update_func) {
             char code4[4 + 1] = {0};
             strlcpy(code4, asset->alpha_num4.asset_code, sizeof(code4));
             sha256_update_func((uint8_t *) code4, 4);
-            write_account_id(&asset->alpha_num4.issuer, sha256_update_func);
+            write_account_id(asset->alpha_num4.issuer, sha256_update_func);
             break;
         }
         case ASSET_TYPE_CREDIT_ALPHANUM12: {
             char code12[12 + 1] = {0};
             strlcpy(code12, asset->alpha_num12.asset_code, sizeof(code12));
             sha256_update_func((uint8_t *) code12, 12);
-            write_account_id(&asset->alpha_num12.issuer, sha256_update_func);
+            write_account_id(asset->alpha_num12.issuer, sha256_update_func);
             break;
         }
         default:
@@ -154,7 +154,7 @@ bool write_change_trust_asset(const change_trust_asset_t *asset,
 }
 
 void write_create_account_op(const create_account_op_t *op, sha256_update_func sha256_update_func) {
-    write_account_id(&op->destination, sha256_update_func);
+    write_account_id(op->destination, sha256_update_func);
     write_uint64(op->starting_balance, sha256_update_func);
 }
 
@@ -239,7 +239,7 @@ void write_signer(const signer_t *signer, sha256_update_func sha256_update_func)
 void write_set_options_op(const set_options_op_t *op, sha256_update_func sha256_update_func) {
     if (op->inflation_destination_present) {
         write_bool(true, sha256_update_func);
-        write_account_id(&op->inflation_destination, sha256_update_func);
+        write_account_id(op->inflation_destination, sha256_update_func);
     } else {
         write_bool(false, sha256_update_func);
     }
@@ -307,7 +307,7 @@ void write_change_trust_op(const change_trust_op_t *op, sha256_update_func sha25
 }
 
 void write_allow_trust_op(const allow_trust_op_t *op, sha256_update_func sha256_update_func) {
-    write_account_id(&op->trustor, sha256_update_func);
+    write_account_id(op->trustor, sha256_update_func);
     size_t len = strlen(op->asset_code);
     if (len <= 4) {
         write_uint32(ASSET_TYPE_CREDIT_ALPHANUM4, sha256_update_func);
@@ -376,7 +376,7 @@ void write_claim_claimable_balance_op(const claim_claimable_balance_op_t *op,
 
 void write_begin_sponsoring_future_reserves_op(const begin_sponsoring_future_reserves_op_t *op,
                                                sha256_update_func sha256_update_func) {
-    write_account_id(&op->sponsored_id, sha256_update_func);
+    write_account_id(op->sponsored_id, sha256_update_func);
 }
 
 void write_revoke_sponsorship_op(const revoke_sponsorship_op_t *op,
@@ -396,7 +396,7 @@ void write_clawback_claimable_balance_op(const clawback_claimable_balance_op_t *
 
 void write_set_trust_line_flags_op(const set_trust_line_flags_op_t *op,
                                    sha256_update_func sha256_update_func) {
-    write_account_id(&op->trustor, sha256_update_func);
+    write_account_id(op->trustor, sha256_update_func);
     write_asset(&op->asset, sha256_update_func);
     write_uint32(op->clear_flags, sha256_update_func);
     write_uint32(op->set_flags, sha256_update_func);

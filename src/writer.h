@@ -19,7 +19,7 @@ void write_bool(bool value, sha256_update_func sha256_update_func);
 
 void write_string(const uint8_t *data, size_t len, sha256_update_func sha256_update_func);
 
-void write_account_id(const account_id_t *account_id, sha256_update_func sha256_update_func);
+void write_account_id(account_id_t account_id, sha256_update_func sha256_update_func);
 
 void write_muxed_account_med25519(const muxed_account_med25519_t *med25519,
                                   sha256_update_func sha256_update_func);
