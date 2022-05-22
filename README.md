@@ -17,5 +17,5 @@ Currently, there are two methods for processing Stellar transactions on hardware
 2. send the transaction information (such as source, fee and operations, etc, due to memory constraints, a transaction
    is usually split into multiple details and sent separately) to the wallet,
    the wallet needs to assemble these information to get the hash of the transaction, and return the signature,
-   Trezor wallet uses this method, if you also want to use this method way, you should start with `src/writer.h`.
+   Trezor wallet uses this method, if you want to use it too, start with `src/writer.h`.
 

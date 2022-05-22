@@ -118,4 +118,6 @@ bool read_operation(buffer_t *buffer, operation_t *opDetails);
 bool read_tx_details(buffer_t *buffer, transaction_details_t *transaction);
 
 bool read_fee_bump_tx_details(buffer_t *buffer, fee_bump_transaction_details_t *feeBumpTransaction);
+
+bool read_transaction_envelope_type(buffer_t *buffer, envelope_type_t *envelope_type);
 #endif  // LIBSTELLAR_READER_H

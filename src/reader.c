@@ -886,3 +886,14 @@ bool read_fee_bump_tx_details(buffer_t *buffer,
     READER_CHECK(buffer_read64(buffer, (uint64_t *) &feeBumpTransaction->fee))
     return true;
 }
+
+bool read_transaction_envelope_type(buffer_t *buffer, envelope_type_t *envelope_type) {
+    uint32_t type;
+    READER_CHECK(buffer_read32(buffer, &type))
+    if (type != ENVELOPE_TYPE_TX && type != ENVELOPE_TYPE_TX_FEE_BUMP) {
+        return false;
+    }
+
+    *envelope_type = type;
+    return true;
+}

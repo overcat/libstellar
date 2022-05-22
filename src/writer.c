@@ -545,3 +545,8 @@ void write_fee_bump_transaction_details(
     write_muxed_account(&fee_bump_transaction_details->fee_source, sha256_update_func);
     write_uint64(fee_bump_transaction_details->fee, sha256_update_func);
 }
+
+void write_transaction_envelope_type(const envelope_type_t *envelope_type,
+                                     sha256_update_func sha256_update_func) {
+    write_uint32(*envelope_type, sha256_update_func);
+}

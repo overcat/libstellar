@@ -115,4 +115,6 @@ void write_fee_bump_transaction_details(
     const fee_bump_transaction_details_t *fee_bump_transaction_details,
     sha256_update_func sha256_update_func);
 
+void write_transaction_envelope_type(const envelope_type_t *envelope_type,
+                                     sha256_update_func sha256_update_func);
 #endif  // LIBSTELLAR_WRITER_H
