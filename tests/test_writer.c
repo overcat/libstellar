@@ -151,13 +151,45 @@ static void test_manage_sell_offer_op() {
     assert_memory_equal(expect_hash, hash, sizeof(hash));
 }
 
+static void test_create_passive_sell_offer_op() {
+    uint8_t issuer1[] = {0x9b, 0x8e, 0xba, 0xf8, 0x96, 0x38, 0x55, 0x1d, 0xcf, 0x9e, 0xa4,
+                         0xf7, 0x43, 0x20, 0x71, 0x10, 0x6b, 0x87, 0xab, 0xe,  0x2d, 0xb3,
+                         0xd6, 0x9b, 0x75, 0xa5, 0x38, 0x22, 0x72, 0xf7, 0x59, 0xd8};
+    asset_t asset1 = {.type = ASSET_TYPE_CREDIT_ALPHANUM4,
+                      .alpha_num4 = {.asset_code = "USD", .issuer = issuer1}};
+
+    operation_t operation = {.type = OPERATION_TYPE_CREATE_PASSIVE_SELL_OFFER,
+                             .source_account_present = true,
+                             .source_account =
+                                 {
+                                     .type = KEY_TYPE_ED25519,
+                                     .ed25519 = kp1_public,
+                                 },
+                             .create_passive_sell_offer_op = {
+                                 .selling = {.type = ASSET_TYPE_NATIVE},
+                                 .buying = asset1,
+                                 .amount = 100000000,
+                                 .price = {.n = 1, .d = 1},
+                             }};
+
+    sha256_init(&sha256_ctx);
+    write_operation(&operation, sha256_update_f);
+    sha256_final(&sha256_ctx, hash);
+
+    uint8_t expect_hash[] = {0x29, 0xa4, 0x32, 0x47, 0x94, 0x28, 0x59, 0xae, 0x92, 0x62, 0x6e,
+                             0x38, 0xbd, 0x6e, 0x7d, 0x96, 0xc,  0xfc, 0x8f, 0xcd, 0xae, 0x9a,
+                             0xc9, 0xc9, 0xa9, 0x87, 0x3d, 0xbb, 0x67, 0x6,  0x67, 0xc3};
+
+    assert_memory_equal(expect_hash, hash, sizeof(hash));
+}
+
 int main() {
     const struct CMUnitTest tests[] = {
         cmocka_unit_test(test_create_account_op),
         cmocka_unit_test(test_payment_op),
         cmocka_unit_test(test_path_payment_strict_receive_op),
         cmocka_unit_test(test_manage_sell_offer_op),
-
+        cmocka_unit_test(test_create_passive_sell_offer_op),
     };
     return cmocka_run_group_tests(tests, NULL, NULL);
 }
