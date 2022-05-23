@@ -118,11 +118,46 @@ static void test_path_payment_strict_receive_op() {
     assert_memory_equal(expect_hash, hash, sizeof(hash));
 }
 
+static void test_manage_sell_offer_op() {
+    uint8_t issuer1[] = {0x9b, 0x8e, 0xba, 0xf8, 0x96, 0x38, 0x55, 0x1d, 0xcf, 0x9e, 0xa4,
+                         0xf7, 0x43, 0x20, 0x71, 0x10, 0x6b, 0x87, 0xab, 0xe,  0x2d, 0xb3,
+                         0xd6, 0x9b, 0x75, 0xa5, 0x38, 0x22, 0x72, 0xf7, 0x59, 0xd8};
+    asset_t asset1 = {.type = ASSET_TYPE_CREDIT_ALPHANUM4,
+                      .alpha_num4 = {.asset_code = "USD", .issuer = issuer1}};
+
+    operation_t operation = {.type = OPERATION_TYPE_MANAGE_SELL_OFFER,
+                             .source_account_present = true,
+                             .source_account =
+                                 {
+                                     .type = KEY_TYPE_ED25519,
+                                     .ed25519 = kp1_public,
+                                 },
+                             .manage_sell_offer_op = {
+                                 .selling = {.type = ASSET_TYPE_NATIVE},
+                                 .buying = asset1,
+                                 .amount = 100000000,
+                                 .price = {.n = 1, .d = 1},
+                                 .offer_id = 123456,
+                             }};
+
+    sha256_init(&sha256_ctx);
+    write_operation(&operation, sha256_update_f);
+    sha256_final(&sha256_ctx, hash);
+
+    uint8_t expect_hash[] = {0xf4, 0x6b, 0xa6, 0xa2, 0x1b, 0x49, 0x89, 0x6,  0x23, 0x7f, 0xf0,
+                             0x1b, 0x4e, 0x4a, 0xcd, 0xee, 0x11, 0x45, 0x35, 0xee, 0x4f, 0x8,
+                             0x5c, 0xcb, 0x28, 0x22, 0xb3, 0x8c, 0x9,  0x76, 0xcd, 0xc1};
+
+    assert_memory_equal(expect_hash, hash, sizeof(hash));
+}
+
 int main() {
     const struct CMUnitTest tests[] = {
         cmocka_unit_test(test_create_account_op),
         cmocka_unit_test(test_payment_op),
         cmocka_unit_test(test_path_payment_strict_receive_op),
+        cmocka_unit_test(test_manage_sell_offer_op),
+
     };
     return cmocka_run_group_tests(tests, NULL, NULL);
 }
