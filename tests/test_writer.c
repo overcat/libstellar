@@ -48,9 +48,34 @@ static void test_create_account_op() {
     assert_memory_equal(expect_hash, hash, sizeof(hash));
 }
 
+static void test_payment_op() {
+    operation_t operation = {
+        .type = OPERATION_TYPE_PAYMENT,
+        .source_account_present = true,
+        .source_account =
+            {
+                .type = KEY_TYPE_ED25519,
+                .ed25519 = kp1_public,
+            },
+        .payment_op = {.destination = {.type = KEY_TYPE_ED25519, .ed25519 = kp2_public},
+                       .amount = 100000000000,
+                       .asset = {.type = ASSET_TYPE_NATIVE}}};
+
+    sha256_init(&sha256_ctx);
+    write_operation(&operation, sha256_update_f);
+    sha256_final(&sha256_ctx, hash);
+
+    uint8_t expect_hash[] = {0xde, 0x4d, 0x0,  0x24, 0x8a, 0x20, 0x25, 0x8c, 0xb9, 0x6a, 0xf6,
+                             0xad, 0xe4, 0xf2, 0x8,  0xde, 0x52, 0x86, 0x8a, 0x82, 0x33, 0xc3,
+                             0x84, 0x1c, 0x45, 0xf7, 0x65, 0xe,  0x25, 0x7c, 0x96, 0x5d};
+
+    assert_memory_equal(expect_hash, hash, sizeof(hash));
+}
+
 int main() {
     const struct CMUnitTest tests[] = {
         cmocka_unit_test(test_create_account_op),
+        cmocka_unit_test(test_payment_op),
     };
     return cmocka_run_group_tests(tests, NULL, NULL);
 }
