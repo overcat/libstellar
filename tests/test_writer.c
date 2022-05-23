@@ -183,6 +183,36 @@ static void test_create_passive_sell_offer_op() {
     assert_memory_equal(expect_hash, hash, sizeof(hash));
 }
 
+static void test_change_trust_op() {
+    uint8_t issuer1[] = {0x9b, 0x8e, 0xba, 0xf8, 0x96, 0x38, 0x55, 0x1d, 0xcf, 0x9e, 0xa4,
+                         0xf7, 0x43, 0x20, 0x71, 0x10, 0x6b, 0x87, 0xab, 0xe,  0x2d, 0xb3,
+                         0xd6, 0x9b, 0x75, 0xa5, 0x38, 0x22, 0x72, 0xf7, 0x59, 0xd8};
+    change_trust_asset_t asset1 = {.type = ASSET_TYPE_CREDIT_ALPHANUM4,
+                                   .alpha_num4 = {.asset_code = "USD", .issuer = issuer1}};
+
+    operation_t operation = {.type = OPERATION_TYPE_CHANGE_TRUST,
+                             .source_account_present = true,
+                             .source_account =
+                                 {
+                                     .type = KEY_TYPE_ED25519,
+                                     .ed25519 = kp1_public,
+                                 },
+                             .change_trust_op = {
+                                 .line = asset1,
+                                 .limit = 100000000,
+                             }};
+
+    sha256_init(&sha256_ctx);
+    write_operation(&operation, sha256_update_f);
+    sha256_final(&sha256_ctx, hash);
+
+    uint8_t expect_hash[] = {0x3a, 0x93, 0xa,  0xa2, 0xc3, 0x8a, 0xbe, 0xa6, 0xf7, 0x66, 0xc4,
+                             0x8f, 0x99, 0x94, 0x72, 0x70, 0xec, 0x88, 0x69, 0xb,  0xfb, 0x88,
+                             0x80, 0x52, 0x44, 0x45, 0xd7, 0x84, 0xb,  0x17, 0xbd, 0xa};
+
+    assert_memory_equal(expect_hash, hash, sizeof(hash));
+}
+
 int main() {
     const struct CMUnitTest tests[] = {
         cmocka_unit_test(test_create_account_op),
@@ -190,6 +220,7 @@ int main() {
         cmocka_unit_test(test_path_payment_strict_receive_op),
         cmocka_unit_test(test_manage_sell_offer_op),
         cmocka_unit_test(test_create_passive_sell_offer_op),
+        cmocka_unit_test(test_change_trust_op),
     };
     return cmocka_run_group_tests(tests, NULL, NULL);
 }
