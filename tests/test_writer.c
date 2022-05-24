@@ -434,6 +434,32 @@ static void test_path_payment_strict_send_op() {
     assert_memory_equal(expect_hash, hash, sizeof(hash));
 }
 
+static void test_claim_claimable_balance_op() {
+    operation_t operation = {
+        .type = OPERATION_TYPE_CLAIM_CLAIMABLE_BALANCE,
+        .source_account_present = true,
+        .source_account =
+            {
+                .type = KEY_TYPE_ED25519,
+                .ed25519 = kp1_public,
+            },
+        .claim_claimable_balance_op = {
+            .balance_id = {.type = CLAIMABLE_BALANCE_ID_TYPE_V0,
+                           .v0 = {0xda, 0xd,  0x57, 0xda, 0x7d, 0x48, 0x50, 0xe7, 0xfc, 0x10, 0xd2,
+                                  0xa9, 0xd0, 0xeb, 0xc7, 0x31, 0xf7, 0xaf, 0xb4, 0x5,  0x74, 0xc0,
+                                  0x33, 0x95, 0xb1, 0x7d, 0x49, 0x14, 0x9b, 0x91, 0xf5, 0xbe}}}};
+    // TODO: v0 ptr?
+    sha256_init(&sha256_ctx);
+    write_operation(&operation, sha256_update_f);
+    sha256_final(&sha256_ctx, hash);
+
+    uint8_t expect_hash[] = {0xd8, 0x1e, 0xea, 0x50, 0xca, 0x2e, 0xa9, 0xb7, 0x75, 0x92, 0xde,
+                             0xf8, 0x5f, 0x3,  0xa8, 0xad, 0xfa, 0x9f, 0xb,  0xf,  0x96, 0xe6,
+                             0x45, 0xb7, 0x6e, 0xf8, 0xad, 0x56, 0x8e, 0xad, 0x4e, 0xd6};
+
+    assert_memory_equal(expect_hash, hash, sizeof(hash));
+}
+
 int main() {
     const struct CMUnitTest tests[] = {
         cmocka_unit_test(test_create_account_op),
@@ -450,6 +476,7 @@ int main() {
         cmocka_unit_test(test_bump_sequence),
         cmocka_unit_test(test_manage_buy_offer_op),
         cmocka_unit_test(test_path_payment_strict_send_op),
+        cmocka_unit_test(test_claim_claimable_balance_op),
     };
     return cmocka_run_group_tests(tests, NULL, NULL);
 }
