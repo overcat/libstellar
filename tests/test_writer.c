@@ -236,6 +236,30 @@ static void test_allow_trust_op() {
     assert_memory_equal(expect_hash, hash, sizeof(hash));
 }
 
+static void test_account_merge_op() {
+    operation_t operation = {.type = OPERATION_TYPE_ACCOUNT_MERGE,
+                             .source_account_present = true,
+                             .source_account =
+                                 {
+                                     .type = KEY_TYPE_ED25519,
+                                     .ed25519 = kp1_public,
+                                 },
+                             .account_merge_op = {.destination = {
+                                                      .type = KEY_TYPE_ED25519,
+                                                      .ed25519 = kp2_public,
+                                                  }}};
+
+    sha256_init(&sha256_ctx);
+    write_operation(&operation, sha256_update_f);
+    sha256_final(&sha256_ctx, hash);
+
+    uint8_t expect_hash[] = {0xe,  0x2,  0x8f, 0x18, 0xa7, 0x9e, 0xc6, 0x7e, 0xe9, 0xe0, 0x76,
+                             0xb5, 0x1a, 0x3d, 0xd0, 0xf7, 0xf0, 0x3c, 0x53, 0x97, 0x3d, 0x82,
+                             0xec, 0x8,  0x1,  0x22, 0xc4, 0xed, 0xc2, 0xe5, 0x7c, 0xc9};
+
+    assert_memory_equal(expect_hash, hash, sizeof(hash));
+}
+
 int main() {
     const struct CMUnitTest tests[] = {
         cmocka_unit_test(test_create_account_op),
@@ -245,6 +269,7 @@ int main() {
         cmocka_unit_test(test_create_passive_sell_offer_op),
         cmocka_unit_test(test_change_trust_op),
         cmocka_unit_test(test_allow_trust_op),
+        cmocka_unit_test(test_account_merge_op),
     };
     return cmocka_run_group_tests(tests, NULL, NULL);
 }
