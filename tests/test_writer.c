@@ -334,6 +334,106 @@ static void test_manage_data_remove_data() {
     assert_memory_equal(expect_hash, hash, sizeof(hash));
 }
 
+static void test_bump_sequence() {
+    operation_t operation = {.type = OPERATION_TYPE_BUMP_SEQUENCE,
+                             .source_account_present = true,
+                             .source_account =
+                                 {
+                                     .type = KEY_TYPE_ED25519,
+                                     .ed25519 = kp1_public,
+                                 },
+                             .bump_sequence_op = {.bump_to = 12345678900001}};
+
+    sha256_init(&sha256_ctx);
+    write_operation(&operation, sha256_update_f);
+    sha256_final(&sha256_ctx, hash);
+
+    uint8_t expect_hash[] = {0xe8, 0x44, 0x64, 0xb,  0x92, 0xa8, 0x2,  0x74, 0x57, 0x10, 0xb8,
+                             0x94, 0xf1, 0x40, 0x22, 0x71, 0x4d, 0x6c, 0x74, 0xcf, 0x2c, 0x8b,
+                             0xf7, 0xc8, 0x91, 0xc8, 0x8c, 0xd0, 0x24, 0x1a, 0x57, 0xe0};
+
+    assert_memory_equal(expect_hash, hash, sizeof(hash));
+}
+
+static void test_manage_buy_offer_op() {
+    uint8_t issuer1[] = {0x9b, 0x8e, 0xba, 0xf8, 0x96, 0x38, 0x55, 0x1d, 0xcf, 0x9e, 0xa4,
+                         0xf7, 0x43, 0x20, 0x71, 0x10, 0x6b, 0x87, 0xab, 0xe,  0x2d, 0xb3,
+                         0xd6, 0x9b, 0x75, 0xa5, 0x38, 0x22, 0x72, 0xf7, 0x59, 0xd8};
+    asset_t asset1 = {.type = ASSET_TYPE_CREDIT_ALPHANUM4,
+                      .alpha_num4 = {.asset_code = "USD", .issuer = issuer1}};
+
+    operation_t operation = {.type = OPERATION_TYPE_MANAGE_BUY_OFFER,
+                             .source_account_present = true,
+                             .source_account =
+                                 {
+                                     .type = KEY_TYPE_ED25519,
+                                     .ed25519 = kp1_public,
+                                 },
+                             .manage_buy_offer_op = {
+                                 .selling = {.type = ASSET_TYPE_NATIVE},
+                                 .buying = asset1,
+                                 .buy_amount = 100000000,
+                                 .price = {.n = 1, .d = 1},
+                                 .offer_id = 123456,
+                             }};
+
+    sha256_init(&sha256_ctx);
+    write_operation(&operation, sha256_update_f);
+    sha256_final(&sha256_ctx, hash);
+
+    uint8_t expect_hash[] = {0x88, 0xfe, 0x5c, 0xa2, 0xa5, 0x23, 0x79, 0xd7, 0x4e, 0x3b, 0x6f,
+                             0x4a, 0xf8, 0x30, 0xc3, 0xa3, 0x5f, 0x3e, 0x33, 0xd9, 0x6f, 0x59,
+                             0x7f, 0xc6, 0x7f, 0x1a, 0x75, 0xb1, 0x55, 0xd9, 0xea, 0x18};
+
+    assert_memory_equal(expect_hash, hash, sizeof(hash));
+}
+
+static void test_path_payment_strict_send_op() {
+    uint8_t issuer1[] = {0x9b, 0x8e, 0xba, 0xf8, 0x96, 0x38, 0x55, 0x1d, 0xcf, 0x9e, 0xa4,
+                         0xf7, 0x43, 0x20, 0x71, 0x10, 0x6b, 0x87, 0xab, 0xe,  0x2d, 0xb3,
+                         0xd6, 0x9b, 0x75, 0xa5, 0x38, 0x22, 0x72, 0xf7, 0x59, 0xd8};
+    uint8_t issuer2[] = {0xd3, 0x52, 0x8c, 0xdd, 0x70, 0xad, 0xd7, 0xe2, 0xc7, 0xf,  0xb8,
+                         0xc3, 0x4c, 0xe6, 0x29, 0x7b, 0xf1, 0xc6, 0x29, 0x20, 0xe8, 0x42,
+                         0x8c, 0x8b, 0xd4, 0x96, 0xd4, 0x39, 0xcd, 0x3e, 0x13, 0x63};
+    uint8_t issuer3[] = {0xd3, 0x52, 0x8c, 0xdd, 0x70, 0xad, 0xd7, 0xe2, 0xc7, 0xf,  0xb8,
+                         0xc3, 0x4c, 0xe6, 0x29, 0x7b, 0xf1, 0xc6, 0x29, 0x20, 0xe8, 0x42,
+                         0x8c, 0x8b, 0xd4, 0x96, 0xd4, 0x39, 0xcd, 0x3e, 0x13, 0x63};
+    asset_t asset1 = {.type = ASSET_TYPE_CREDIT_ALPHANUM4,
+                      .alpha_num4 = {.asset_code = "USD", .issuer = issuer1}};
+    asset_t asset2 = {.type = ASSET_TYPE_CREDIT_ALPHANUM12,
+                      .alpha_num12 = {.asset_code = "CATCOIN", .issuer = issuer2}};
+    asset_t asset3 = {.type = ASSET_TYPE_CREDIT_ALPHANUM12,
+                      .alpha_num12 = {.asset_code = "PANDA", .issuer = issuer3}};
+
+    operation_t operation = {.type = OPERATION_TYPE_PATH_PAYMENT_STRICT_SEND,
+                             .source_account_present = true,
+                             .source_account =
+                                 {
+                                     .type = KEY_TYPE_ED25519,
+                                     .ed25519 = kp1_public,
+                                 },
+                             .path_payment_strict_send_op = {
+                                 .destination = {.type = KEY_TYPE_ED25519, .ed25519 = kp2_public},
+                                 .send_asset = {.type = ASSET_TYPE_NATIVE},
+                                 .send_amount = 1000000000,
+                                 .dest_asset = asset1,
+                                 .dest_min = 2000000000,
+                                 .path_len = 2,
+                             }};
+    memcpy(&operation.path_payment_strict_receive_op.path[0], &asset2, sizeof(asset2));
+    memcpy(&operation.path_payment_strict_receive_op.path[1], &asset3, sizeof(asset3));
+
+    sha256_init(&sha256_ctx);
+    write_operation(&operation, sha256_update_f);
+    sha256_final(&sha256_ctx, hash);
+
+    uint8_t expect_hash[] = {0x69, 0xba, 0xd9, 0x8f, 0x74, 0x99, 0x4b, 0xcf, 0x8c, 0x49, 0x62,
+                             0x10, 0xb5, 0x61, 0xf4, 0x4a, 0x6f, 0x58, 0x4e, 0x2,  0x9c, 0x25,
+                             0x8e, 0x42, 0x34, 0xda, 0xf3, 0x25, 0x19, 0xa9, 0x97, 0xd6};
+
+    assert_memory_equal(expect_hash, hash, sizeof(hash));
+}
+
 int main() {
     const struct CMUnitTest tests[] = {
         cmocka_unit_test(test_create_account_op),
@@ -347,6 +447,9 @@ int main() {
         cmocka_unit_test(test_inflation_op),
         cmocka_unit_test(test_manage_data_set_data),
         cmocka_unit_test(test_manage_data_remove_data),
+        cmocka_unit_test(test_bump_sequence),
+        cmocka_unit_test(test_manage_buy_offer_op),
+        cmocka_unit_test(test_path_payment_strict_send_op),
     };
     return cmocka_run_group_tests(tests, NULL, NULL);
 }
