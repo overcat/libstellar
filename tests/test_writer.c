@@ -282,6 +282,58 @@ static void test_inflation_op() {
     assert_memory_equal(expect_hash, hash, sizeof(hash));
 }
 
+static void test_manage_data_set_data() {
+    uint8_t data_name[] = "hello";
+    uint8_t data_value[] = "world";
+    operation_t operation = {.type = OPERATION_TYPE_MANAGE_DATA,
+                             .source_account_present = true,
+                             .source_account =
+                                 {
+                                     .type = KEY_TYPE_ED25519,
+                                     .ed25519 = kp1_public,
+                                 },
+                             .manage_data_op = {.data_name_size = 5,
+                                                .data_value_size = 5,
+                                                .data_name = data_name,
+                                                .data_value = data_value}};
+
+    sha256_init(&sha256_ctx);
+    write_operation(&operation, sha256_update_f);
+    sha256_final(&sha256_ctx, hash);
+
+    uint8_t expect_hash[] = {0xbb, 0x1a, 0x45, 0x70, 0x42, 0xcc, 0x57, 0xd4, 0x1b, 0xac, 0x5d,
+                             0x88, 0x3a, 0x7,  0x94, 0xe2, 0xc4, 0xd6, 0x1f, 0xe2, 0x4b, 0x78,
+                             0x1d, 0x8e, 0x60, 0xfe, 0x39, 0xc2, 0xf1, 0xdb, 0xef, 0x36};
+
+    assert_memory_equal(expect_hash, hash, sizeof(hash));
+}
+
+static void test_manage_data_remove_data() {
+    uint8_t data_name[] = "hello";
+    operation_t operation = {.type = OPERATION_TYPE_MANAGE_DATA,
+                             .source_account_present = true,
+                             .source_account =
+                                 {
+                                     .type = KEY_TYPE_ED25519,
+                                     .ed25519 = kp1_public,
+                                 },
+                             .manage_data_op = {
+                                 .data_name_size = 5,
+                                 .data_value_size = 0,
+                                 .data_name = data_name,
+                             }};
+
+    sha256_init(&sha256_ctx);
+    write_operation(&operation, sha256_update_f);
+    sha256_final(&sha256_ctx, hash);
+
+    uint8_t expect_hash[] = {0xe7, 0xf7, 0xcd, 0x1,  0xf3, 0x7b, 0xad, 0x9d, 0x34, 0x48, 0x28,
+                             0x24, 0xe8, 0xbc, 0x13, 0xfe, 0xde, 0x53, 0xea, 0x2c, 0x4d, 0x2,
+                             0x85, 0xf6, 0xf8, 0x45, 0x26, 0xca, 0xbf, 0xe,  0xa6, 0x45};
+
+    assert_memory_equal(expect_hash, hash, sizeof(hash));
+}
+
 int main() {
     const struct CMUnitTest tests[] = {
         cmocka_unit_test(test_create_account_op),
@@ -293,6 +345,8 @@ int main() {
         cmocka_unit_test(test_allow_trust_op),
         cmocka_unit_test(test_account_merge_op),
         cmocka_unit_test(test_inflation_op),
+        cmocka_unit_test(test_manage_data_set_data),
+        cmocka_unit_test(test_manage_data_remove_data),
     };
     return cmocka_run_group_tests(tests, NULL, NULL);
 }

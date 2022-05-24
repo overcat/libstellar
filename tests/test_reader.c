@@ -324,6 +324,51 @@ static void test_inflation_op() {
     assert_int_equal(operation.type, OPERATION_TYPE_INFLATION);
 }
 
+static void test_manage_data_set_data() {
+    uint8_t data[] = {0x0,  0x0,  0x0,  0x1,  0x0,  0x0,  0x0,  0x0,  0x62, 0x5f, 0x3d, 0x59,
+                      0xc3, 0xf8, 0x9e, 0x59, 0x1a, 0x6,  0xda, 0x5e, 0x8,  0xc5, 0xd6, 0xe4,
+                      0xbd, 0xf0, 0xd1, 0x50, 0x3a, 0xb9, 0xc3, 0x22, 0x81, 0x49, 0x49, 0xeb,
+                      0x9,  0x1e, 0x5d, 0xa1, 0x0,  0x0,  0x0,  0xa,  0x0,  0x0,  0x0,  0x5,
+                      0x68, 0x65, 0x6c, 0x6c, 0x6f, 0x0,  0x0,  0x0,  0x0,  0x0,  0x0,  0x1,
+                      0x0,  0x0,  0x0,  0x5,  0x77, 0x6f, 0x72, 0x6c, 0x64, 0x0,  0x0,  0x0};
+
+    buffer_t buffer = {.offset = 0, .size = sizeof(data), .ptr = data};
+    operation_t operation;
+    assert_true(read_operation(&buffer, &operation));
+    assert_int_equal(buffer.offset, buffer.size);
+
+    assert_true(operation.source_account_present);
+    assert_int_equal(operation.source_account.type, KEY_TYPE_ED25519);
+    assert_memory_equal(operation.source_account.ed25519, kp1_public, sizeof(kp1_public));
+
+    assert_int_equal(operation.type, OPERATION_TYPE_MANAGE_DATA);
+    assert_int_equal(operation.manage_data_op.data_name_size, 5);
+    assert_int_equal(operation.manage_data_op.data_value_size, 5);
+    // TODO: test value
+}
+
+static void test_manage_data_remove_data() {
+    uint8_t data[] = {0x0,  0x0,  0x0,  0x1,  0x0,  0x0,  0x0,  0x0,  0x62, 0x5f, 0x3d, 0x59,
+                      0xc3, 0xf8, 0x9e, 0x59, 0x1a, 0x6,  0xda, 0x5e, 0x8,  0xc5, 0xd6, 0xe4,
+                      0xbd, 0xf0, 0xd1, 0x50, 0x3a, 0xb9, 0xc3, 0x22, 0x81, 0x49, 0x49, 0xeb,
+                      0x9,  0x1e, 0x5d, 0xa1, 0x0,  0x0,  0x0,  0xa,  0x0,  0x0,  0x0,  0x5,
+                      0x68, 0x65, 0x6c, 0x6c, 0x6f, 0x0,  0x0,  0x0,  0x0,  0x0,  0x0,  0x0};
+
+    buffer_t buffer = {.offset = 0, .size = sizeof(data), .ptr = data};
+    operation_t operation;
+    assert_true(read_operation(&buffer, &operation));
+    assert_int_equal(buffer.offset, buffer.size);
+
+    assert_true(operation.source_account_present);
+    assert_int_equal(operation.source_account.type, KEY_TYPE_ED25519);
+    assert_memory_equal(operation.source_account.ed25519, kp1_public, sizeof(kp1_public));
+
+    assert_int_equal(operation.type, OPERATION_TYPE_MANAGE_DATA);
+    assert_int_equal(operation.manage_data_op.data_name_size, 5);
+    assert_int_equal(operation.manage_data_op.data_value_size, 0);
+    // TODO: test value
+}
+
 int main() {
     const struct CMUnitTest tests[] = {
         cmocka_unit_test(test_create_account_op),
@@ -335,7 +380,8 @@ int main() {
         cmocka_unit_test(test_allow_trust_op),
         cmocka_unit_test(test_account_merge_op),
         cmocka_unit_test(test_inflation_op),
-
+        cmocka_unit_test(test_manage_data_set_data),
+        cmocka_unit_test(test_manage_data_remove_data),
     };
     return cmocka_run_group_tests(tests, NULL, NULL);
 }

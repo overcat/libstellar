@@ -329,7 +329,12 @@ void write_account_merge_op(const account_merge_op_t *op, sha256_update_func sha
 
 void write_manage_data_op(const manage_data_op_t *op, sha256_update_func sha256_update_func) {
     write_string(op->data_name, op->data_name_size, sha256_update_func);
-    write_string(op->data_value, op->data_value_size, sha256_update_func);
+    if (op->data_value_size) {
+        write_bool(true, sha256_update_func);
+        write_string(op->data_value, op->data_value_size, sha256_update_func);
+    } else {
+        write_bool(false, sha256_update_func);
+    }
 }
 
 void write_bump_sequence_op(const bump_sequence_op_t *op, sha256_update_func sha256_update_func) {

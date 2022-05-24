@@ -446,7 +446,7 @@ bool read_manage_data(buffer_t *buffer, manage_data_op_t *op) {
     READER_CHECK(read_string_ptr(buffer, (const char **) &op->data_name, &size, DATA_NAME_MAX_SIZE))
     op->data_name_size = size;
 
-    // DataValue* data_value;
+    // TODO: DataValue* data_value;
     bool hasValue;
     READER_CHECK(buffer_read_bool(buffer, &hasValue))
     if (hasValue) {
