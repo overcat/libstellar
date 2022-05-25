@@ -556,6 +556,93 @@ static void test_clawback_claimable_balance_op() {
     assert_memory_equal(expect_hash, hash, sizeof(hash));
 }
 
+static void test_set_trust_line_flags_op() {
+    uint8_t issuer1[] = {0x9b, 0x8e, 0xba, 0xf8, 0x96, 0x38, 0x55, 0x1d, 0xcf, 0x9e, 0xa4,
+                         0xf7, 0x43, 0x20, 0x71, 0x10, 0x6b, 0x87, 0xab, 0xe,  0x2d, 0xb3,
+                         0xd6, 0x9b, 0x75, 0xa5, 0x38, 0x22, 0x72, 0xf7, 0x59, 0xd8};
+    asset_t asset1 = {.type = ASSET_TYPE_CREDIT_ALPHANUM4,
+                      .alpha_num4 = {.asset_code = "USD", .issuer = issuer1}};
+    operation_t operation = {
+        .type = OPERATION_TYPE_SET_TRUST_LINE_FLAGS,
+        .source_account_present = true,
+        .source_account =
+            {
+                .type = KEY_TYPE_ED25519,
+                .ed25519 = kp1_public,
+            },
+        .set_trust_line_flags_op = {.asset = asset1,
+                                    .trustor = kp2_public,
+                                    .clear_flags = AUTHORIZED_FLAG,
+                                    .set_flags = TRUSTLINE_CLAWBACK_ENABLED_FLAG}};
+
+    sha256_init(&sha256_ctx);
+    write_operation(&operation, sha256_update_f);
+    sha256_final(&sha256_ctx, hash);
+
+    uint8_t expect_hash[] = {0xb4, 0x50, 0x94, 0x53, 0x6,  0xed, 0x8f, 0x27, 0x43, 0x6f, 0xc3,
+                             0xa6, 0x28, 0xc1, 0xfe, 0xda, 0x7b, 0xc,  0xef, 0xeb, 0xc7, 0x50,
+                             0x3f, 0x34, 0x64, 0x84, 0x69, 0x2a, 0xe1, 0xc5, 0xdb, 0xc5};
+
+    assert_memory_equal(expect_hash, hash, sizeof(hash));
+}
+
+static void test_liquidity_pool_deposit_op() {
+    operation_t operation = {
+        .type = OPERATION_TYPE_LIQUIDITY_POOL_DEPOSIT,
+        .source_account_present = true,
+        .source_account =
+            {
+                .type = KEY_TYPE_ED25519,
+                .ed25519 = kp1_public,
+            },
+        .liquidity_pool_deposit_op = {
+            .liquidity_pool_id = {0x61, 0x90, 0x9,  0x98, 0xf1, 0x6a, 0x79, 0x7e, 0x1c, 0x1d, 0xbb,
+                                  0x2e, 0xb2, 0x1a, 0x1,  0x65, 0x7d, 0xa5, 0x8e, 0x6c, 0xc2, 0xf2,
+                                  0xba, 0xdc, 0x4c, 0x1e, 0xf7, 0x90, 0xf1, 0x7a, 0x22, 0xca},
+            .max_amount_a = 100000000,
+            .max_amount_b = 200000000,
+            .min_price = {.n = 9, .d = 20},
+            .max_price = {.n = 11, .d = 20}}};
+
+    sha256_init(&sha256_ctx);
+    write_operation(&operation, sha256_update_f);
+    sha256_final(&sha256_ctx, hash);
+
+    uint8_t expect_hash[] = {0x2d, 0x0,  0x62, 0xcc, 0xe1, 0x14, 0xb7, 0xd6, 0x86, 0xd5, 0x70,
+                             0xd9, 0xad, 0xd8, 0x63, 0x72, 0xcf, 0x42, 0xfe, 0x3d, 0x61, 0x8d,
+                             0xe4, 0xd7, 0x74, 0x50, 0xe4, 0x34, 0xe8, 0x47, 0x37, 0xa0};
+
+    assert_memory_equal(expect_hash, hash, sizeof(hash));
+}
+
+static void test_liquidity_pool_withdraw_op() {
+    operation_t operation = {
+        .type = OPERATION_TYPE_LIQUIDITY_POOL_WITHDRAW,
+        .source_account_present = true,
+        .source_account =
+            {
+                .type = KEY_TYPE_ED25519,
+                .ed25519 = kp1_public,
+            },
+        .liquidity_pool_withdraw_op = {
+            .liquidity_pool_id = {0x61, 0x90, 0x9,  0x98, 0xf1, 0x6a, 0x79, 0x7e, 0x1c, 0x1d, 0xbb,
+                                  0x2e, 0xb2, 0x1a, 0x1,  0x65, 0x7d, 0xa5, 0x8e, 0x6c, 0xc2, 0xf2,
+                                  0xba, 0xdc, 0x4c, 0x1e, 0xf7, 0x90, 0xf1, 0x7a, 0x22, 0xca},
+            .min_amount_a = 100000000,
+            .min_amount_b = 200000000,
+            .amount = 50000000}};
+
+    sha256_init(&sha256_ctx);
+    write_operation(&operation, sha256_update_f);
+    sha256_final(&sha256_ctx, hash);
+
+    uint8_t expect_hash[] = {0x69, 0xe0, 0xa8, 0x32, 0xb6, 0x9b, 0x89, 0xdc, 0x2c, 0xcc, 0x2b,
+                             0xa3, 0xb5, 0x91, 0x41, 0x4f, 0xae, 0xfa, 0x67, 0xb5, 0x90, 0xc5,
+                             0x81, 0xd9, 0xfc, 0xa7, 0xa2, 0x9a, 0x9a, 0xdd, 0x97, 0xa5};
+
+    assert_memory_equal(expect_hash, hash, sizeof(hash));
+}
+
 int main() {
     const struct CMUnitTest tests[] = {
         cmocka_unit_test(test_create_account_op),
@@ -576,6 +663,9 @@ int main() {
         cmocka_unit_test(test_begin_sponsoring_future_reserves),
         cmocka_unit_test(test_end_sponsoring_future_reserves),
         cmocka_unit_test(test_clawback_claimable_balance_op),
+        cmocka_unit_test(test_set_trust_line_flags_op),
+        cmocka_unit_test(test_liquidity_pool_deposit_op),
+        cmocka_unit_test(test_liquidity_pool_withdraw_op),
     };
     return cmocka_run_group_tests(tests, NULL, NULL);
 }
