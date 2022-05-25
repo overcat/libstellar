@@ -530,6 +530,32 @@ static void test_clawback_op() {
     assert_memory_equal(expect_hash, hash, sizeof(hash));
 }
 
+static void test_clawback_claimable_balance_op() {
+    operation_t operation = {
+        .type = OPERATION_TYPE_CLAWBACK_CLAIMABLE_BALANCE,
+        .source_account_present = true,
+        .source_account =
+            {
+                .type = KEY_TYPE_ED25519,
+                .ed25519 = kp1_public,
+            },
+        .clawback_claimable_balance_op = {
+            .balance_id = {.type = CLAIMABLE_BALANCE_ID_TYPE_V0,
+                           .v0 = {0xda, 0xd,  0x57, 0xda, 0x7d, 0x48, 0x50, 0xe7, 0xfc, 0x10, 0xd2,
+                                  0xa9, 0xd0, 0xeb, 0xc7, 0x31, 0xf7, 0xaf, 0xb4, 0x5,  0x74, 0xc0,
+                                  0x33, 0x95, 0xb1, 0x7d, 0x49, 0x14, 0x9b, 0x91, 0xf5, 0xbe}}}};
+    // TODO: v0 ptr?
+    sha256_init(&sha256_ctx);
+    write_operation(&operation, sha256_update_f);
+    sha256_final(&sha256_ctx, hash);
+
+    uint8_t expect_hash[] = {0x8,  0x16, 0x59, 0x8f, 0x5f, 0xe0, 0xca, 0xbb, 0x7d, 0x4d, 0xb9,
+                             0x4a, 0x31, 0x82, 0x2a, 0x93, 0x85, 0xa,  0x2,  0x6c, 0x1c, 0xfa,
+                             0xa5, 0x39, 0xe2, 0x87, 0xc3, 0x5,  0xcd, 0x21, 0x32, 0x1c};
+
+    assert_memory_equal(expect_hash, hash, sizeof(hash));
+}
+
 int main() {
     const struct CMUnitTest tests[] = {
         cmocka_unit_test(test_create_account_op),
@@ -549,7 +575,7 @@ int main() {
         cmocka_unit_test(test_claim_claimable_balance_op),
         cmocka_unit_test(test_begin_sponsoring_future_reserves),
         cmocka_unit_test(test_end_sponsoring_future_reserves),
-        cmocka_unit_test(test_clawback_op),
+        cmocka_unit_test(test_clawback_claimable_balance_op),
     };
     return cmocka_run_group_tests(tests, NULL, NULL);
 }

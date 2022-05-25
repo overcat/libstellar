@@ -614,6 +614,35 @@ static void test_clawback_op() {
     assert_int_equal(operation.clawback_op.amount, 100000000);
 }
 
+static void test_clawback_claimable_balance_op() {
+    uint8_t data[] = {0x0,  0x0,  0x0,  0x1,  0x0,  0x0,  0x0,  0x0,  0x62, 0x5f, 0x3d, 0x59,
+                      0xc3, 0xf8, 0x9e, 0x59, 0x1a, 0x6,  0xda, 0x5e, 0x8,  0xc5, 0xd6, 0xe4,
+                      0xbd, 0xf0, 0xd1, 0x50, 0x3a, 0xb9, 0xc3, 0x22, 0x81, 0x49, 0x49, 0xeb,
+                      0x9,  0x1e, 0x5d, 0xa1, 0x0,  0x0,  0x0,  0x14, 0x0,  0x0,  0x0,  0x0,
+                      0xda, 0xd,  0x57, 0xda, 0x7d, 0x48, 0x50, 0xe7, 0xfc, 0x10, 0xd2, 0xa9,
+                      0xd0, 0xeb, 0xc7, 0x31, 0xf7, 0xaf, 0xb4, 0x5,  0x74, 0xc0, 0x33, 0x95,
+                      0xb1, 0x7d, 0x49, 0x14, 0x9b, 0x91, 0xf5, 0xbe};
+
+    buffer_t buffer = {.offset = 0, .size = sizeof(data), .ptr = data};
+    operation_t operation;
+    assert_true(read_operation(&buffer, &operation));
+    assert_int_equal(buffer.offset, buffer.size);
+
+    assert_true(operation.source_account_present);
+    assert_int_equal(operation.source_account.type, KEY_TYPE_ED25519);
+    assert_memory_equal(operation.source_account.ed25519, kp1_public, sizeof(kp1_public));
+
+    assert_int_equal(operation.type, OPERATION_TYPE_CLAWBACK_CLAIMABLE_BALANCE);
+    // TODO: uint8 []
+    uint8_t balance_id_v0[] = {0xda, 0xd,  0x57, 0xda, 0x7d, 0x48, 0x50, 0xe7, 0xfc, 0x10, 0xd2,
+                               0xa9, 0xd0, 0xeb, 0xc7, 0x31, 0xf7, 0xaf, 0xb4, 0x5,  0x74, 0xc0,
+                               0x33, 0x95, 0xb1, 0x7d, 0x49, 0x14, 0x9b, 0x91, 0xf5, 0xbe};
+
+    assert_memory_equal(operation.clawback_claimable_balance_op.balance_id.v0,
+                        balance_id_v0,
+                        sizeof(balance_id_v0));
+}
+
 int main() {
     const struct CMUnitTest tests[] = {
         cmocka_unit_test(test_create_account_op),
@@ -634,6 +663,8 @@ int main() {
         cmocka_unit_test(test_begin_sponsoring_future_reserves),
         cmocka_unit_test(test_end_sponsoring_future_reserves),
         cmocka_unit_test(test_clawback_op),
+        cmocka_unit_test(test_clawback_claimable_balance_op),
+
     };
     return cmocka_run_group_tests(tests, NULL, NULL);
 }
