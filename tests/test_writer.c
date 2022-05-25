@@ -503,6 +503,33 @@ static void test_end_sponsoring_future_reserves() {
     assert_memory_equal(expect_hash, hash, sizeof(hash));
 }
 
+static void test_clawback_op() {
+    uint8_t issuer1[] = {0x9b, 0x8e, 0xba, 0xf8, 0x96, 0x38, 0x55, 0x1d, 0xcf, 0x9e, 0xa4,
+                         0xf7, 0x43, 0x20, 0x71, 0x10, 0x6b, 0x87, 0xab, 0xe,  0x2d, 0xb3,
+                         0xd6, 0x9b, 0x75, 0xa5, 0x38, 0x22, 0x72, 0xf7, 0x59, 0xd8};
+    asset_t asset1 = {.type = ASSET_TYPE_CREDIT_ALPHANUM4,
+                      .alpha_num4 = {.asset_code = "USD", .issuer = issuer1}};
+    muxed_account_t from = {.type = KEY_TYPE_ED25519, .ed25519 = kp2_public};
+    operation_t operation = {.type = OPERATION_TYPE_CLAWBACK,
+                             .source_account_present = true,
+                             .source_account =
+                                 {
+                                     .type = KEY_TYPE_ED25519,
+                                     .ed25519 = kp1_public,
+                                 },
+                             .clawback_op = {.asset = asset1, .from = from, .amount = 100000000}};
+
+    sha256_init(&sha256_ctx);
+    write_operation(&operation, sha256_update_f);
+    sha256_final(&sha256_ctx, hash);
+
+    uint8_t expect_hash[] = {0xe2, 0x45, 0xda, 0x77, 0x17, 0x3d, 0xc5, 0x9,  0xaa, 0x36, 0x15,
+                             0x19, 0x22, 0x65, 0xfd, 0x4b, 0xe2, 0xf8, 0x6b, 0x1a, 0x9a, 0xe2,
+                             0x94, 0x6e, 0x21, 0xff, 0x1b, 0x42, 0x23, 0x73, 0x48, 0x4f};
+
+    assert_memory_equal(expect_hash, hash, sizeof(hash));
+}
+
 int main() {
     const struct CMUnitTest tests[] = {
         cmocka_unit_test(test_create_account_op),
@@ -522,6 +549,7 @@ int main() {
         cmocka_unit_test(test_claim_claimable_balance_op),
         cmocka_unit_test(test_begin_sponsoring_future_reserves),
         cmocka_unit_test(test_end_sponsoring_future_reserves),
+        cmocka_unit_test(test_clawback_op),
     };
     return cmocka_run_group_tests(tests, NULL, NULL);
 }
