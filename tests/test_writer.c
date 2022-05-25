@@ -460,6 +460,49 @@ static void test_claim_claimable_balance_op() {
     assert_memory_equal(expect_hash, hash, sizeof(hash));
 }
 
+static void test_begin_sponsoring_future_reserves() {
+    operation_t operation = {.type = OPERATION_TYPE_BEGIN_SPONSORING_FUTURE_RESERVES,
+                             .source_account_present = true,
+                             .source_account =
+                                 {
+                                     .type = KEY_TYPE_ED25519,
+                                     .ed25519 = kp1_public,
+                                 },
+                             .begin_sponsoring_future_reserves_op = {.sponsored_id = kp2_public}};
+
+    sha256_init(&sha256_ctx);
+    write_operation(&operation, sha256_update_f);
+    sha256_final(&sha256_ctx, hash);
+
+    uint8_t expect_hash[] = {0x8d, 0xd6, 0x13, 0x46, 0xea, 0xe3, 0x8,  0x1f, 0xf,  0xbb, 0x4d,
+                             0x83, 0x74, 0xa7, 0x25, 0x88, 0x98, 0xc0, 0x86, 0x63, 0x47, 0x52,
+                             0xec, 0x9e, 0xf8, 0x3b, 0x59, 0xe9, 0x43, 0xf8, 0x46, 0xe0};
+
+    assert_memory_equal(expect_hash, hash, sizeof(hash));
+}
+
+static void test_end_sponsoring_future_reserves() {
+    operation_t operation = {
+        .type = OPERATION_TYPE_END_SPONSORING_FUTURE_RESERVES,
+        .source_account_present = true,
+        .source_account =
+            {
+                .type = KEY_TYPE_ED25519,
+                .ed25519 = kp1_public,
+            },
+    };
+
+    sha256_init(&sha256_ctx);
+    write_operation(&operation, sha256_update_f);
+    sha256_final(&sha256_ctx, hash);
+
+    uint8_t expect_hash[] = {0xde, 0xc3, 0xd2, 0x16, 0xd8, 0x7,  0xa1, 0x1d, 0x8e, 0xe8, 0x68,
+                             0x9e, 0xbc, 0x74, 0x97, 0xeb, 0x87, 0xd9, 0x56, 0x8c, 0x84, 0x7d,
+                             0x61, 0xdd, 0x34, 0x2f, 0x97, 0x3b, 0xe1, 0x45, 0xe0, 0x36};
+
+    assert_memory_equal(expect_hash, hash, sizeof(hash));
+}
+
 int main() {
     const struct CMUnitTest tests[] = {
         cmocka_unit_test(test_create_account_op),
@@ -477,6 +520,8 @@ int main() {
         cmocka_unit_test(test_manage_buy_offer_op),
         cmocka_unit_test(test_path_payment_strict_send_op),
         cmocka_unit_test(test_claim_claimable_balance_op),
+        cmocka_unit_test(test_begin_sponsoring_future_reserves),
+        cmocka_unit_test(test_end_sponsoring_future_reserves),
     };
     return cmocka_run_group_tests(tests, NULL, NULL);
 }
