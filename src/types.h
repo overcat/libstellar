@@ -194,7 +194,7 @@ typedef struct {
         alpha_num12_t alpha_num12;
         uint8_t liquidity_pool_id[LIQUIDITY_POOL_ID_SIZE];
     };
-} trust_line_asset;
+} trust_line_asset_t;
 
 typedef struct {
     int32_t n;  // numerator
@@ -399,8 +399,8 @@ typedef struct {
 
         struct {
             account_id_t account_id;
-            trust_line_asset asset;
-        } trustLine;  // type == TRUSTLINE
+            trust_line_asset_t asset;
+        } trust_line;  // type == TRUSTLINE
 
         struct {
             account_id_t seller_id;

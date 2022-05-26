@@ -316,7 +316,7 @@ bool read_asset(buffer_t *buffer, asset_t *asset) {
     }
 }
 
-bool read_trust_line_asset(buffer_t *buffer, trust_line_asset *asset) {
+bool read_trust_line_asset(buffer_t *buffer, trust_line_asset_t *asset) {
     uint32_t assetType;
 
     READER_CHECK(buffer_read32(buffer, &assetType))
@@ -683,8 +683,8 @@ bool read_ledger_key(buffer_t *buffer, ledger_key_t *ledger_key) {
             READER_CHECK(read_account_id(buffer, &ledger_key->account.account_id))
             return true;
         case TRUSTLINE:
-            READER_CHECK(read_account_id(buffer, &ledger_key->trustLine.account_id))
-            READER_CHECK(read_trust_line_asset(buffer, &ledger_key->trustLine.asset))
+            READER_CHECK(read_account_id(buffer, &ledger_key->trust_line.account_id))
+            READER_CHECK(read_trust_line_asset(buffer, &ledger_key->trust_line.asset))
             return true;
         case OFFER:
             READER_CHECK(read_account_id(buffer, &ledger_key->offer.seller_id))

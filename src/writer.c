@@ -384,8 +384,71 @@ void write_begin_sponsoring_future_reserves_op(const begin_sponsoring_future_res
     write_account_id(op->sponsored_id, sha256_update_func);
 }
 
-void write_revoke_sponsorship_op(const revoke_sponsorship_op_t *op,
+bool write_trust_line_asset(const trust_line_asset_t *asset,
+                            sha256_update_func sha256_update_func) {
+    switch (asset->type) {
+        case ASSET_TYPE_NATIVE:
+        case ASSET_TYPE_CREDIT_ALPHANUM4:
+        case ASSET_TYPE_CREDIT_ALPHANUM12:
+            return write_asset((asset_t *) asset, sha256_update_func);
+        case ASSET_TYPE_POOL_SHARE:
+            write_uint32(asset->type, sha256_update_func);
+            sha256_update_func(asset->liquidity_pool_id, sizeof(asset->liquidity_pool_id));
+            break;
+        default:
+            return false;
+    }
+    return true;
+}
+
+bool write_revoke_sponsorship_ledger_entry(const ledger_key_t *ledger_key,
+                                           sha256_update_func sha256_update_func) {
+    write_uint32(ledger_key->type, sha256_update_func);
+    switch (ledger_key->type) {
+        case ACCOUNT:
+            write_account_id(ledger_key->account.account_id, sha256_update_func);
+            break;
+        case TRUSTLINE:
+            write_account_id(ledger_key->trust_line.account_id, sha256_update_func);
+            write_trust_line_asset(&ledger_key->trust_line.asset, sha256_update_func);
+            break;
+        case OFFER:
+            write_account_id(ledger_key->offer.seller_id, sha256_update_func);
+            write_uint64(ledger_key->offer.offer_id, sha256_update_func);
+            break;
+        case DATA:
+            write_account_id(ledger_key->data.account_id, sha256_update_func);
+            write_string(ledger_key->data.data_name,
+                         ledger_key->data.data_name_size,
+                         sha256_update_func);
+            break;
+        case CLAIMABLE_BALANCE:
+            write_claimable_balance_id(&ledger_key->claimable_balance.balance_id,
+                                       sha256_update_func);
+            break;
+        case LIQUIDITY_POOL:
+            sha256_update_func(ledger_key->liquidity_pool.liquidity_pool_id, 32);
+            break;
+        default:
+            return false;
+    }
+    return true;
+}
+
+bool write_revoke_sponsorship_op(const revoke_sponsorship_op_t *op,
                                  sha256_update_func sha256_update_func) {
+    write_uint32(op->type, sha256_update_func);
+    switch (op->type) {
+        case REVOKE_SPONSORSHIP_LEDGER_ENTRY:
+            return write_revoke_sponsorship_ledger_entry(&op->ledger_key, sha256_update_func);
+        case REVOKE_SPONSORSHIP_SIGNER:
+            write_account_id(op->signer.account_id, sha256_update_func);
+            write_signer_key(&op->signer.signer_key, sha256_update_func);
+            break;
+        default:
+            return false;
+    }
+    return true;
 }
 
 void write_clawback_op(const clawback_op_t *op, sha256_update_func sha256_update_func) {

@@ -88,7 +88,7 @@ void write_claim_claimable_balance_op(const claim_claimable_balance_op_t *op,
 void write_begin_sponsoring_future_reserves_op(const begin_sponsoring_future_reserves_op_t *op,
                                                sha256_update_func sha256_update_func);
 
-void write_revoke_sponsorship_op(const revoke_sponsorship_op_t *op,
+bool write_revoke_sponsorship_op(const revoke_sponsorship_op_t *op,
                                  sha256_update_func sha256_update_func);
 
 void write_clawback_op(const clawback_op_t *op, sha256_update_func sha256_update_func);

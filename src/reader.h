@@ -49,7 +49,7 @@ bool read_alpha_num12_asset(buffer_t *buffer, alpha_num12_t *asset);
 
 bool read_asset(buffer_t *buffer, asset_t *asset);
 
-bool read_trust_line_asset(buffer_t *buffer, trust_line_asset *asset);
+bool read_trust_line_asset(buffer_t *buffer, trust_line_asset_t *asset);
 
 bool read_liquidity_pool_parameters(buffer_t *buffer,
                                     liquidity_pool_parameters_t *liquidityPoolParameters);
