@@ -21,6 +21,7 @@ RUN apt-get update && apt-get upgrade -qy && apt-get install -qy \
     lld \
     cmake \
     git \
+    lcov \
     libbsd-dev \
     libcmocka0 \
     libcmocka-dev \
