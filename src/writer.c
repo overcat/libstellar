@@ -597,21 +597,59 @@ bool write_memo(const memo_t *memo, sha256_update_func sha256_update_func) {
     return true;
 }
 
+void write_transaction_source(const muxed_account_t *source,
+                              sha256_update_func sha256_update_func) {
+    write_muxed_account(source, sha256_update_func);
+}
+
+void write_transaction_fee(uint32_t fee, sha256_update_func sha256_update_func) {
+    write_uint32(fee, sha256_update_func);
+}
+
+void write_transaction_sequence(sequence_number_t sequence_number,
+                                sha256_update_func sha256_update_func) {
+    write_uint64(sequence_number, sha256_update_func);
+}
+
+void write_transaction_preconditions(preconditions_t *preconditions,
+                                     sha256_update_func sha256_update_func) {
+    write_preconditions(preconditions, sha256_update_func);
+}
+
+void write_transaction_memo(memo_t *memo, sha256_update_func sha256_update_func) {
+    write_memo(memo, sha256_update_func);
+}
+
+void write_transaction_operation_len(uint8_t operations_len,
+                                     sha256_update_func sha256_update_func) {
+    write_uint32(operations_len, sha256_update_func);
+}
+
 void write_transaction_details(const transaction_details_t *transaction_details,
                                sha256_update_func sha256_update_func) {
-    write_muxed_account(&transaction_details->source_account, sha256_update_func);
-    write_uint32(transaction_details->fee, sha256_update_func);
-    write_uint64(transaction_details->sequence_number, sha256_update_func);
+    write_transaction_source(&transaction_details->source_account, sha256_update_func);
+    write_transaction_fee(transaction_details->fee, sha256_update_func);
+    write_transaction_sequence(transaction_details->sequence_number, sha256_update_func);
     write_preconditions(&transaction_details->cond, sha256_update_func);
     write_memo(&transaction_details->memo, sha256_update_func);
-    write_uint32(transaction_details->operations_len, sha256_update_func);
+    write_transaction_operation_len(transaction_details->operations_len, sha256_update_func);
+}
+
+void write_fee_bump_transaction_fee_source(const muxed_account_t *fee_source,
+                                           sha256_update_func sha256_update_func) {
+    write_muxed_account(fee_source, sha256_update_func);
+}
+
+void write_fee_bump_transaction_fee(int64_t fee, sha256_update_func sha256_update_func) {
+    write_uint64(fee, sha256_update_func);
 }
 
 void write_fee_bump_transaction_details(
     const fee_bump_transaction_details_t *fee_bump_transaction_details,
     sha256_update_func sha256_update_func) {
-    write_muxed_account(&fee_bump_transaction_details->fee_source, sha256_update_func);
-    write_uint64(fee_bump_transaction_details->fee, sha256_update_func);
+    write_fee_bump_transaction_fee_source(&fee_bump_transaction_details->fee_source,
+                                          sha256_update_func);
+    write_fee_bump_transaction_fee(fee_bump_transaction_details->fee, sha256_update_func);
 }
 
 void write_transaction_envelope_type(const envelope_type_t *envelope_type,
