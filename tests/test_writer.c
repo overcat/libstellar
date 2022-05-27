@@ -862,6 +862,7 @@ int main() {
         cmocka_unit_test(test_revoke_claimable_balance_sponsorship_op),
         cmocka_unit_test(test_revoke_liquidity_pool_sponsorship_op),
         cmocka_unit_test(test_revoke_signer_sponsorship_op),
+        cmocka_unit_test(test_clawback_op),
         cmocka_unit_test(test_clawback_claimable_balance_op),
         cmocka_unit_test(test_set_trust_line_flags_op),
         cmocka_unit_test(test_liquidity_pool_deposit_op),
