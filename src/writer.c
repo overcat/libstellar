@@ -105,7 +105,10 @@ void write_preconditions(const preconditions_t *preconditions,
 
     write_uint64(preconditions->min_seq_age, sha256_update_func);
     write_uint32(preconditions->min_seq_ledger_gap, sha256_update_func);
-    // TODO: add extra signers support
+    write_uint32(preconditions->extra_signers_len, sha256_update_func);
+    for (uint8_t i = 0; i < preconditions->extra_signers_len; i++) {
+        write_signer_key(preconditions->extra_signers + i, sha256_update_func);
+    }
 }
 
 bool write_asset(const asset_t *asset, sha256_update_func sha256_update_func) {

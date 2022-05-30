@@ -534,6 +534,8 @@ typedef struct {
     sequence_number_t min_seq_num;
     duration_t min_seq_age;
     uint32_t min_seq_ledger_gap;
+    signer_key_t extra_signers[2];
+    uint8_t extra_signers_len;
     bool time_bounds_present;
     bool ledger_bounds_present;
     bool min_seq_num_present;

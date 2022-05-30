@@ -37,7 +37,7 @@ bool read_time_bounds(buffer_t *buffer, time_bounds_t *bounds);
 
 bool read_ledger_bounds(buffer_t *buffer, ledger_bounds_t *ledger_bounds);
 
-bool read_extra_signers(buffer_t *buffer);
+bool read_extra_signers(buffer_t *buffer, signer_key_t *extra_signers, uint8_t *extra_signers_len);
 
 bool read_preconditions(buffer_t *buffer, preconditions_t *cond);
 

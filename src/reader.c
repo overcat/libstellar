@@ -207,16 +207,16 @@ bool read_ledger_bounds(buffer_t *buffer, ledger_bounds_t *ledger_bounds) {
     return true;
 }
 
-bool read_extra_signers(buffer_t *buffer) {
+bool read_extra_signers(buffer_t *buffer, signer_key_t *extra_signers, uint8_t *extra_signers_len) {
     uint32_t length;
     READER_CHECK(buffer_read32(buffer, &length))
     if (length > 2) {  // maximum length is 2
         return false;
     }
-
+    *extra_signers_len = length;
     signer_key_t signer_key;
     for (uint32_t i = 0; i < length; i++) {
-        READER_CHECK(read_signer_key(buffer, &signer_key))
+        READER_CHECK(read_signer_key(buffer, extra_signers + i))
     }
     return true;
 }
@@ -246,7 +246,7 @@ bool read_preconditions(buffer_t *buffer, preconditions_t *cond) {
                                             &cond->min_seq_num_present))
             READER_CHECK(buffer_read64(buffer, (uint64_t *) &cond->min_seq_age))
             READER_CHECK(buffer_read32(buffer, &cond->min_seq_ledger_gap))
-            READER_CHECK(read_extra_signers(buffer))
+            READER_CHECK(read_extra_signers(buffer, cond->extra_signers, &cond->extra_signers_len))
             return true;
         default:
             return false;
