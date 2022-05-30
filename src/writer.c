@@ -363,9 +363,10 @@ void write_path_payment_strict_send_op(const path_payment_strict_send_op_t *op,
     }
 }
 
-void write_create_claimable_balance_op(const create_claimable_balance_op_t *op,
+bool write_create_claimable_balance_op(const create_claimable_balance_op_t *op,
                                        sha256_update_func sha256_update_func) {
-    // TODO: add create_claimable_balance_op support
+    // create_claimable_balance_op is currently not supported.
+    return false;
 }
 
 void write_claimable_balance_id(const claimable_balance_id *claimable_balance_id,
@@ -540,8 +541,8 @@ bool write_operation(const operation_t *op, sha256_update_func sha256_update_fun
             write_path_payment_strict_send_op(&op->path_payment_strict_send_op, sha256_update_func);
             break;
         case OPERATION_TYPE_CREATE_CLAIMABLE_BALANCE:
-            write_create_claimable_balance_op(&op->create_claimable_balance_op, sha256_update_func);
-            break;
+            return write_create_claimable_balance_op(&op->create_claimable_balance_op,
+                                                     sha256_update_func);
         case OPERATION_TYPE_CLAIM_CLAIMABLE_BALANCE:
             write_claim_claimable_balance_op(&op->claim_claimable_balance_op, sha256_update_func);
             break;
@@ -588,8 +589,10 @@ bool write_memo(const memo_t *memo, sha256_update_func sha256_update_func) {
             write_uint64(memo->id, sha256_update_func);
             break;
         case MEMO_HASH:
-        case MEMO_RETURN:
             sha256_update_func(memo->hash, 32);
+            break;
+        case MEMO_RETURN:
+            sha256_update_func(memo->return_hash, 32);
             break;
         default:
             return false;

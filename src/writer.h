@@ -76,7 +76,7 @@ void write_manage_buy_offer_op(const manage_buy_offer_op_t *op,
 void write_path_payment_strict_send_op(const path_payment_strict_send_op_t *op,
                                        sha256_update_func sha256_update_func);
 
-void write_create_claimable_balance_op(const create_claimable_balance_op_t *op,
+bool write_create_claimable_balance_op(const create_claimable_balance_op_t *op,
                                        sha256_update_func sha256_update_func);
 
 void write_claimable_balance_id(const claimable_balance_id *claimable_balance_id,

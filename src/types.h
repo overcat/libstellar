@@ -509,6 +509,7 @@ typedef struct {
         uint64_t id;
         const char *text;  // TODO: fix to uint8
         const uint8_t *hash;
+        const uint8_t *return_hash;
     };
 } memo_t;
 

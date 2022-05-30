@@ -268,11 +268,17 @@ bool read_memo(buffer_t *buffer, memo_t *memo) {
         case MEMO_TEXT:
             return read_string_ptr(buffer, &memo->text, NULL, MEMO_TEXT_MAX_SIZE);
         case MEMO_HASH:
-        case MEMO_RETURN:
             if (buffer->size - buffer->offset < HASH_SIZE) {
                 return false;
             }
             memo->hash = buffer->ptr + buffer->offset;
+            buffer->offset += HASH_SIZE;
+            return true;
+        case MEMO_RETURN:
+            if (buffer->size - buffer->offset < HASH_SIZE) {
+                return false;
+            }
+            memo->return_hash = buffer->ptr + buffer->offset;
             buffer->offset += HASH_SIZE;
             return true;
         default:
