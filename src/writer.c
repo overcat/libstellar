@@ -583,7 +583,7 @@ bool write_memo(const memo_t *memo, sha256_update_func sha256_update_func) {
         case MEMO_NONE:
             break;
         case MEMO_TEXT:
-            // TODO: add text memo support
+            write_string(memo->text.text, memo->text.text_size, sha256_update_func);
             break;
         case MEMO_ID:
             write_uint64(memo->id, sha256_update_func);

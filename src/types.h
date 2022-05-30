@@ -507,7 +507,10 @@ typedef struct {
     memo_type_t type;
     union {
         uint64_t id;
-        const char *text;  // TODO: fix to uint8
+        struct {
+            uint8_t text_size;
+            const uint8_t *text;
+        } text;
         const uint8_t *hash;
         const uint8_t *return_hash;
     };

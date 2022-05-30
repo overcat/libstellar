@@ -265,8 +265,15 @@ bool read_memo(buffer_t *buffer, memo_t *memo) {
             return true;
         case MEMO_ID:
             return buffer_read64(buffer, &memo->id);
-        case MEMO_TEXT:
-            return read_string_ptr(buffer, &memo->text, NULL, MEMO_TEXT_MAX_SIZE);
+        case MEMO_TEXT: {
+            size_t size;
+            READER_CHECK(read_string_ptr(buffer,
+                                         (const char **) &memo->text.text,
+                                         &size,
+                                         DATA_VALUE_MAX_SIZE))
+            memo->text.text_size = size;
+            return true;
+        }
         case MEMO_HASH:
             if (buffer->size - buffer->offset < HASH_SIZE) {
                 return false;
