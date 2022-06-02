@@ -524,10 +524,14 @@ bool read_set_options(buffer_t *buffer, set_options_op_t *setOptions) {
                                     &setOptions->inflation_destination,
                                     &setOptions->inflation_destination_present))
 
-    READER_CHECK(
-        read_optional_type(buffer, (xdr_type_reader) buffer_read32, &setOptions->clear_flags, NULL))
-    READER_CHECK(
-        read_optional_type(buffer, (xdr_type_reader) buffer_read32, &setOptions->set_flags, NULL))
+    READER_CHECK(read_optional_type(buffer,
+                                    (xdr_type_reader) buffer_read32,
+                                    &setOptions->clear_flags,
+                                    &setOptions->clear_flags_present))
+    READER_CHECK(read_optional_type(buffer,
+                                    (xdr_type_reader) buffer_read32,
+                                    &setOptions->set_flags,
+                                    &setOptions->set_flags_present))
     READER_CHECK(read_optional_type(buffer,
                                     (xdr_type_reader) buffer_read32,
                                     &setOptions->master_weight,

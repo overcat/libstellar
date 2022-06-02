@@ -220,6 +220,87 @@ static void test_create_passive_sell_offer_op() {
     assert_int_equal(operation.create_passive_sell_offer_op.price.d, 1);
 }
 
+static void test_set_options_op() {
+    uint8_t data[] = {
+        0x0,  0x0,  0x0,  0x1,  0x0,  0x0,  0x0,  0x0,  0x62, 0x5f, 0x3d, 0x59, 0xc3, 0xf8,
+        0x9e, 0x59, 0x1a, 0x6,  0xda, 0x5e, 0x8,  0xc5, 0xd6, 0xe4, 0xbd, 0xf0, 0xd1, 0x50,
+        0x3a, 0xb9, 0xc3, 0x22, 0x81, 0x49, 0x49, 0xeb, 0x9,  0x1e, 0x5d, 0xa1, 0x0,  0x0,
+        0x0,  0x5,  0x0,  0x0,  0x0,  0x1,  0x0,  0x0,  0x0,  0x0,  0xb4, 0x69, 0xf8, 0x27,
+        0xc2, 0x68, 0xa1, 0xfe, 0x55, 0x2,  0xaf, 0x55, 0x87, 0x1,  0x11, 0x16, 0x23, 0xe3,
+        0xbf, 0xf8, 0x81, 0x74, 0xb3, 0xb0, 0x6d, 0x56, 0x48, 0x8c, 0xc5, 0x2e, 0xfe, 0xb8,
+        0x0,  0x0,  0x0,  0x1,  0x0,  0x0,  0x0,  0x2,  0x0,  0x0,  0x0,  0x1,  0x0,  0x0,
+        0x0,  0x4,  0x0,  0x0,  0x0,  0x1,  0x0,  0x0,  0x0,  0x1,  0x0,  0x0,  0x0,  0x1,
+        0x0,  0x0,  0x0,  0xa,  0x0,  0x0,  0x0,  0x1,  0x0,  0x0,  0x0,  0x14, 0x0,  0x0,
+        0x0,  0x1,  0x0,  0x0,  0x0,  0x1e, 0x0,  0x0,  0x0,  0x1,  0x0,  0x0,  0x0,  0xb,
+        0x65, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x2e, 0x63, 0x6f, 0x6d, 0x0,  0x0,  0x0,
+        0x0,  0x1,  0x0,  0x0,  0x0,  0x0,  0xb4, 0x69, 0xf8, 0x27, 0xc2, 0x68, 0xa1, 0xfe,
+        0x55, 0x2,  0xaf, 0x55, 0x87, 0x1,  0x11, 0x16, 0x23, 0xe3, 0xbf, 0xf8, 0x81, 0x74,
+        0xb3, 0xb0, 0x6d, 0x56, 0x48, 0x8c, 0xc5, 0x2e, 0xfe, 0xb8, 0x0,  0x0,  0x0,  0x5};
+
+    buffer_t buffer = {.offset = 0, .size = sizeof(data), .ptr = data};
+    operation_t operation;
+    assert_true(read_operation(&buffer, &operation));
+    assert_int_equal(buffer.offset, buffer.size);
+
+    assert_true(operation.source_account_present);
+    assert_int_equal(operation.source_account.type, KEY_TYPE_ED25519);
+    assert_memory_equal(operation.source_account.ed25519, kp1_public, sizeof(kp1_public));
+
+    assert_int_equal(operation.type, OPERATION_TYPE_SET_OPTIONS);
+    uint8_t home_domain[] = "example.com";
+    assert_true(operation.set_options_op.inflation_destination_present);
+    assert_memory_equal(operation.set_options_op.inflation_destination, kp2_public, 32);
+    assert_true(operation.set_options_op.clear_flags_present);
+    assert_int_equal(operation.set_options_op.clear_flags, 2);  // TODO: add flags enum
+    assert_true(operation.set_options_op.set_flags_present);
+    assert_int_equal(operation.set_options_op.set_flags, 4);  // TODO: add flags enum
+    assert_true(operation.set_options_op.master_weight_present);
+    assert_int_equal(operation.set_options_op.master_weight, 1);
+    assert_true(operation.set_options_op.low_threshold_present);
+    assert_int_equal(operation.set_options_op.low_threshold, 10);
+    assert_true(operation.set_options_op.medium_threshold_present);
+    assert_int_equal(operation.set_options_op.medium_threshold, 20);
+    assert_true(operation.set_options_op.high_threshold_present);
+    assert_int_equal(operation.set_options_op.high_threshold, 30);
+    assert_true(operation.set_options_op.signer_present);
+    assert_int_equal(operation.set_options_op.signer.weight, 5);
+    assert_int_equal(operation.set_options_op.signer.key.type, SIGNER_KEY_TYPE_ED25519);
+    assert_memory_equal(operation.set_options_op.signer.key.ed25519, kp2_public, 32);
+    assert_true(operation.set_options_op.home_domain_present);
+    assert_int_equal(operation.set_options_op.home_domain_size, 11);
+    assert_memory_equal(operation.set_options_op.home_domain, home_domain, 11);
+}
+
+static void test_set_options_op_empty() {
+    uint8_t data[] = {0x0,  0x0,  0x0,  0x1,  0x0,  0x0,  0x0,  0x0,  0x62, 0x5f, 0x3d, 0x59,
+                      0xc3, 0xf8, 0x9e, 0x59, 0x1a, 0x6,  0xda, 0x5e, 0x8,  0xc5, 0xd6, 0xe4,
+                      0xbd, 0xf0, 0xd1, 0x50, 0x3a, 0xb9, 0xc3, 0x22, 0x81, 0x49, 0x49, 0xeb,
+                      0x9,  0x1e, 0x5d, 0xa1, 0x0,  0x0,  0x0,  0x5,  0x0,  0x0,  0x0,  0x0,
+                      0x0,  0x0,  0x0,  0x0,  0x0,  0x0,  0x0,  0x0,  0x0,  0x0,  0x0,  0x0,
+                      0x0,  0x0,  0x0,  0x0,  0x0,  0x0,  0x0,  0x0,  0x0,  0x0,  0x0,  0x0,
+                      0x0,  0x0,  0x0,  0x0,  0x0,  0x0,  0x0,  0x0};
+
+    buffer_t buffer = {.offset = 0, .size = sizeof(data), .ptr = data};
+    operation_t operation;
+    assert_true(read_operation(&buffer, &operation));
+    assert_int_equal(buffer.offset, buffer.size);
+
+    assert_true(operation.source_account_present);
+    assert_int_equal(operation.source_account.type, KEY_TYPE_ED25519);
+    assert_memory_equal(operation.source_account.ed25519, kp1_public, sizeof(kp1_public));
+
+    assert_int_equal(operation.type, OPERATION_TYPE_SET_OPTIONS);
+    assert_false(operation.set_options_op.inflation_destination_present);
+    assert_false(operation.set_options_op.clear_flags_present);
+    assert_false(operation.set_options_op.set_flags_present);
+    assert_false(operation.set_options_op.master_weight_present);
+    assert_false(operation.set_options_op.low_threshold_present);
+    assert_false(operation.set_options_op.medium_threshold_present);
+    assert_false(operation.set_options_op.high_threshold_present);
+    assert_false(operation.set_options_op.signer_present);
+    assert_false(operation.set_options_op.home_domain_present);
+}
+
 static void test_change_trust_op() {
     uint8_t data[] = {0x0,  0x0,  0x0,  0x1,  0x0,  0x0,  0x0,  0x0,  0x62, 0x5f, 0x3d, 0x59,
                       0xc3, 0xf8, 0x9e, 0x59, 0x1a, 0x6,  0xda, 0x5e, 0x8,  0xc5, 0xd6, 0xe4,
@@ -1120,6 +1201,8 @@ int main() {
         cmocka_unit_test(test_path_payment_strict_receive_op),
         cmocka_unit_test(test_manage_sell_offer_op),
         cmocka_unit_test(test_create_passive_sell_offer_op),
+        cmocka_unit_test(test_set_options_op),
+        cmocka_unit_test(test_set_options_op_empty),
         cmocka_unit_test(test_change_trust_op),
         cmocka_unit_test(test_allow_trust_op),
         cmocka_unit_test(test_account_merge_op),

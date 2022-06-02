@@ -183,6 +183,74 @@ static void test_create_passive_sell_offer_op() {
     assert_memory_equal(expect_hash, hash, sizeof(hash));
 }
 
+static void test_set_options_op() {
+    uint8_t home_domain[] = "example.com";
+
+    operation_t operation = {
+        .type = OPERATION_TYPE_SET_OPTIONS,
+        .source_account_present = true,
+        .source_account =
+            {
+                .type = KEY_TYPE_ED25519,
+                .ed25519 = kp1_public,
+            },
+        .set_options_op = {.inflation_destination_present = true,
+                           .inflation_destination = kp2_public,
+                           .clear_flags_present = true,
+                           .clear_flags = 2,
+                           .set_flags_present = true,
+                           .set_flags = 4,
+                           .master_weight_present = true,
+                           .master_weight = 1,
+                           .low_threshold_present = true,
+                           .low_threshold = 10,
+                           .medium_threshold_present = true,
+                           .medium_threshold = 20,
+                           .high_threshold_present = true,
+                           .high_threshold = 30,
+                           .home_domain_present = true,
+                           .home_domain = home_domain,
+                           .home_domain_size = 11,
+                           .signer_present = true,
+                           .signer = {
+                               .key = {.type = SIGNER_KEY_TYPE_ED25519, .ed25519 = kp2_public},
+                               .weight = 5,
+                           }}};
+
+    sha256_init(&sha256_ctx);
+    write_operation(&operation, sha256_update_f);
+    sha256_final(&sha256_ctx, hash);
+
+    uint8_t expect_hash[] = {0x80, 0x50, 0x34, 0xf7, 0x70, 0x3d, 0xf8, 0x80, 0xe3, 0xd,  0xc3,
+                             0xc,  0x1c, 0xf,  0x86, 0x60, 0x26, 0x28, 0xf3, 0xe4, 0x7d, 0x2a,
+                             0x96, 0xa9, 0x6,  0x32, 0x11, 0x5c, 0x22, 0x5d, 0x4,  0xa5};
+
+    assert_memory_equal(expect_hash, hash, sizeof(hash));
+}
+
+static void test_set_options_op_empty() {
+    operation_t operation = {.type = OPERATION_TYPE_SET_OPTIONS,
+                             .source_account_present = true,
+                             .source_account =
+                                 {
+                                     .type = KEY_TYPE_ED25519,
+                                     .ed25519 = kp1_public,
+                                 },
+                             .set_options_op = {
+
+                             }};
+
+    sha256_init(&sha256_ctx);
+    write_operation(&operation, sha256_update_f);
+    sha256_final(&sha256_ctx, hash);
+
+    uint8_t expect_hash[] = {0xbe, 0xce, 0x24, 0x7c, 0xf1, 0x1e, 0xc6, 0xaf, 0xa,  0xd9, 0x23,
+                             0x84, 0x3,  0xf6, 0x96, 0x43, 0x6,  0x62, 0xc5, 0x18, 0xb2, 0x6,
+                             0x6b, 0x6b, 0x53, 0xf1, 0x7c, 0xb4, 0xe6, 0xec, 0xa0, 0x84};
+
+    assert_memory_equal(expect_hash, hash, sizeof(hash));
+}
+
 static void test_change_trust_op() {
     uint8_t issuer1[] = {0x9b, 0x8e, 0xba, 0xf8, 0x96, 0x38, 0x55, 0x1d, 0xcf, 0x9e, 0xa4,
                          0xf7, 0x43, 0x20, 0x71, 0x10, 0x6b, 0x87, 0xab, 0xe,  0x2d, 0xb3,
@@ -985,6 +1053,8 @@ int main() {
         cmocka_unit_test(test_path_payment_strict_receive_op),
         cmocka_unit_test(test_manage_sell_offer_op),
         cmocka_unit_test(test_create_passive_sell_offer_op),
+        cmocka_unit_test(test_set_options_op),
+        cmocka_unit_test(test_set_options_op_empty),
         cmocka_unit_test(test_change_trust_op),
         cmocka_unit_test(test_allow_trust_op),
         cmocka_unit_test(test_account_merge_op),
