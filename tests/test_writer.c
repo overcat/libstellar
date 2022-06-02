@@ -1046,6 +1046,105 @@ static void test_signer_key_ed25519_signed_payload() {
     assert_memory_equal(expect_hash, hash, sizeof(hash));
 }
 
+static void test_preconditions_v2() {
+    preconditions_t preconditions = {
+        .time_bounds_present = true,
+        .ledger_bounds_present = true,
+        .min_seq_num_present = true,
+        .time_bounds = {.min_time = 1649237469, .max_time = 1649238469},
+        .ledger_bounds = {.min_ledger = 40351800, .max_ledger = 40352000},
+        .min_seq_num = 103420918407103888,
+        .min_seq_ledger_gap = 30,
+        .min_seq_age = 1649239999,
+        .extra_signers_len = 2,
+    };
+    signer_key_t signer_key0 = {.type = SIGNER_KEY_TYPE_ED25519, .ed25519 = kp1_public};
+    signer_key_t signer_key1 = {.type = SIGNER_KEY_TYPE_ED25519, .ed25519 = kp2_public};
+    memcpy(&preconditions.extra_signers[0], &signer_key0, sizeof(signer_key0));
+    memcpy(&preconditions.extra_signers[1], &signer_key1, sizeof(signer_key1));
+
+    sha256_init(&sha256_ctx);
+    write_preconditions(&preconditions, sha256_update_f);
+    sha256_final(&sha256_ctx, hash);
+
+    uint8_t expect_hash[] = {0xbb, 0xcc, 0x9e, 0xe9, 0xac, 0x77, 0xa4, 0x94, 0x69, 0xae, 0x4,
+                             0xbe, 0xa6, 0x5d, 0x4d, 0x91, 0xc8, 0x76, 0x76, 0x95, 0x73, 0x4e,
+                             0x29, 0x16, 0xbc, 0x4f, 0xc,  0xbd, 0x5f, 0x5b, 0xfb, 0x1b};
+
+    assert_memory_equal(expect_hash, hash, sizeof(hash));
+}
+
+static void test_preconditions_v0() {
+    preconditions_t preconditions = {
+        .time_bounds_present = false,
+        .ledger_bounds_present = false,
+        .min_seq_num_present = false,
+        .time_bounds = {.min_time = 1649237469, .max_time = 1649238469},
+        .ledger_bounds = {.min_ledger = 40351800, .max_ledger = 40352000},
+        .min_seq_num = 103420918407103888,
+        .min_seq_ledger_gap = 30,
+        .min_seq_age = 1649239999,
+        .extra_signers_len = 2,
+    };
+    signer_key_t signer_key0 = {.type = SIGNER_KEY_TYPE_ED25519, .ed25519 = kp1_public};
+    signer_key_t signer_key1 = {.type = SIGNER_KEY_TYPE_ED25519, .ed25519 = kp2_public};
+    memcpy(&preconditions.extra_signers[0], &signer_key0, sizeof(signer_key0));
+    memcpy(&preconditions.extra_signers[1], &signer_key1, sizeof(signer_key1));
+
+    sha256_init(&sha256_ctx);
+    write_preconditions(&preconditions, sha256_update_f);
+    sha256_final(&sha256_ctx, hash);
+
+    uint8_t expect_hash[] = {0xdf, 0x3f, 0x61, 0x98, 0x4,  0xa9, 0x2f, 0xdb, 0x40, 0x57, 0x19,
+                             0x2d, 0xc4, 0x3d, 0xd7, 0x48, 0xea, 0x77, 0x8a, 0xdc, 0x52, 0xbc,
+                             0x49, 0x8c, 0xe8, 0x5,  0x24, 0xc0, 0x14, 0xb8, 0x11, 0x19};
+
+    assert_memory_equal(expect_hash, hash, sizeof(hash));
+}
+
+static void test_preconditions_none() {
+    preconditions_t preconditions = {
+        .time_bounds_present = false,
+        .ledger_bounds_present = false,
+        .min_seq_num_present = false,
+
+    };
+    signer_key_t signer_key0 = {.type = SIGNER_KEY_TYPE_ED25519, .ed25519 = kp1_public};
+    signer_key_t signer_key1 = {.type = SIGNER_KEY_TYPE_ED25519, .ed25519 = kp2_public};
+    memcpy(&preconditions.extra_signers[0], &signer_key0, sizeof(signer_key0));
+    memcpy(&preconditions.extra_signers[1], &signer_key1, sizeof(signer_key1));
+
+    sha256_init(&sha256_ctx);
+    write_preconditions(&preconditions, sha256_update_f);
+    sha256_final(&sha256_ctx, hash);
+
+    uint8_t expect_hash[] = {0xdf, 0x3f, 0x61, 0x98, 0x4,  0xa9, 0x2f, 0xdb, 0x40, 0x57, 0x19,
+                             0x2d, 0xc4, 0x3d, 0xd7, 0x48, 0xea, 0x77, 0x8a, 0xdc, 0x52, 0xbc,
+                             0x49, 0x8c, 0xe8, 0x5,  0x24, 0xc0, 0x14, 0xb8, 0x11, 0x19};
+
+    assert_memory_equal(expect_hash, hash, sizeof(hash));
+}
+
+static void test_preconditions_time() {
+    preconditions_t preconditions = {
+        .time_bounds_present = true,
+        .time_bounds = {.min_time = 1649237469, .max_time = 1649238469},
+    };
+    signer_key_t signer_key0 = {.type = SIGNER_KEY_TYPE_ED25519, .ed25519 = kp1_public};
+    signer_key_t signer_key1 = {.type = SIGNER_KEY_TYPE_ED25519, .ed25519 = kp2_public};
+    memcpy(&preconditions.extra_signers[0], &signer_key0, sizeof(signer_key0));
+    memcpy(&preconditions.extra_signers[1], &signer_key1, sizeof(signer_key1));
+
+    sha256_init(&sha256_ctx);
+    write_preconditions(&preconditions, sha256_update_f);
+    sha256_final(&sha256_ctx, hash);
+
+    uint8_t expect_hash[] = {0x6f, 0x33, 0xe,  0xa4, 0x4,  0xc7, 0xe0, 0x0,  0xd,  0x57, 0x7a,
+                             0x1c, 0xec, 0x51, 0xa4, 0xbb, 0x50, 0xd0, 0x42, 0x3,  0xb0, 0x49,
+                             0xdf, 0x6d, 0x2b, 0x57, 0x9d, 0x4c, 0x25, 0x30, 0xf5, 0xb0};
+
+    assert_memory_equal(expect_hash, hash, sizeof(hash));
+}
 int main() {
     const struct CMUnitTest tests[] = {
         cmocka_unit_test(test_create_account_op),
@@ -1087,6 +1186,10 @@ int main() {
         cmocka_unit_test(test_signer_key_ed25519_public_key),
         cmocka_unit_test(test_signer_key_pre_auth_tx),
         cmocka_unit_test(test_signer_key_hash_x),
-        cmocka_unit_test(test_signer_key_ed25519_signed_payload)};
+        cmocka_unit_test(test_signer_key_ed25519_signed_payload),
+        cmocka_unit_test(test_preconditions_v2),
+        cmocka_unit_test(test_preconditions_none),
+        cmocka_unit_test(test_preconditions_time),
+    };
     return cmocka_run_group_tests(tests, NULL, NULL);
 }

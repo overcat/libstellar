@@ -214,7 +214,6 @@ bool read_extra_signers(buffer_t *buffer, signer_key_t *extra_signers, uint8_t *
         return false;
     }
     *extra_signers_len = length;
-    signer_key_t signer_key;
     for (uint32_t i = 0; i < length; i++) {
         READER_CHECK(read_signer_key(buffer, extra_signers + i))
     }
@@ -226,10 +225,21 @@ bool read_preconditions(buffer_t *buffer, preconditions_t *cond) {
     READER_CHECK(buffer_read32(buffer, &preconditionType))
     switch (preconditionType) {
         case PRECOND_NONE:
+            cond->time_bounds_present = false;
+            cond->min_seq_num_present = false;
+            cond->ledger_bounds_present = false;
+            cond->min_seq_ledger_gap = 0;
+            cond->min_seq_age = 0;
+            cond->extra_signers_len = 0;
             return true;
         case PRECOND_TIME:
             cond->time_bounds_present = true;
             READER_CHECK(read_time_bounds(buffer, &cond->time_bounds))
+            cond->min_seq_num_present = false;
+            cond->ledger_bounds_present = false;
+            cond->min_seq_ledger_gap = 0;
+            cond->min_seq_age = 0;
+            cond->extra_signers_len = 0;
             return true;
         case PRECOND_V2:
             READER_CHECK(read_optional_type(buffer,

@@ -82,32 +82,42 @@ void write_ledger_bounds(const ledger_bounds_t *ledger_bounds,
 
 void write_preconditions(const preconditions_t *preconditions,
                          sha256_update_func sha256_update_func) {
-    if (preconditions->time_bounds_present) {
-        write_bool(true, sha256_update_func);
+    if (preconditions->ledger_bounds_present || preconditions->min_seq_num_present ||
+        preconditions->min_seq_age || preconditions->min_seq_ledger_gap ||
+        preconditions->extra_signers_len) {
+        write_uint32(PRECOND_V2, sha256_update_func);
+        if (preconditions->time_bounds_present) {
+            write_bool(true, sha256_update_func);
+            write_time_bounds(&preconditions->time_bounds, sha256_update_func);
+        } else {
+            write_bool(false, sha256_update_func);
+        }
+
+        if (preconditions->ledger_bounds_present) {
+            write_bool(true, sha256_update_func);
+            write_ledger_bounds(&preconditions->ledger_bounds, sha256_update_func);
+        } else {
+            write_bool(false, sha256_update_func);
+        }
+
+        if (preconditions->min_seq_num_present) {
+            write_bool(true, sha256_update_func);
+            write_uint64(preconditions->min_seq_num, sha256_update_func);
+        } else {
+            write_bool(false, sha256_update_func);
+        }
+
+        write_uint64(preconditions->min_seq_age, sha256_update_func);
+        write_uint32(preconditions->min_seq_ledger_gap, sha256_update_func);
+        write_uint32(preconditions->extra_signers_len, sha256_update_func);
+        for (uint8_t i = 0; i < preconditions->extra_signers_len; i++) {
+            write_signer_key(preconditions->extra_signers + i, sha256_update_func);
+        }
+    } else if (preconditions->time_bounds_present) {
+        write_uint32(PRECOND_TIME, sha256_update_func);
         write_time_bounds(&preconditions->time_bounds, sha256_update_func);
     } else {
-        write_bool(false, sha256_update_func);
-    }
-
-    if (preconditions->ledger_bounds_present) {
-        write_bool(true, sha256_update_func);
-        write_ledger_bounds(&preconditions->ledger_bounds, sha256_update_func);
-    } else {
-        write_bool(false, sha256_update_func);
-    }
-
-    if (preconditions->min_seq_num_present) {
-        write_bool(true, sha256_update_func);
-        write_uint64(preconditions->min_seq_num, sha256_update_func);
-    } else {
-        write_bool(false, sha256_update_func);
-    }
-
-    write_uint64(preconditions->min_seq_age, sha256_update_func);
-    write_uint32(preconditions->min_seq_ledger_gap, sha256_update_func);
-    write_uint32(preconditions->extra_signers_len, sha256_update_func);
-    for (uint8_t i = 0; i < preconditions->extra_signers_len; i++) {
-        write_signer_key(preconditions->extra_signers + i, sha256_update_func);
+        write_uint32(PRECOND_NONE, sha256_update_func);
     }
 }
 

@@ -1194,6 +1194,76 @@ static void test_signer_key_ed25519_signed_payload() {
     assert_int_equal(signer_key.ed25519_signed_payload.payload_len, 3);
 }
 
+static void test_preconditions_v2() {
+    uint8_t data[] = {0x0,  0x0,  0x0,  0x2,  0x0,  0x0,  0x0,  0x1,  0x0,  0x0,  0x0,  0x0,  0x62,
+                      0x4d, 0x5d, 0xdd, 0x0,  0x0,  0x0,  0x0,  0x62, 0x4d, 0x61, 0xc5, 0x0,  0x0,
+                      0x0,  0x1,  0x2,  0x67, 0xb8, 0x38, 0x2,  0x67, 0xb9, 0x0,  0x0,  0x0,  0x0,
+                      0x1,  0x1,  0x6f, 0x6c, 0xc7, 0x0,  0x0,  0x5,  0x90, 0x0,  0x0,  0x0,  0x0,
+                      0x62, 0x4d, 0x67, 0xbf, 0x0,  0x0,  0x0,  0x1e, 0x0,  0x0,  0x0,  0x2,  0x0,
+                      0x0,  0x0,  0x0,  0x62, 0x5f, 0x3d, 0x59, 0xc3, 0xf8, 0x9e, 0x59, 0x1a, 0x6,
+                      0xda, 0x5e, 0x8,  0xc5, 0xd6, 0xe4, 0xbd, 0xf0, 0xd1, 0x50, 0x3a, 0xb9, 0xc3,
+                      0x22, 0x81, 0x49, 0x49, 0xeb, 0x9,  0x1e, 0x5d, 0xa1, 0x0,  0x0,  0x0,  0x0,
+                      0xb4, 0x69, 0xf8, 0x27, 0xc2, 0x68, 0xa1, 0xfe, 0x55, 0x2,  0xaf, 0x55, 0x87,
+                      0x1,  0x11, 0x16, 0x23, 0xe3, 0xbf, 0xf8, 0x81, 0x74, 0xb3, 0xb0, 0x6d, 0x56,
+                      0x48, 0x8c, 0xc5, 0x2e, 0xfe, 0xb8};
+
+    buffer_t buffer = {.offset = 0, .size = sizeof(data), .ptr = data};
+    preconditions_t preconditions;
+    assert_true(read_preconditions(&buffer, &preconditions));
+    assert_int_equal(buffer.offset, buffer.size);
+
+    assert_true(preconditions.time_bounds_present);
+    assert_true(preconditions.ledger_bounds_present);
+    assert_true(preconditions.min_seq_num_present);
+    assert_int_equal(preconditions.time_bounds.min_time, 1649237469);
+    assert_int_equal(preconditions.time_bounds.max_time, 1649238469);
+    assert_int_equal(preconditions.ledger_bounds.min_ledger, 40351800);
+    assert_int_equal(preconditions.ledger_bounds.max_ledger, 40352000);
+    assert_int_equal(preconditions.min_seq_num, 103420918407103888);
+    assert_int_equal(preconditions.min_seq_age, 1649239999);
+    assert_int_equal(preconditions.min_seq_ledger_gap, 30);
+    assert_int_equal(preconditions.extra_signers_len, 2);
+    assert_int_equal(preconditions.extra_signers[0].type, SIGNER_KEY_TYPE_ED25519);
+    assert_memory_equal(preconditions.extra_signers[0].ed25519, kp1_public, 32);
+    assert_int_equal(preconditions.extra_signers[1].type, SIGNER_KEY_TYPE_ED25519);
+    assert_memory_equal(preconditions.extra_signers[1].ed25519, kp2_public, 32);
+}
+
+static void test_preconditions_none() {
+    uint8_t data[] = {0x0, 0x0, 0x0, 0x0};
+
+    buffer_t buffer = {.offset = 0, .size = sizeof(data), .ptr = data};
+    preconditions_t preconditions;
+    assert_true(read_preconditions(&buffer, &preconditions));
+    assert_int_equal(buffer.offset, buffer.size);
+
+    assert_false(preconditions.time_bounds_present);
+    assert_false(preconditions.ledger_bounds_present);
+    assert_false(preconditions.min_seq_num_present);
+    assert_int_equal(preconditions.min_seq_ledger_gap, 0);
+    assert_int_equal(preconditions.min_seq_age, 0);
+    assert_int_equal(preconditions.extra_signers_len, 0);
+}
+
+static void test_preconditions_time() {
+    uint8_t data[] = {0x0,  0x0,  0x0, 0x1, 0x0, 0x0, 0x0,  0x0,  0x62, 0x4d,
+                      0x5d, 0xdd, 0x0, 0x0, 0x0, 0x0, 0x62, 0x4d, 0x61, 0xc5};
+
+    buffer_t buffer = {.offset = 0, .size = sizeof(data), .ptr = data};
+    preconditions_t preconditions;
+    assert_true(read_preconditions(&buffer, &preconditions));
+    assert_int_equal(buffer.offset, buffer.size);
+
+    assert_true(preconditions.time_bounds_present);
+    assert_int_equal(preconditions.time_bounds.min_time, 1649237469);
+    assert_int_equal(preconditions.time_bounds.max_time, 1649238469);
+    assert_false(preconditions.ledger_bounds_present);
+    assert_false(preconditions.min_seq_num_present);
+    assert_int_equal(preconditions.min_seq_ledger_gap, 0);
+    assert_int_equal(preconditions.min_seq_age, 0);
+    assert_int_equal(preconditions.extra_signers_len, 0);
+}
+
 int main() {
     const struct CMUnitTest tests[] = {
         cmocka_unit_test(test_create_account_op),
@@ -1235,6 +1305,10 @@ int main() {
         cmocka_unit_test(test_signer_key_ed25519_public_key),
         cmocka_unit_test(test_signer_key_pre_auth_tx),
         cmocka_unit_test(test_signer_key_hash_x),
-        cmocka_unit_test(test_signer_key_ed25519_signed_payload)};
+        cmocka_unit_test(test_signer_key_ed25519_signed_payload),
+        cmocka_unit_test(test_preconditions_v2),
+        cmocka_unit_test(test_preconditions_none),
+        cmocka_unit_test(test_preconditions_time),
+    };
     return cmocka_run_group_tests(tests, NULL, NULL);
 }
