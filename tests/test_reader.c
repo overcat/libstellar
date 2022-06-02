@@ -976,6 +976,71 @@ static void test_liquidity_pool_withdraw_op() {
     assert_int_equal(operation.liquidity_pool_withdraw_op.amount, 50000000);
 }
 
+static void test_memo_none() {
+    uint8_t data[] = {0x0, 0x0, 0x0, 0x0};
+
+    buffer_t buffer = {.offset = 0, .size = sizeof(data), .ptr = data};
+    memo_t memo;
+    assert_true(read_memo(&buffer, &memo));
+    assert_int_equal(buffer.offset, buffer.size);
+    assert_int_equal(memo.type, MEMO_NONE);
+}
+
+static void test_memo_text() {
+    uint8_t data[] =
+        {0x0, 0x0, 0x0, 0x1, 0x0, 0x0, 0x0, 0x5, 0x68, 0x65, 0x6c, 0x6c, 0x6f, 0x0, 0x0, 0x0};
+
+    buffer_t buffer = {.offset = 0, .size = sizeof(data), .ptr = data};
+    memo_t memo;
+    assert_true(read_memo(&buffer, &memo));
+    assert_int_equal(buffer.offset, buffer.size);
+    assert_int_equal(memo.type, MEMO_TEXT);
+    assert_int_equal(memo.text.text_size, 5);
+    uint8_t text[] = "hello";
+    assert_memory_equal(memo.text.text, text, 5);
+}
+
+static void test_memo_id() {
+    uint8_t data[] = {0x0, 0x0, 0x0, 0x2, 0x0, 0x0, 0x0, 0x0, 0x0, 0x1, 0xe2, 0x40};
+
+    buffer_t buffer = {.offset = 0, .size = sizeof(data), .ptr = data};
+    memo_t memo;
+    assert_true(read_memo(&buffer, &memo));
+    assert_int_equal(buffer.offset, buffer.size);
+    assert_int_equal(memo.type, MEMO_ID);
+    assert_int_equal(memo.id, 123456);
+}
+
+static void test_memo_hash() {
+    uint8_t data[] = {0x0,  0x0,  0x0,  0x3,  0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61,
+                      0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61,
+                      0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61};
+    uint8_t hash[] = {0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61,
+                      0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61,
+                      0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61};
+    buffer_t buffer = {.offset = 0, .size = sizeof(data), .ptr = data};
+    memo_t memo;
+    assert_true(read_memo(&buffer, &memo));
+    assert_int_equal(buffer.offset, buffer.size);
+    assert_int_equal(memo.type, MEMO_HASH);
+    assert_memory_equal(memo.hash, hash, 32);
+}
+
+static void test_memo_return_hash() {
+    uint8_t data[] = {0x0,  0x0,  0x0,  0x4,  0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61,
+                      0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61,
+                      0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61};
+    uint8_t hash[] = {0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61,
+                      0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61,
+                      0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61};
+    buffer_t buffer = {.offset = 0, .size = sizeof(data), .ptr = data};
+    memo_t memo;
+    assert_true(read_memo(&buffer, &memo));
+    assert_int_equal(buffer.offset, buffer.size);
+    assert_int_equal(memo.type, MEMO_RETURN);
+    assert_memory_equal(memo.return_hash, hash, 32);
+}
+
 int main() {
     const struct CMUnitTest tests[] = {
         cmocka_unit_test(test_create_account_op),
@@ -1007,6 +1072,11 @@ int main() {
         cmocka_unit_test(test_set_trust_line_flags_op),
         cmocka_unit_test(test_liquidity_pool_deposit_op),
         cmocka_unit_test(test_liquidity_pool_withdraw_op),
+        cmocka_unit_test(test_memo_none),
+        cmocka_unit_test(test_memo_text),
+        cmocka_unit_test(test_memo_id),
+        cmocka_unit_test(test_memo_hash),
+        cmocka_unit_test(test_memo_return_hash),
     };
     return cmocka_run_group_tests(tests, NULL, NULL);
 }
