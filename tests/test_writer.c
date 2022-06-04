@@ -595,7 +595,7 @@ static void test_revoke_account_sponsorship_op() {
     assert_memory_equal(expect_hash, hash, sizeof(hash));
 }
 
-static void test_revoke_trustline_sponsorship_op() {
+static void test_revoke_trustline_sponsorship_op_asset() {
     uint8_t issuer1[] = {0x9b, 0x8e, 0xba, 0xf8, 0x96, 0x38, 0x55, 0x1d, 0xcf, 0x9e, 0xa4,
                          0xf7, 0x43, 0x20, 0x71, 0x10, 0x6b, 0x87, 0xab, 0xe,  0x2d, 0xb3,
                          0xd6, 0x9b, 0x75, 0xa5, 0x38, 0x22, 0x72, 0xf7, 0x59, 0xd8};
@@ -622,6 +622,35 @@ static void test_revoke_trustline_sponsorship_op() {
     uint8_t expect_hash[] = {0x1b, 0x4,  0xe3, 0xcd, 0x9f, 0x5d, 0xb5, 0xa4, 0xaa, 0xa3, 0x67,
                              0xf4, 0xbd, 0xc4, 0x65, 0x5f, 0x98, 0x65, 0xfb, 0xdf, 0x4b, 0x68,
                              0x9b, 0xf7, 0x9c, 0x3a, 0x6,  0x9a, 0x1b, 0xf6, 0xad, 0xe8};
+
+    assert_memory_equal(expect_hash, hash, sizeof(hash));
+}
+
+static void test_revoke_trustline_sponsorship_op_pool() {
+    trust_line_asset_t asset1 = {.type = ASSET_TYPE_POOL_SHARE,
+                                 .liquidity_pool_id = {
+                                     0xdd, 0x7b, 0x1a, 0xb8, 0x31, 0xc2, 0x73, 0x31, 0xd,  0xdb, 0xec,
+                                     0x6f, 0x97, 0x87, 0xa,  0xa8, 0x3c, 0x2f, 0xbd, 0x78, 0xce, 0x22,
+                                     0xad, 0xed, 0x37, 0xec, 0xbf, 0x4f, 0x33, 0x80, 0xfa, 0xc7}};
+
+    operation_t operation = {
+        .type = OPERATION_TYPE_REVOKE_SPONSORSHIP,
+        .source_account_present = true,
+        .source_account =
+            {
+                .type = KEY_TYPE_ED25519,
+                .ed25519 = kp1_public,
+            },
+        .revoke_sponsorship_op = {
+            .type = REVOKE_SPONSORSHIP_LEDGER_ENTRY,
+            .ledger_key = {.type = TRUSTLINE,
+                           .trust_line = {.account_id = kp2_public, .asset = asset1}}}};
+
+    sha256_init(&sha256_ctx);
+    write_operation(&operation, sha256_update_f);
+    sha256_final(&sha256_ctx, hash);
+
+    uint8_t expect_hash[] = {0xba, 0x61, 0x89, 0x7, 0x11, 0xa7, 0x32, 0xe6, 0x52, 0x5, 0xcc, 0xc1, 0x6d, 0xf6, 0x96, 0xfd, 0xa9, 0x23, 0xbd, 0x33, 0xf, 0x7d, 0xb0, 0xe2, 0xcd, 0x8d, 0xc3, 0xf2, 0xa8, 0x16, 0x39, 0xb3};
 
     assert_memory_equal(expect_hash, hash, sizeof(hash));
 }
@@ -1167,7 +1196,8 @@ int main() {
         cmocka_unit_test(test_begin_sponsoring_future_reserves),
         cmocka_unit_test(test_end_sponsoring_future_reserves),
         cmocka_unit_test(test_revoke_account_sponsorship_op),
-        cmocka_unit_test(test_revoke_trustline_sponsorship_op),
+        cmocka_unit_test(test_revoke_trustline_sponsorship_op_asset),
+        cmocka_unit_test(test_revoke_trustline_sponsorship_op_pool),
         cmocka_unit_test(test_revoke_offer_sponsorship_op),
         cmocka_unit_test(test_revoke_data_sponsorship_op),
         cmocka_unit_test(test_revoke_claimable_balance_sponsorship_op),

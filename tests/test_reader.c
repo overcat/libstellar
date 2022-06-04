@@ -681,7 +681,7 @@ static void test_revoke_account_sponsorship_op() {
                         sizeof(kp2_public));
 }
 
-static void test_revoke_trustline_sponsorship_op() {
+static void test_revoke_trustline_sponsorship_op_asset() {
     uint8_t data[] = {
         0x0,  0x0,  0x0,  0x1,  0x0,  0x0,  0x0,  0x0,  0x62, 0x5f, 0x3d, 0x59, 0xc3, 0xf8, 0x9e,
         0x59, 0x1a, 0x6,  0xda, 0x5e, 0x8,  0xc5, 0xd6, 0xe4, 0xbd, 0xf0, 0xd1, 0x50, 0x3a, 0xb9,
@@ -716,6 +716,47 @@ static void test_revoke_trustline_sponsorship_op() {
         operation.revoke_sponsorship_op.ledger_key.trust_line.asset.alpha_num4.issuer,
         asset1.alpha_num4.issuer,
         sizeof(asset1.alpha_num4.issuer));
+
+    assert_int_equal(operation.type, OPERATION_TYPE_REVOKE_SPONSORSHIP);
+    assert_int_equal(operation.revoke_sponsorship_op.type, REVOKE_SPONSORSHIP_LEDGER_ENTRY);
+    assert_int_equal(operation.revoke_sponsorship_op.ledger_key.type, TRUSTLINE);
+    assert_memory_equal(operation.revoke_sponsorship_op.ledger_key.trust_line.account_id,
+                        kp2_public,
+                        sizeof(kp2_public));
+}
+
+static void test_revoke_trustline_sponsorship_op_pool() {
+    uint8_t data[] = {0x0,  0x0,  0x0,  0x1,  0x0,  0x0,  0x0,  0x0,  0x62, 0x5f, 0x3d, 0x59, 0xc3,
+                      0xf8, 0x9e, 0x59, 0x1a, 0x6,  0xda, 0x5e, 0x8,  0xc5, 0xd6, 0xe4, 0xbd, 0xf0,
+                      0xd1, 0x50, 0x3a, 0xb9, 0xc3, 0x22, 0x81, 0x49, 0x49, 0xeb, 0x9,  0x1e, 0x5d,
+                      0xa1, 0x0,  0x0,  0x0,  0x12, 0x0,  0x0,  0x0,  0x0,  0x0,  0x0,  0x0,  0x1,
+                      0x0,  0x0,  0x0,  0x0,  0xb4, 0x69, 0xf8, 0x27, 0xc2, 0x68, 0xa1, 0xfe, 0x55,
+                      0x2,  0xaf, 0x55, 0x87, 0x1,  0x11, 0x16, 0x23, 0xe3, 0xbf, 0xf8, 0x81, 0x74,
+                      0xb3, 0xb0, 0x6d, 0x56, 0x48, 0x8c, 0xc5, 0x2e, 0xfe, 0xb8, 0x0,  0x0,  0x0,
+                      0x3,  0xdd, 0x7b, 0x1a, 0xb8, 0x31, 0xc2, 0x73, 0x31, 0xd,  0xdb, 0xec, 0x6f,
+                      0x97, 0x87, 0xa,  0xa8, 0x3c, 0x2f, 0xbd, 0x78, 0xce, 0x22, 0xad, 0xed, 0x37,
+                      0xec, 0xbf, 0x4f, 0x33, 0x80, 0xfa, 0xc7};
+
+    buffer_t buffer = {.offset = 0, .size = sizeof(data), .ptr = data};
+    operation_t operation;
+    assert_true(read_operation(&buffer, &operation));
+    assert_int_equal(buffer.offset, buffer.size);
+
+    assert_true(operation.source_account_present);
+    assert_int_equal(operation.source_account.type, KEY_TYPE_ED25519);
+    assert_memory_equal(operation.source_account.ed25519, kp1_public, sizeof(kp1_public));
+
+    trust_line_asset_t asset1 = {
+        .type = ASSET_TYPE_POOL_SHARE,
+        .liquidity_pool_id = {0xdd, 0x7b, 0x1a, 0xb8, 0x31, 0xc2, 0x73, 0x31, 0xd,  0xdb, 0xec,
+                              0x6f, 0x97, 0x87, 0xa,  0xa8, 0x3c, 0x2f, 0xbd, 0x78, 0xce, 0x22,
+                              0xad, 0xed, 0x37, 0xec, 0xbf, 0x4f, 0x33, 0x80, 0xfa, 0xc7}};
+
+    assert_int_equal(operation.revoke_sponsorship_op.ledger_key.trust_line.asset.type, asset1.type);
+    assert_memory_equal(
+        operation.revoke_sponsorship_op.ledger_key.trust_line.asset.liquidity_pool_id,
+        asset1.liquidity_pool_id,
+        sizeof(asset1.liquidity_pool_id));
 
     assert_int_equal(operation.type, OPERATION_TYPE_REVOKE_SPONSORSHIP);
     assert_int_equal(operation.revoke_sponsorship_op.type, REVOKE_SPONSORSHIP_LEDGER_ENTRY);
@@ -1286,7 +1327,8 @@ int main() {
         cmocka_unit_test(test_begin_sponsoring_future_reserves),
         cmocka_unit_test(test_end_sponsoring_future_reserves),
         cmocka_unit_test(test_revoke_account_sponsorship_op),
-        cmocka_unit_test(test_revoke_trustline_sponsorship_op),
+        cmocka_unit_test(test_revoke_trustline_sponsorship_op_asset),
+        cmocka_unit_test(test_revoke_trustline_sponsorship_op_pool),
         cmocka_unit_test(test_revoke_offer_sponsorship_op),
         cmocka_unit_test(test_revoke_data_sponsorship_op),
         cmocka_unit_test(test_revoke_claimable_balance_sponsorship_op),
