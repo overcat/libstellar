@@ -884,33 +884,66 @@ bool read_operation(buffer_t *buffer, operation_t *opDetails) {
     }
 }
 
-bool read_tx_details(buffer_t *buffer, transaction_details_t *transaction) {
-    // account used to run the (inner)transaction
-    READER_CHECK(read_muxed_account(buffer, &transaction->source_account))
+bool read_transaction_source(buffer_t *buffer, muxed_account_t *source) {
+    return read_muxed_account(buffer, source);
+}
 
-    // the fee the source_account will pay
-    READER_CHECK(buffer_read32(buffer, &transaction->fee))
+bool read_transaction_fee(buffer_t *buffer, uint32_t *fee) {
+    return buffer_read32(buffer, fee);
+}
 
-    // sequence number to consume in the account
-    READER_CHECK(buffer_read64(buffer, (uint64_t *) &transaction->sequence_number))
+bool read_transaction_sequence(buffer_t *buffer, sequence_number_t *sequence_number) {
+    return buffer_read64(buffer, (uint64_t *) sequence_number);
+}
 
-    // validity conditions
-    READER_CHECK(read_preconditions(buffer, &transaction->cond))
+bool read_transaction_preconditions(buffer_t *buffer, preconditions_t *preconditions) {
+    return read_preconditions(buffer, preconditions);
+}
 
-    READER_CHECK(read_memo(buffer, &transaction->memo))
-    uint32_t operations_len;
-    READER_CHECK(buffer_read32(buffer, &operations_len))
-    transaction->operations_len = operations_len;
-    if (transaction->operations_len > MAX_OPS) {
+bool read_transaction_memo(buffer_t *buffer, memo_t *memo) {
+    return read_memo(buffer, memo);
+}
+
+bool read_transaction_operation_len(buffer_t *buffer, uint8_t *operations_len) {
+    uint32_t len;
+    READER_CHECK(buffer_read32(buffer, &len))
+    if (len > MAX_OPS) {
         return false;
     }
+    *operations_len = len;
     return true;
 }
 
-bool read_fee_bump_tx_details(buffer_t *buffer,
-                              fee_bump_transaction_details_t *feeBumpTransaction) {
-    READER_CHECK(read_muxed_account(buffer, &feeBumpTransaction->fee_source))
-    READER_CHECK(buffer_read64(buffer, (uint64_t *) &feeBumpTransaction->fee))
+bool read_transaction_details(buffer_t *buffer, transaction_details_t *transaction) {
+    // account used to run the (inner)transaction
+    READER_CHECK(read_transaction_source(buffer, &transaction->source_account))
+
+    // the fee the source_account will pay
+    READER_CHECK(read_transaction_fee(buffer, &transaction->fee))
+
+    // sequence number to consume in the account
+    READER_CHECK(read_transaction_sequence(buffer, &transaction->sequence_number))
+
+    // validity conditions
+    READER_CHECK(read_transaction_preconditions(buffer, &transaction->cond))
+
+    READER_CHECK(read_transaction_memo(buffer, &transaction->memo))
+    READER_CHECK(read_transaction_operation_len(buffer, &transaction->operations_len))
+    return true;
+}
+
+bool read_fee_bump_transaction_fee_source(buffer_t *buffer, muxed_account_t *fee_source) {
+    return read_muxed_account(buffer, fee_source);
+}
+
+bool read_fee_bump_transaction_fee(buffer_t *buffer, int64_t *fee) {
+    return buffer_read64(buffer, (uint64_t *) fee);
+}
+
+bool read_fee_bump_transaction_details(buffer_t *buffer,
+                                       fee_bump_transaction_details_t *feeBumpTransaction) {
+    READER_CHECK(read_fee_bump_transaction_fee_source(buffer, &feeBumpTransaction->fee_source))
+    READER_CHECK(read_fee_bump_transaction_fee(buffer, &feeBumpTransaction->fee))
     return true;
 }
 

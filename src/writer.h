@@ -56,6 +56,7 @@ void write_create_passive_sell_offer_op(const create_passive_sell_offer_op_t *op
                                         sha256_update_func sha256_update_func);
 
 bool write_signer_key(const signer_key_t *signer_key, sha256_update_func sha256_update_func);
+
 void write_signer(const signer_t *signer, sha256_update_func sha256_update_func);
 
 void write_set_options_op(const set_options_op_t *op, sha256_update_func sha256_update_func);
@@ -88,6 +89,11 @@ void write_claim_claimable_balance_op(const claim_claimable_balance_op_t *op,
 void write_begin_sponsoring_future_reserves_op(const begin_sponsoring_future_reserves_op_t *op,
                                                sha256_update_func sha256_update_func);
 
+bool write_trust_line_asset(const trust_line_asset_t *asset, sha256_update_func sha256_update_func);
+
+bool write_revoke_sponsorship_ledger_entry(const ledger_key_t *ledger_key,
+                                           sha256_update_func sha256_update_func);
+
 bool write_revoke_sponsorship_op(const revoke_sponsorship_op_t *op,
                                  sha256_update_func sha256_update_func);
 
@@ -101,6 +107,7 @@ void write_set_trust_line_flags_op(const set_trust_line_flags_op_t *op,
 
 void write_liquidity_pool_deposit_op(const liquidity_pool_deposit_op_t *op,
                                      sha256_update_func sha256_update_func);
+
 void write_liquidity_pool_withdraw_op(const liquidity_pool_withdraw_op_t *op,
                                       sha256_update_func sha256_update_func);
 
@@ -108,8 +115,27 @@ bool write_operation(const operation_t *op, sha256_update_func sha256_update_fun
 
 bool write_memo(const memo_t *memo, sha256_update_func sha256_update_func);
 
+void write_transaction_source(const muxed_account_t *source, sha256_update_func sha256_update_func);
+
+void write_transaction_fee(uint32_t fee, sha256_update_func sha256_update_func);
+
+void write_transaction_sequence(sequence_number_t sequence_number,
+                                sha256_update_func sha256_update_func);
+
+void write_transaction_preconditions(preconditions_t *preconditions,
+                                     sha256_update_func sha256_update_func);
+
+void write_transaction_memo(memo_t *memo, sha256_update_func sha256_update_func);
+
+void write_transaction_operation_len(uint8_t operations_len, sha256_update_func sha256_update_func);
+
 void write_transaction_details(const transaction_details_t *transaction_details,
                                sha256_update_func sha256_update_func);
+
+void write_fee_bump_transaction_fee_source(const muxed_account_t *fee_source,
+                                           sha256_update_func sha256_update_func);
+
+void write_fee_bump_transaction_fee(int64_t fee, sha256_update_func sha256_update_func);
 
 void write_fee_bump_transaction_details(
     const fee_bump_transaction_details_t *fee_bump_transaction_details,
