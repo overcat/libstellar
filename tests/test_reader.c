@@ -1305,6 +1305,91 @@ static void test_preconditions_time() {
     assert_int_equal(preconditions.extra_signers_len, 0);
 }
 
+static void test_transaction_details() {
+    uint8_t data[] = {
+        0x0,  0x0,  0x0,  0x0,  0x62, 0x5f, 0x3d, 0x59, 0xc3, 0xf8, 0x9e, 0x59, 0x1a, 0x6,  0xda,
+        0x5e, 0x8,  0xc5, 0xd6, 0xe4, 0xbd, 0xf0, 0xd1, 0x50, 0x3a, 0xb9, 0xc3, 0x22, 0x81, 0x49,
+        0x49, 0xeb, 0x9,  0x1e, 0x5d, 0xa1, 0x0,  0x0,  0x0,  0xc8, 0x0,  0x4,  0x62, 0xd5, 0x3c,
+        0x8a, 0x63, 0x12, 0x0,  0x0,  0x0,  0x1,  0x0,  0x0,  0x0,  0x0,  0x62, 0x4d, 0x5d, 0xdd,
+        0x0,  0x0,  0x0,  0x0,  0x62, 0x4d, 0x61, 0xc5, 0x0,  0x0,  0x0,  0x2,  0x0,  0x0,  0x0,
+        0x0,  0x0,  0x1,  0xe2, 0x40, 0x0,  0x0,  0x0,  0x2,  0x0,  0x0,  0x0,  0x1,  0x0,  0x0,
+        0x0,  0x0,  0x62, 0x5f, 0x3d, 0x59, 0xc3, 0xf8, 0x9e, 0x59, 0x1a, 0x6,  0xda, 0x5e, 0x8,
+        0xc5, 0xd6, 0xe4, 0xbd, 0xf0, 0xd1, 0x50, 0x3a, 0xb9, 0xc3, 0x22, 0x81, 0x49, 0x49, 0xeb,
+        0x9,  0x1e, 0x5d, 0xa1, 0x0,  0x0,  0x0,  0x1,  0x0,  0x0,  0x0,  0x0,  0xb4, 0x69, 0xf8,
+        0x27, 0xc2, 0x68, 0xa1, 0xfe, 0x55, 0x2,  0xaf, 0x55, 0x87, 0x1,  0x11, 0x16, 0x23, 0xe3,
+        0xbf, 0xf8, 0x81, 0x74, 0xb3, 0xb0, 0x6d, 0x56, 0x48, 0x8c, 0xc5, 0x2e, 0xfe, 0xb8, 0x0,
+        0x0,  0x0,  0x0,  0x0,  0x0,  0x0,  0xb,  0xa4, 0x3b, 0x74, 0x0,  0x0,  0x0,  0x0,  0x1,
+        0x0,  0x0,  0x0,  0x0,  0x62, 0x5f, 0x3d, 0x59, 0xc3, 0xf8, 0x9e, 0x59, 0x1a, 0x6,  0xda,
+        0x5e, 0x8,  0xc5, 0xd6, 0xe4, 0xbd, 0xf0, 0xd1, 0x50, 0x3a, 0xb9, 0xc3, 0x22, 0x81, 0x49,
+        0x49, 0xeb, 0x9,  0x1e, 0x5d, 0xa1, 0x0,  0x0,  0x0,  0x1,  0x0,  0x0,  0x0,  0x0,  0xb4,
+        0x69, 0xf8, 0x27, 0xc2, 0x68, 0xa1, 0xfe, 0x55, 0x2,  0xaf, 0x55, 0x87, 0x1,  0x11, 0x16,
+        0x23, 0xe3, 0xbf, 0xf8, 0x81, 0x74, 0xb3, 0xb0, 0x6d, 0x56, 0x48, 0x8c, 0xc5, 0x2e, 0xfe,
+        0xb8, 0x0,  0x0,  0x0,  0x0,  0x0,  0x0,  0x0,  0x17, 0x48, 0x76, 0xe8, 0x0,  0x0,  0x0,
+        0x0,  0x0};
+    buffer_t buffer = {.offset = 0, .size = sizeof(data), .ptr = data};
+    transaction_details_t transaction;
+    assert_true(read_transaction_details(&buffer, &transaction));
+
+    transaction_details_t expect_transaction = {
+        .source_account =
+            {
+                .type = KEY_TYPE_ED25519,
+                .ed25519 = kp1_public,
+            },
+        .sequence_number = 1234567890101010,
+        .fee = 200,
+        .memo = {.type = MEMO_ID, .id = 123456},
+        .cond =
+            {
+                .time_bounds_present = true,
+                .time_bounds = {.min_time = 1649237469, .max_time = 1649238469},
+            },
+        .operations_len = 2};
+    assert_int_equal(transaction.source_account.type, expect_transaction.source_account.type);
+    assert_memory_equal(transaction.source_account.ed25519,
+                        expect_transaction.source_account.ed25519,
+                        sizeof(kp1_public));
+    assert_int_equal(transaction.sequence_number, expect_transaction.sequence_number);
+    assert_int_equal(transaction.fee, expect_transaction.fee);
+    assert_int_equal(transaction.memo.type, expect_transaction.memo.type);
+    assert_int_equal(transaction.memo.id, expect_transaction.memo.id);
+    assert_int_equal(transaction.cond.time_bounds_present,
+                     expect_transaction.cond.time_bounds_present);
+    assert_int_equal(transaction.cond.time_bounds.max_time,
+                     expect_transaction.cond.time_bounds.max_time);
+    assert_int_equal(transaction.cond.time_bounds.min_time,
+                     expect_transaction.cond.time_bounds.min_time);
+    assert_int_equal(transaction.operations_len, expect_transaction.operations_len);
+
+    operation_t operation;
+    assert_true(read_operation(&buffer, &operation));
+
+    assert_true(operation.source_account_present);
+    assert_int_equal(operation.source_account.type, KEY_TYPE_ED25519);
+    assert_memory_equal(operation.source_account.ed25519, kp1_public, sizeof(kp1_public));
+
+    assert_int_equal(operation.type, OPERATION_TYPE_PAYMENT);
+    assert_int_equal(operation.payment_op.amount, 50000000000);
+    assert_memory_equal(operation.payment_op.destination.ed25519, kp2_public, sizeof(kp2_public));
+    assert_int_equal(operation.payment_op.destination.type, KEY_TYPE_ED25519);
+    assert_int_equal(operation.payment_op.asset.type, ASSET_TYPE_NATIVE);
+
+    assert_true(read_operation(&buffer, &operation));
+
+    assert_true(operation.source_account_present);
+    assert_int_equal(operation.source_account.type, KEY_TYPE_ED25519);
+    assert_memory_equal(operation.source_account.ed25519, kp1_public, sizeof(kp1_public));
+
+    assert_int_equal(operation.type, OPERATION_TYPE_PAYMENT);
+    assert_int_equal(operation.payment_op.amount, 100000000000);
+    assert_memory_equal(operation.payment_op.destination.ed25519, kp2_public, sizeof(kp2_public));
+    assert_int_equal(operation.payment_op.destination.type, KEY_TYPE_ED25519);
+    assert_int_equal(operation.payment_op.asset.type, ASSET_TYPE_NATIVE);
+
+    assert_true(read_transaction_ext(&buffer));
+    assert_int_equal(buffer.offset, buffer.size);
+}
+
 int main() {
     const struct CMUnitTest tests[] = {
         cmocka_unit_test(test_create_account_op),
@@ -1351,6 +1436,6 @@ int main() {
         cmocka_unit_test(test_preconditions_v2),
         cmocka_unit_test(test_preconditions_none),
         cmocka_unit_test(test_preconditions_time),
-    };
+        cmocka_unit_test(test_transaction_details)};
     return cmocka_run_group_tests(tests, NULL, NULL);
 }

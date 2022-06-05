@@ -627,11 +627,11 @@ static void test_revoke_trustline_sponsorship_op_asset() {
 }
 
 static void test_revoke_trustline_sponsorship_op_pool() {
-    trust_line_asset_t asset1 = {.type = ASSET_TYPE_POOL_SHARE,
-                                 .liquidity_pool_id = {
-                                     0xdd, 0x7b, 0x1a, 0xb8, 0x31, 0xc2, 0x73, 0x31, 0xd,  0xdb, 0xec,
-                                     0x6f, 0x97, 0x87, 0xa,  0xa8, 0x3c, 0x2f, 0xbd, 0x78, 0xce, 0x22,
-                                     0xad, 0xed, 0x37, 0xec, 0xbf, 0x4f, 0x33, 0x80, 0xfa, 0xc7}};
+    trust_line_asset_t asset1 = {
+        .type = ASSET_TYPE_POOL_SHARE,
+        .liquidity_pool_id = {0xdd, 0x7b, 0x1a, 0xb8, 0x31, 0xc2, 0x73, 0x31, 0xd,  0xdb, 0xec,
+                              0x6f, 0x97, 0x87, 0xa,  0xa8, 0x3c, 0x2f, 0xbd, 0x78, 0xce, 0x22,
+                              0xad, 0xed, 0x37, 0xec, 0xbf, 0x4f, 0x33, 0x80, 0xfa, 0xc7}};
 
     operation_t operation = {
         .type = OPERATION_TYPE_REVOKE_SPONSORSHIP,
@@ -650,7 +650,9 @@ static void test_revoke_trustline_sponsorship_op_pool() {
     write_operation(&operation, sha256_update_f);
     sha256_final(&sha256_ctx, hash);
 
-    uint8_t expect_hash[] = {0xba, 0x61, 0x89, 0x7, 0x11, 0xa7, 0x32, 0xe6, 0x52, 0x5, 0xcc, 0xc1, 0x6d, 0xf6, 0x96, 0xfd, 0xa9, 0x23, 0xbd, 0x33, 0xf, 0x7d, 0xb0, 0xe2, 0xcd, 0x8d, 0xc3, 0xf2, 0xa8, 0x16, 0x39, 0xb3};
+    uint8_t expect_hash[] = {0xba, 0x61, 0x89, 0x7,  0x11, 0xa7, 0x32, 0xe6, 0x52, 0x5, 0xcc,
+                             0xc1, 0x6d, 0xf6, 0x96, 0xfd, 0xa9, 0x23, 0xbd, 0x33, 0xf, 0x7d,
+                             0xb0, 0xe2, 0xcd, 0x8d, 0xc3, 0xf2, 0xa8, 0x16, 0x39, 0xb3};
 
     assert_memory_equal(expect_hash, hash, sizeof(hash));
 }
@@ -1174,6 +1176,61 @@ static void test_preconditions_time() {
 
     assert_memory_equal(expect_hash, hash, sizeof(hash));
 }
+
+static void test_transaction_details() {
+    operation_t operation1 = {
+        .type = OPERATION_TYPE_PAYMENT,
+        .source_account_present = true,
+        .source_account =
+            {
+                .type = KEY_TYPE_ED25519,
+                .ed25519 = kp1_public,
+            },
+        .payment_op = {.destination = {.type = KEY_TYPE_ED25519, .ed25519 = kp2_public},
+                       .amount = 50000000000,
+                       .asset = {.type = ASSET_TYPE_NATIVE}}};
+    operation_t operation2 = {
+        .type = OPERATION_TYPE_PAYMENT,
+        .source_account_present = true,
+        .source_account =
+            {
+                .type = KEY_TYPE_ED25519,
+                .ed25519 = kp1_public,
+            },
+        .payment_op = {.destination = {.type = KEY_TYPE_ED25519, .ed25519 = kp2_public},
+                       .amount = 100000000000,
+                       .asset = {.type = ASSET_TYPE_NATIVE}}};
+
+    transaction_details_t transaction = {
+        .source_account =
+            {
+                .type = KEY_TYPE_ED25519,
+                .ed25519 = kp1_public,
+            },
+        .sequence_number = 1234567890101010,
+        .fee = 200,
+        .memo = {.type = MEMO_ID, .id = 123456},
+        .cond =
+            {
+                .time_bounds_present = true,
+                .time_bounds = {.min_time = 1649237469, .max_time = 1649238469},
+            },
+        .operations_len = 2};
+
+    sha256_init(&sha256_ctx);
+    write_transaction_details(&transaction, sha256_update_f);
+    write_operation(&operation1, sha256_update_f);
+    write_operation(&operation2, sha256_update_f);
+    write_transaction_ext(sha256_update_f);
+    sha256_final(&sha256_ctx, hash);
+
+    uint8_t expect_hash[] = {0x79, 0xc8, 0xa8, 0xec, 0x28, 0x91, 0x22, 0xe6, 0x50, 0xe,  0x23,
+                             0x5f, 0xf6, 0xc,  0x8c, 0x6a, 0x4a, 0x67, 0x14, 0x46, 0xde, 0x69,
+                             0x12, 0xb0, 0x1d, 0xf,  0x53, 0xca, 0xe5, 0x2,  0x79, 0xd5};
+
+    assert_memory_equal(expect_hash, hash, sizeof(hash));
+}
+
 int main() {
     const struct CMUnitTest tests[] = {
         cmocka_unit_test(test_create_account_op),
@@ -1220,6 +1277,7 @@ int main() {
         cmocka_unit_test(test_preconditions_v2),
         cmocka_unit_test(test_preconditions_none),
         cmocka_unit_test(test_preconditions_time),
+        cmocka_unit_test(test_transaction_details),
     };
     return cmocka_run_group_tests(tests, NULL, NULL);
 }

@@ -651,6 +651,10 @@ void write_transaction_details(const transaction_details_t *transaction_details,
     write_transaction_operation_len(transaction_details->operations_len, sha256_update_func);
 }
 
+void write_transaction_ext(sha256_update_func sha256_update_func) {
+    write_uint32(0, sha256_update_func);
+}
+
 void write_fee_bump_transaction_fee_source(const muxed_account_t *fee_source,
                                            sha256_update_func sha256_update_func) {
     write_muxed_account(fee_source, sha256_update_func);

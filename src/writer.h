@@ -132,6 +132,8 @@ void write_transaction_operation_len(uint8_t operations_len, sha256_update_func 
 void write_transaction_details(const transaction_details_t *transaction_details,
                                sha256_update_func sha256_update_func);
 
+void write_transaction_ext(sha256_update_func sha256_update_func);
+
 void write_fee_bump_transaction_fee_source(const muxed_account_t *fee_source,
                                            sha256_update_func sha256_update_func);
 

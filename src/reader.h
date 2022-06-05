@@ -129,6 +129,8 @@ bool read_transaction_operation_len(buffer_t *buffer, uint8_t *operations_len);
 
 bool read_transaction_details(buffer_t *buffer, transaction_details_t *transaction);
 
+bool read_transaction_ext(buffer_t *buffer);
+
 bool read_fee_bump_transaction_fee_source(buffer_t *buffer, muxed_account_t *fee_source);
 
 bool read_fee_bump_transaction_fee(buffer_t *buffer, int64_t *fee);

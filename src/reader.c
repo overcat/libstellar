@@ -932,6 +932,15 @@ bool read_transaction_details(buffer_t *buffer, transaction_details_t *transacti
     return true;
 }
 
+bool read_transaction_ext(buffer_t *buffer) {
+    uint32_t ext;
+    READER_CHECK(buffer_read32(buffer, &ext))
+    if (ext != 0) {
+        return false;
+    }
+    return true;
+}
+
 bool read_fee_bump_transaction_fee_source(buffer_t *buffer, muxed_account_t *fee_source) {
     return read_muxed_account(buffer, fee_source);
 }
