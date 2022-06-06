@@ -941,6 +941,22 @@ bool read_transaction_ext(buffer_t *buffer) {
     return true;
 }
 
+bool read_decorated_signature_len(buffer_t *buffer, uint8_t *len) {
+    uint32_t slen;
+    READER_CHECK(buffer_read32(buffer, &slen))
+    *len = slen;
+    return true;
+}
+
+bool read_decorated_signature(buffer_t *buffer, decorated_signature_t *decorated_signature) {
+    READER_CHECK(buffer_read_bytes(buffer, decorated_signature->signature_hint, 4))
+    uint32_t signature_len;
+    READER_CHECK(buffer_read32(buffer, &signature_len));
+    decorated_signature->signature_size = signature_len;
+    READER_CHECK(buffer_read_bytes(buffer, decorated_signature->signature, signature_len))
+    return true;
+}
+
 bool read_fee_bump_transaction_fee_source(buffer_t *buffer, muxed_account_t *fee_source) {
     return read_muxed_account(buffer, fee_source);
 }
@@ -953,6 +969,15 @@ bool read_fee_bump_transaction_details(buffer_t *buffer,
                                        fee_bump_transaction_details_t *feeBumpTransaction) {
     READER_CHECK(read_fee_bump_transaction_fee_source(buffer, &feeBumpTransaction->fee_source))
     READER_CHECK(read_fee_bump_transaction_fee(buffer, &feeBumpTransaction->fee))
+    return true;
+}
+
+bool read_fee_bump_transaction_ext(buffer_t *buffer) {
+    uint32_t ext;
+    READER_CHECK(buffer_read32(buffer, &ext))
+    if (ext != 0) {
+        return false;
+    }
     return true;
 }
 

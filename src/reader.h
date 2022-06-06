@@ -131,11 +131,18 @@ bool read_transaction_details(buffer_t *buffer, transaction_details_t *transacti
 
 bool read_transaction_ext(buffer_t *buffer);
 
+bool read_decorated_signature_len(buffer_t *buffer, uint8_t *len);
+
+bool read_decorated_signature(buffer_t *buffer, decorated_signature_t *decorated_signature);
+
 bool read_fee_bump_transaction_fee_source(buffer_t *buffer, muxed_account_t *fee_source);
 
 bool read_fee_bump_transaction_fee(buffer_t *buffer, int64_t *fee);
 
 bool read_fee_bump_transaction_details(buffer_t *buffer,
                                        fee_bump_transaction_details_t *feeBumpTransaction);
+
+bool read_fee_bump_transaction_ext(buffer_t *buffer);
+
 bool read_transaction_envelope_type(buffer_t *buffer, envelope_type_t *envelope_type);
 #endif  // LIBSTELLAR_READER_H

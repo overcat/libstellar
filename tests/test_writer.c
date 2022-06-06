@@ -1231,6 +1231,91 @@ static void test_transaction_details() {
     assert_memory_equal(expect_hash, hash, sizeof(hash));
 }
 
+static void test_fee_bump_transaction_details() {
+    operation_t operation1 = {
+        .type = OPERATION_TYPE_PAYMENT,
+        .source_account_present = true,
+        .source_account =
+            {
+                .type = KEY_TYPE_ED25519,
+                .ed25519 = kp1_public,
+            },
+        .payment_op = {.destination = {.type = KEY_TYPE_ED25519, .ed25519 = kp2_public},
+                       .amount = 50000000000,
+                       .asset = {.type = ASSET_TYPE_NATIVE}}};
+    operation_t operation2 = {
+        .type = OPERATION_TYPE_PAYMENT,
+        .source_account_present = true,
+        .source_account =
+            {
+                .type = KEY_TYPE_ED25519,
+                .ed25519 = kp1_public,
+            },
+        .payment_op = {.destination = {.type = KEY_TYPE_ED25519, .ed25519 = kp2_public},
+                       .amount = 100000000000,
+                       .asset = {.type = ASSET_TYPE_NATIVE}}};
+
+    transaction_details_t transaction = {
+        .source_account =
+            {
+                .type = KEY_TYPE_ED25519,
+                .ed25519 = kp1_public,
+            },
+        .sequence_number = 1234567890101010,
+        .fee = 200,
+        .memo = {.type = MEMO_ID, .id = 123456},
+        .cond =
+            {
+                .time_bounds_present = true,
+                .time_bounds = {.min_time = 1649237469, .max_time = 1649238469},
+            },
+        .operations_len = 2};
+
+    fee_bump_transaction_details_t fee_bump_transaction = {
+        .fee_source =
+            {
+                .type = KEY_TYPE_ED25519,
+                .ed25519 = kp1_public,
+            },
+        .fee = 900,
+    };
+
+    sha256_init(&sha256_ctx);
+    write_fee_bump_transaction_details(&fee_bump_transaction, sha256_update_f);
+    write_transaction_envelope_type(ENVELOPE_TYPE_TX, sha256_update_f);
+    write_transaction_details(&transaction, sha256_update_f);
+    write_operation(&operation1, sha256_update_f);
+    write_operation(&operation2, sha256_update_f);
+    write_transaction_ext(sha256_update_f);
+    write_decorated_signature_len(2, sha256_update_f);
+    decorated_signature_t decorated_signature1 = {
+        .signature_hint = {0x9, 0x1e, 0x5d, 0xa1},
+        .signature_size = 64,
+        .signature = {0xf1, 0x6a, 0x4,  0xd3, 0xc6, 0xb2, 0x4c, 0x28, 0x0,  0x45, 0x17, 0xcb, 0x39,
+                      0x42, 0x6b, 0x8,  0x17, 0xa0, 0xf5, 0xe0, 0x14, 0xd6, 0x9a, 0xa5, 0x5a, 0x68,
+                      0xc0, 0x4c, 0xdb, 0xb0, 0x9,  0xca, 0x45, 0xad, 0xc3, 0xa9, 0x3a, 0x1e, 0xab,
+                      0x5c, 0x1d, 0xf9, 0x45, 0xdf, 0x96, 0xbd, 0xfa, 0x2b, 0xa,  0xcb, 0x45, 0x8f,
+                      0x88, 0xfe, 0xd6, 0x4b, 0x79, 0xc6, 0x79, 0xbf, 0x9f, 0xba, 0x8,  0x2}};
+    decorated_signature_t decorated_signature2 = {
+        .signature_hint = {0x42, 0xb1, 0x97, 0x55},
+        .signature_size = 64,
+        .signature = {0x23, 0xc8, 0x93, 0xe1, 0xe8, 0x5,  0xe0, 0x4b, 0x8e, 0x5e, 0xad, 0x8,  0xf,
+                      0x20, 0xaf, 0xa,  0x73, 0xaf, 0x78, 0xc2, 0xc,  0x6b, 0x2c, 0xa4, 0xb2, 0xbe,
+                      0xe4, 0x44, 0x8b, 0xd2, 0xc0, 0x51, 0x55, 0x83, 0xa4, 0x26, 0xcb, 0xd6, 0xb0,
+                      0xc8, 0x49, 0x48, 0x8b, 0x82, 0xf6, 0xe2, 0x6e, 0xca, 0xe9, 0xbb, 0xb7, 0x3f,
+                      0xcf, 0xcd, 0x44, 0x98, 0xdb, 0x12, 0x5b, 0x52, 0x4d, 0x6c, 0x8c, 0x2}};
+    write_decorated_signature(&decorated_signature1, sha256_update_f);
+    write_decorated_signature(&decorated_signature2, sha256_update_f);
+    write_fee_bump_transaction_ext(sha256_update_f);
+    sha256_final(&sha256_ctx, hash);
+
+    uint8_t expect_hash[] = {0x8c, 0x7,  0xdf, 0x77, 0x2a, 0x19, 0x19, 0x3e, 0xd6, 0x64, 0x4a,
+                             0x5b, 0xed, 0xb7, 0xaa, 0x7,  0xf3, 0x5c, 0x23, 0xc3, 0x5d, 0x97,
+                             0x4e, 0x12, 0xd6, 0x14, 0x35, 0x41, 0x7e, 0x13, 0xb,  0x21};
+
+    assert_memory_equal(expect_hash, hash, sizeof(hash));
+}
+
 int main() {
     const struct CMUnitTest tests[] = {
         cmocka_unit_test(test_create_account_op),
@@ -1278,6 +1363,7 @@ int main() {
         cmocka_unit_test(test_preconditions_none),
         cmocka_unit_test(test_preconditions_time),
         cmocka_unit_test(test_transaction_details),
+        cmocka_unit_test(test_fee_bump_transaction_details),
     };
     return cmocka_run_group_tests(tests, NULL, NULL);
 }

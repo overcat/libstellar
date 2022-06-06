@@ -134,6 +134,11 @@ void write_transaction_details(const transaction_details_t *transaction_details,
 
 void write_transaction_ext(sha256_update_func sha256_update_func);
 
+void write_decorated_signature_len(uint8_t len, sha256_update_func sha256_update_func);
+
+void write_decorated_signature(const decorated_signature_t *decorated_signature,
+                               sha256_update_func sha256_update_func);
+
 void write_fee_bump_transaction_fee_source(const muxed_account_t *fee_source,
                                            sha256_update_func sha256_update_func);
 
@@ -143,6 +148,8 @@ void write_fee_bump_transaction_details(
     const fee_bump_transaction_details_t *fee_bump_transaction_details,
     sha256_update_func sha256_update_func);
 
-void write_transaction_envelope_type(const envelope_type_t *envelope_type,
+void write_fee_bump_transaction_ext(sha256_update_func sha256_update_func);
+
+void write_transaction_envelope_type(envelope_type_t envelope_type,
                                      sha256_update_func sha256_update_func);
 #endif  // LIBSTELLAR_WRITER_H

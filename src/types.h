@@ -555,4 +555,10 @@ typedef struct {
     int64_t fee;
 } fee_bump_transaction_details_t;
 
+typedef struct {
+    uint8_t signature_hint[4];
+    uint8_t signature[64];
+    uint8_t signature_size;
+} decorated_signature_t;
+
 #endif  // LIBSTELLAR_TYPES_H

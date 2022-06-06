@@ -655,6 +655,17 @@ void write_transaction_ext(sha256_update_func sha256_update_func) {
     write_uint32(0, sha256_update_func);
 }
 
+void write_decorated_signature_len(uint8_t len, sha256_update_func sha256_update_func) {
+    write_uint32(len, sha256_update_func);
+}
+
+void write_decorated_signature(const decorated_signature_t *decorated_signature,
+                               sha256_update_func sha256_update_func) {
+    sha256_update_func(decorated_signature->signature_hint, 4);
+    write_uint32(decorated_signature->signature_size, sha256_update_func);
+    sha256_update_func(decorated_signature->signature, decorated_signature->signature_size);
+}
+
 void write_fee_bump_transaction_fee_source(const muxed_account_t *fee_source,
                                            sha256_update_func sha256_update_func) {
     write_muxed_account(fee_source, sha256_update_func);
@@ -672,7 +683,11 @@ void write_fee_bump_transaction_details(
     write_fee_bump_transaction_fee(fee_bump_transaction_details->fee, sha256_update_func);
 }
 
-void write_transaction_envelope_type(const envelope_type_t *envelope_type,
+void write_fee_bump_transaction_ext(sha256_update_func sha256_update_func) {
+    write_uint32(0, sha256_update_func);
+}
+
+void write_transaction_envelope_type(envelope_type_t envelope_type,
                                      sha256_update_func sha256_update_func) {
-    write_uint32(*envelope_type, sha256_update_func);
+    write_uint32(envelope_type, sha256_update_func);
 }
