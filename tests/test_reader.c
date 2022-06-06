@@ -1103,7 +1103,7 @@ static void test_memo_none() {
 
     buffer_t buffer = {.offset = 0, .size = sizeof(data), .ptr = data};
     memo_t memo;
-    assert_true(read_memo(&buffer, &memo));
+    assert_true(read_transaction_memo(&buffer, &memo));
     assert_int_equal(buffer.offset, buffer.size);
     assert_int_equal(memo.type, MEMO_NONE);
 }
@@ -1114,7 +1114,7 @@ static void test_memo_text() {
 
     buffer_t buffer = {.offset = 0, .size = sizeof(data), .ptr = data};
     memo_t memo;
-    assert_true(read_memo(&buffer, &memo));
+    assert_true(read_transaction_memo(&buffer, &memo));
     assert_int_equal(buffer.offset, buffer.size);
     assert_int_equal(memo.type, MEMO_TEXT);
     assert_int_equal(memo.text.text_size, 5);
@@ -1127,7 +1127,7 @@ static void test_memo_id() {
 
     buffer_t buffer = {.offset = 0, .size = sizeof(data), .ptr = data};
     memo_t memo;
-    assert_true(read_memo(&buffer, &memo));
+    assert_true(read_transaction_memo(&buffer, &memo));
     assert_int_equal(buffer.offset, buffer.size);
     assert_int_equal(memo.type, MEMO_ID);
     assert_int_equal(memo.id, 123456);
@@ -1142,7 +1142,7 @@ static void test_memo_hash() {
                       0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61};
     buffer_t buffer = {.offset = 0, .size = sizeof(data), .ptr = data};
     memo_t memo;
-    assert_true(read_memo(&buffer, &memo));
+    assert_true(read_transaction_memo(&buffer, &memo));
     assert_int_equal(buffer.offset, buffer.size);
     assert_int_equal(memo.type, MEMO_HASH);
     assert_memory_equal(memo.hash, hash, 32);
@@ -1157,7 +1157,7 @@ static void test_memo_return_hash() {
                       0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61};
     buffer_t buffer = {.offset = 0, .size = sizeof(data), .ptr = data};
     memo_t memo;
-    assert_true(read_memo(&buffer, &memo));
+    assert_true(read_transaction_memo(&buffer, &memo));
     assert_int_equal(buffer.offset, buffer.size);
     assert_int_equal(memo.type, MEMO_RETURN);
     assert_memory_equal(memo.return_hash, hash, 32);
@@ -1250,7 +1250,7 @@ static void test_preconditions_v2() {
 
     buffer_t buffer = {.offset = 0, .size = sizeof(data), .ptr = data};
     preconditions_t preconditions;
-    assert_true(read_preconditions(&buffer, &preconditions));
+    assert_true(read_transaction_preconditions(&buffer, &preconditions));
     assert_int_equal(buffer.offset, buffer.size);
 
     assert_true(preconditions.time_bounds_present);
@@ -1275,7 +1275,7 @@ static void test_preconditions_none() {
 
     buffer_t buffer = {.offset = 0, .size = sizeof(data), .ptr = data};
     preconditions_t preconditions;
-    assert_true(read_preconditions(&buffer, &preconditions));
+    assert_true(read_transaction_preconditions(&buffer, &preconditions));
     assert_int_equal(buffer.offset, buffer.size);
 
     assert_false(preconditions.time_bounds_present);
@@ -1292,7 +1292,7 @@ static void test_preconditions_time() {
 
     buffer_t buffer = {.offset = 0, .size = sizeof(data), .ptr = data};
     preconditions_t preconditions;
-    assert_true(read_preconditions(&buffer, &preconditions));
+    assert_true(read_transaction_preconditions(&buffer, &preconditions));
     assert_int_equal(buffer.offset, buffer.size);
 
     assert_true(preconditions.time_bounds_present);

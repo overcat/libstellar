@@ -938,7 +938,7 @@ static void test_liquidity_pool_withdraw_op() {
 static void test_memo_none() {
     memo_t memo = {.type = MEMO_NONE};
     sha256_init(&sha256_ctx);
-    write_memo(&memo, sha256_update_f);
+    write_transaction_memo(&memo, sha256_update_f);
     sha256_final(&sha256_ctx, hash);
 
     uint8_t expect_hash[] = {0xdf, 0x3f, 0x61, 0x98, 0x4,  0xa9, 0x2f, 0xdb, 0x40, 0x57, 0x19,
@@ -952,7 +952,7 @@ static void test_memo_text() {
     uint8_t text[] = "hello";
     memo_t memo = {.type = MEMO_TEXT, .text = {.text_size = 5, .text = text}};
     sha256_init(&sha256_ctx);
-    write_memo(&memo, sha256_update_f);
+    write_transaction_memo(&memo, sha256_update_f);
     sha256_final(&sha256_ctx, hash);
 
     uint8_t expect_hash[] = {0x1d, 0xc4, 0xd6, 0x10, 0x47, 0x3d, 0xbb, 0xef, 0xba, 0x28, 0x96,
@@ -965,7 +965,7 @@ static void test_memo_text() {
 static void test_memo_id() {
     memo_t memo = {.type = MEMO_ID, .id = 123456};
     sha256_init(&sha256_ctx);
-    write_memo(&memo, sha256_update_f);
+    write_transaction_memo(&memo, sha256_update_f);
     sha256_final(&sha256_ctx, hash);
 
     uint8_t expect_hash[] = {0xd0, 0xe1, 0x38, 0x6,  0xc9, 0x4a, 0x9a, 0xa6, 0xc,  0xe2, 0xc,
@@ -982,7 +982,7 @@ static void test_memo_hash() {
 
     memo_t memo = {.type = MEMO_HASH, .hash = data};
     sha256_init(&sha256_ctx);
-    write_memo(&memo, sha256_update_f);
+    write_transaction_memo(&memo, sha256_update_f);
     sha256_final(&sha256_ctx, hash);
 
     uint8_t expect_hash[] = {0x38, 0x1e, 0x49, 0x32, 0xb1, 0x1c, 0x13, 0x4e, 0x84, 0x57, 0x76,
@@ -999,7 +999,7 @@ static void test_memo_return_hash() {
 
     memo_t memo = {.type = MEMO_RETURN, .hash = data};
     sha256_init(&sha256_ctx);
-    write_memo(&memo, sha256_update_f);
+    write_transaction_memo(&memo, sha256_update_f);
     sha256_final(&sha256_ctx, hash);
 
     uint8_t expect_hash[] = {0x9c, 0x9a, 0x1a, 0x36, 0xba, 0x7b, 0xe1, 0x2b, 0x90, 0xb8, 0x4d,
@@ -1095,7 +1095,7 @@ static void test_preconditions_v2() {
     memcpy(&preconditions.extra_signers[1], &signer_key1, sizeof(signer_key1));
 
     sha256_init(&sha256_ctx);
-    write_preconditions(&preconditions, sha256_update_f);
+    write_transaction_preconditions(&preconditions, sha256_update_f);
     sha256_final(&sha256_ctx, hash);
 
     uint8_t expect_hash[] = {0xbb, 0xcc, 0x9e, 0xe9, 0xac, 0x77, 0xa4, 0x94, 0x69, 0xae, 0x4,
@@ -1123,7 +1123,7 @@ static void test_preconditions_v0() {
     memcpy(&preconditions.extra_signers[1], &signer_key1, sizeof(signer_key1));
 
     sha256_init(&sha256_ctx);
-    write_preconditions(&preconditions, sha256_update_f);
+    write_transaction_preconditions(&preconditions, sha256_update_f);
     sha256_final(&sha256_ctx, hash);
 
     uint8_t expect_hash[] = {0xdf, 0x3f, 0x61, 0x98, 0x4,  0xa9, 0x2f, 0xdb, 0x40, 0x57, 0x19,
@@ -1146,7 +1146,7 @@ static void test_preconditions_none() {
     memcpy(&preconditions.extra_signers[1], &signer_key1, sizeof(signer_key1));
 
     sha256_init(&sha256_ctx);
-    write_preconditions(&preconditions, sha256_update_f);
+    write_transaction_preconditions(&preconditions, sha256_update_f);
     sha256_final(&sha256_ctx, hash);
 
     uint8_t expect_hash[] = {0xdf, 0x3f, 0x61, 0x98, 0x4,  0xa9, 0x2f, 0xdb, 0x40, 0x57, 0x19,
@@ -1167,7 +1167,7 @@ static void test_preconditions_time() {
     memcpy(&preconditions.extra_signers[1], &signer_key1, sizeof(signer_key1));
 
     sha256_init(&sha256_ctx);
-    write_preconditions(&preconditions, sha256_update_f);
+    write_transaction_preconditions(&preconditions, sha256_update_f);
     sha256_final(&sha256_ctx, hash);
 
     uint8_t expect_hash[] = {0x6f, 0x33, 0xe,  0xa4, 0x4,  0xc7, 0xe0, 0x0,  0xd,  0x57, 0x7a,

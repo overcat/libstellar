@@ -42,6 +42,38 @@ void write_string(const uint8_t *data, size_t len, sha256_update_func sha256_upd
     }
 }
 
+bool write_signer_key(const signer_key_t *signer_key, sha256_update_func sha256_update_func) {
+    write_uint32(signer_key->type, sha256_update_func);
+    switch (signer_key->type) {
+        case SIGNER_KEY_TYPE_ED25519:
+            sha256_update_func(signer_key->ed25519, 32);
+            break;
+        case SIGNER_KEY_TYPE_PRE_AUTH_TX:
+            sha256_update_func(signer_key->pre_auth_tx, 32);
+            break;
+        case SIGNER_KEY_TYPE_HASH_X:
+            sha256_update_func(signer_key->hash_x, 32);
+            break;
+        case SIGNER_KEY_TYPE_ED25519_SIGNED_PAYLOAD:
+            sha256_update_func(signer_key->ed25519_signed_payload.ed25519, 32);
+            write_uint32(signer_key->ed25519_signed_payload.payload_len, sha256_update_func);
+            sha256_update_func(signer_key->ed25519_signed_payload.payload,
+                               signer_key->ed25519_signed_payload.payload_len);
+            int remainder = signer_key->ed25519_signed_payload.payload_len % 4;
+            uint8_t null_byte[1] = {0x00};
+            if (remainder) {
+                while (remainder < 4) {
+                    sha256_update_func(null_byte, 1);
+                    remainder++;
+                }
+            }
+            break;
+        default:
+            return false;
+    }
+    return true;
+}
+
 void write_account_id(account_id_t account_id, sha256_update_func sha256_update_func) {
     write_uint32(PUBLIC_KEY_TYPE_ED25519, sha256_update_func);
     sha256_update_func(account_id, 32);
@@ -210,38 +242,6 @@ void write_create_passive_sell_offer_op(const create_passive_sell_offer_op_t *op
     write_asset(&op->buying, sha256_update_func);
     write_uint64(op->amount, sha256_update_func);
     write_price(&op->price, sha256_update_func);
-}
-
-bool write_signer_key(const signer_key_t *signer_key, sha256_update_func sha256_update_func) {
-    write_uint32(signer_key->type, sha256_update_func);
-    switch (signer_key->type) {
-        case SIGNER_KEY_TYPE_ED25519:
-            sha256_update_func(signer_key->ed25519, 32);
-            break;
-        case SIGNER_KEY_TYPE_PRE_AUTH_TX:
-            sha256_update_func(signer_key->pre_auth_tx, 32);
-            break;
-        case SIGNER_KEY_TYPE_HASH_X:
-            sha256_update_func(signer_key->hash_x, 32);
-            break;
-        case SIGNER_KEY_TYPE_ED25519_SIGNED_PAYLOAD:
-            sha256_update_func(signer_key->ed25519_signed_payload.ed25519, 32);
-            write_uint32(signer_key->ed25519_signed_payload.payload_len, sha256_update_func);
-            sha256_update_func(signer_key->ed25519_signed_payload.payload,
-                               signer_key->ed25519_signed_payload.payload_len);
-            int remainder = signer_key->ed25519_signed_payload.payload_len % 4;
-            uint8_t null_byte[1] = {0x00};
-            if (remainder) {
-                while (remainder < 4) {
-                    sha256_update_func(null_byte, 1);
-                    remainder++;
-                }
-            }
-            break;
-        default:
-            return false;
-    }
-    return true;
 }
 
 void write_signer(const signer_t *signer, sha256_update_func sha256_update_func) {
@@ -613,35 +613,39 @@ bool write_memo(const memo_t *memo, sha256_update_func sha256_update_func) {
     return true;
 }
 
-void write_transaction_source(const muxed_account_t *source,
+bool write_transaction_source(const muxed_account_t *source,
                               sha256_update_func sha256_update_func) {
-    write_muxed_account(source, sha256_update_func);
+    return write_muxed_account(source, sha256_update_func);
 }
 
-void write_transaction_fee(uint32_t fee, sha256_update_func sha256_update_func) {
+bool write_transaction_fee(uint32_t fee, sha256_update_func sha256_update_func) {
     write_uint32(fee, sha256_update_func);
+    return true;
 }
 
-void write_transaction_sequence(sequence_number_t sequence_number,
+bool write_transaction_sequence(sequence_number_t sequence_number,
                                 sha256_update_func sha256_update_func) {
     write_uint64(sequence_number, sha256_update_func);
+    return true;
 }
 
-void write_transaction_preconditions(preconditions_t *preconditions,
+bool write_transaction_preconditions(preconditions_t *preconditions,
                                      sha256_update_func sha256_update_func) {
     write_preconditions(preconditions, sha256_update_func);
+    return true;
 }
 
-void write_transaction_memo(memo_t *memo, sha256_update_func sha256_update_func) {
-    write_memo(memo, sha256_update_func);
+bool write_transaction_memo(memo_t *memo, sha256_update_func sha256_update_func) {
+    return write_memo(memo, sha256_update_func);
 }
 
-void write_transaction_operation_len(uint8_t operations_len,
+bool write_transaction_operation_len(uint8_t operations_len,
                                      sha256_update_func sha256_update_func) {
     write_uint32(operations_len, sha256_update_func);
+    return true;
 }
 
-void write_transaction_details(const transaction_details_t *transaction_details,
+bool write_transaction_details(const transaction_details_t *transaction_details,
                                sha256_update_func sha256_update_func) {
     write_transaction_source(&transaction_details->source_account, sha256_update_func);
     write_transaction_fee(transaction_details->fee, sha256_update_func);
@@ -649,45 +653,53 @@ void write_transaction_details(const transaction_details_t *transaction_details,
     write_preconditions(&transaction_details->cond, sha256_update_func);
     write_memo(&transaction_details->memo, sha256_update_func);
     write_transaction_operation_len(transaction_details->operations_len, sha256_update_func);
+    return true;
 }
 
-void write_transaction_ext(sha256_update_func sha256_update_func) {
+bool write_transaction_ext(sha256_update_func sha256_update_func) {
     write_uint32(0, sha256_update_func);
+    return true;
 }
 
-void write_decorated_signature_len(uint8_t len, sha256_update_func sha256_update_func) {
+bool write_decorated_signature_len(uint8_t len, sha256_update_func sha256_update_func) {
     write_uint32(len, sha256_update_func);
+    return true;
 }
 
-void write_decorated_signature(const decorated_signature_t *decorated_signature,
+bool write_decorated_signature(const decorated_signature_t *decorated_signature,
                                sha256_update_func sha256_update_func) {
     sha256_update_func(decorated_signature->signature_hint, 4);
     write_uint32(decorated_signature->signature_size, sha256_update_func);
     sha256_update_func(decorated_signature->signature, decorated_signature->signature_size);
+    return true;
 }
 
-void write_fee_bump_transaction_fee_source(const muxed_account_t *fee_source,
+bool write_fee_bump_transaction_fee_source(const muxed_account_t *fee_source,
                                            sha256_update_func sha256_update_func) {
-    write_muxed_account(fee_source, sha256_update_func);
+    return write_muxed_account(fee_source, sha256_update_func);
 }
 
-void write_fee_bump_transaction_fee(int64_t fee, sha256_update_func sha256_update_func) {
+bool write_fee_bump_transaction_fee(int64_t fee, sha256_update_func sha256_update_func) {
     write_uint64(fee, sha256_update_func);
+    return true;
 }
 
-void write_fee_bump_transaction_details(
+bool write_fee_bump_transaction_details(
     const fee_bump_transaction_details_t *fee_bump_transaction_details,
     sha256_update_func sha256_update_func) {
     write_fee_bump_transaction_fee_source(&fee_bump_transaction_details->fee_source,
                                           sha256_update_func);
     write_fee_bump_transaction_fee(fee_bump_transaction_details->fee, sha256_update_func);
+    return true;
 }
 
-void write_fee_bump_transaction_ext(sha256_update_func sha256_update_func) {
+bool write_fee_bump_transaction_ext(sha256_update_func sha256_update_func) {
     write_uint32(0, sha256_update_func);
+    return true;
 }
 
-void write_transaction_envelope_type(envelope_type_t envelope_type,
+bool write_transaction_envelope_type(envelope_type_t envelope_type,
                                      sha256_update_func sha256_update_func) {
     write_uint32(envelope_type, sha256_update_func);
+    return true;
 }

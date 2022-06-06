@@ -793,92 +793,92 @@ bool read_liquidity_pool_withdraw(buffer_t *buffer, liquidity_pool_withdraw_op_t
     return true;
 }
 
-bool read_operation(buffer_t *buffer, operation_t *opDetails) {
-    //    explicit_bzero(opDetails, sizeof(operation_t));
+bool read_operation(buffer_t *buffer, operation_t *operation) {
+    //    explicit_bzero(operation, sizeof(operation_t));
     uint32_t opType;
 
     READER_CHECK(read_optional_type(buffer,
                                     (xdr_type_reader) read_muxed_account,
-                                    &opDetails->source_account,
-                                    &opDetails->source_account_present))
+                                    &operation->source_account,
+                                    &operation->source_account_present))
 
     READER_CHECK(buffer_read32(buffer, &opType))
-    opDetails->type = opType;
-    switch (opDetails->type) {
+    operation->type = opType;
+    switch (operation->type) {
         case OPERATION_TYPE_CREATE_ACCOUNT: {
-            return read_create_account(buffer, &opDetails->create_account_op);
+            return read_create_account(buffer, &operation->create_account_op);
         }
         case OPERATION_TYPE_PAYMENT: {
-            return read_payment(buffer, &opDetails->payment_op);
+            return read_payment(buffer, &operation->payment_op);
         }
         case OPERATION_TYPE_PATH_PAYMENT_STRICT_RECEIVE: {
             return read_path_payment_strict_receive(buffer,
-                                                    &opDetails->path_payment_strict_receive_op);
+                                                    &operation->path_payment_strict_receive_op);
         }
         case OPERATION_TYPE_CREATE_PASSIVE_SELL_OFFER: {
-            return read_create_passive_sell_offer(buffer, &opDetails->create_passive_sell_offer_op);
+            return read_create_passive_sell_offer(buffer, &operation->create_passive_sell_offer_op);
         }
         case OPERATION_TYPE_MANAGE_SELL_OFFER: {
-            return read_manage_sell_offer(buffer, &opDetails->manage_sell_offer_op);
+            return read_manage_sell_offer(buffer, &operation->manage_sell_offer_op);
         }
         case OPERATION_TYPE_SET_OPTIONS: {
-            return read_set_options(buffer, &opDetails->set_options_op);
+            return read_set_options(buffer, &operation->set_options_op);
         }
         case OPERATION_TYPE_CHANGE_TRUST: {
-            return read_change_trust(buffer, &opDetails->change_trust_op);
+            return read_change_trust(buffer, &operation->change_trust_op);
         }
         case OPERATION_TYPE_ALLOW_TRUST: {
-            return read_allow_trust(buffer, &opDetails->allow_trust_op);
+            return read_allow_trust(buffer, &operation->allow_trust_op);
         }
         case OPERATION_TYPE_ACCOUNT_MERGE: {
-            return read_account_merge(buffer, &opDetails->account_merge_op);
+            return read_account_merge(buffer, &operation->account_merge_op);
         }
         case OPERATION_TYPE_INFLATION: {
             return true;
         }
         case OPERATION_TYPE_MANAGE_DATA: {
-            return read_manage_data(buffer, &opDetails->manage_data_op);
+            return read_manage_data(buffer, &operation->manage_data_op);
         }
         case OPERATION_TYPE_BUMP_SEQUENCE: {
-            return read_bump_sequence(buffer, &opDetails->bump_sequence_op);
+            return read_bump_sequence(buffer, &operation->bump_sequence_op);
         }
         case OPERATION_TYPE_MANAGE_BUY_OFFER: {
-            return read_manage_buy_offer(buffer, &opDetails->manage_buy_offer_op);
+            return read_manage_buy_offer(buffer, &operation->manage_buy_offer_op);
         }
         case OPERATION_TYPE_PATH_PAYMENT_STRICT_SEND: {
-            return read_path_payment_strict_send(buffer, &opDetails->path_payment_strict_send_op);
+            return read_path_payment_strict_send(buffer, &operation->path_payment_strict_send_op);
         }
         case OPERATION_TYPE_CREATE_CLAIMABLE_BALANCE: {
-            return read_create_claimable_balance(buffer, &opDetails->create_claimable_balance_op);
+            return read_create_claimable_balance(buffer, &operation->create_claimable_balance_op);
         }
         case OPERATION_TYPE_CLAIM_CLAIMABLE_BALANCE: {
-            return read_claim_claimable_balance(buffer, &opDetails->claim_claimable_balance_op);
+            return read_claim_claimable_balance(buffer, &operation->claim_claimable_balance_op);
         }
         case OPERATION_TYPE_BEGIN_SPONSORING_FUTURE_RESERVES: {
             return read_begin_sponsoring_future_reserves(
                 buffer,
-                &opDetails->begin_sponsoring_future_reserves_op);
+                &operation->begin_sponsoring_future_reserves_op);
         }
         case OPERATION_TYPE_END_SPONSORING_FUTURE_RESERVES: {
             return true;
         }
         case OPERATION_TYPE_REVOKE_SPONSORSHIP: {
-            return read_revoke_sponsorship(buffer, &opDetails->revoke_sponsorship_op);
+            return read_revoke_sponsorship(buffer, &operation->revoke_sponsorship_op);
         }
         case OPERATION_TYPE_CLAWBACK: {
-            return read_clawback(buffer, &opDetails->clawback_op);
+            return read_clawback(buffer, &operation->clawback_op);
         }
         case OPERATION_TYPE_CLAWBACK_CLAIMABLE_BALANCE: {
             return read_clawback_claimable_balance(buffer,
-                                                   &opDetails->clawback_claimable_balance_op);
+                                                   &operation->clawback_claimable_balance_op);
         }
         case OPERATION_TYPE_SET_TRUST_LINE_FLAGS: {
-            return read_set_trust_line_flags(buffer, &opDetails->set_trust_line_flags_op);
+            return read_set_trust_line_flags(buffer, &operation->set_trust_line_flags_op);
         }
         case OPERATION_TYPE_LIQUIDITY_POOL_DEPOSIT:
-            return read_liquidity_pool_deposit(buffer, &opDetails->liquidity_pool_deposit_op);
+            return read_liquidity_pool_deposit(buffer, &operation->liquidity_pool_deposit_op);
         case OPERATION_TYPE_LIQUIDITY_POOL_WITHDRAW:
-            return read_liquidity_pool_withdraw(buffer, &opDetails->liquidity_pool_withdraw_op);
+            return read_liquidity_pool_withdraw(buffer, &operation->liquidity_pool_withdraw_op);
         default:
             return false;  // Unknown operation TODO: throw unknown op error?
     }
