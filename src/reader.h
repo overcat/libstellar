@@ -1,3 +1,46 @@
+/**
+ * The following APIs allow you to decode encoded Stellar transactions.
+ *
+ * First you should call `read_transaction_envelope_type` to determine what type of
+ * transaction is, currently two types are supported.
+ *
+ * if it is of type `ENVELOPE_TYPE_TX`, you should call the following functions
+ * in turn to get the corresponding data:
+ *   1. read_transaction_source
+ *   2. read_transaction_fee
+ *   3. read_transaction_sequence
+ *   4. read_transaction_preconditions
+ *   5. read_transaction_memo
+ *   6. read_transaction_operation_len
+ *   7. read_operation (repeat)
+ *   8. read_transaction_ext
+ *   9. read_decorated_signature_len (optional)
+ *   10. read_decorated_signature (repeat, optional)
+ * You can directly call the `read_transaction_details` function, which includes steps 1 to 6.
+ *
+ * if it is of type `ENVELOPE_TYPE_TX_FEE_BUMP`, you should call the following functions
+ * in turn to get the corresponding data:
+ *   1. read_fee_bump_transaction_fee_source
+ *   2. read_fee_bump_transaction_fee
+ *   3. read_transaction_envelope_type (it should always be ENVELOPE_TYPE_TX)
+ *   4. read_transaction_source
+ *   5. read_transaction_fee
+ *   6. read_transaction_sequence
+ *   7. read_transaction_preconditions
+ *   8. read_transaction_memo
+ *   9. read_transaction_operation_len
+ *   10. read_operation (repeat)
+ *   11. read_transaction_ext
+ *   12. read_decorated_signature_len
+ *   13. read_decorated_signature (repeat)
+ *   14. read_fee_bump_transaction_ext
+ *   15 read_decorated_signature_len (optional)
+ *   16. read_decorated_signature (repeat, optional)
+ * You can directly call the `read_fee_bump_transaction_details` function, which includes steps 1 to
+ * 2, and can also directly call the `read_transaction_details` function, which includes steps 4
+ * to 9.
+ */
+
 #ifndef LIBSTELLAR_READER_H
 #define LIBSTELLAR_READER_H
 #include <stdint.h>
