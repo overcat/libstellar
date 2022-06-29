@@ -382,7 +382,7 @@ bool write_create_claimable_balance_op(const create_claimable_balance_op_t *op,
     return false;
 }
 
-void write_claimable_balance_id(const claimable_balance_id *claimable_balance_id,
+void write_claimable_balance_id(const claimable_balance_id_t *claimable_balance_id,
                                 sha256_update_func sha256_update_func) {
     write_uint32(claimable_balance_id->type, sha256_update_func);
     sha256_update_func(claimable_balance_id->v0, 32);

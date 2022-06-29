@@ -676,7 +676,7 @@ bool read_create_claimable_balance(buffer_t *buffer, create_claimable_balance_op
     }
     return true;
 }
-bool read_claimable_balance_id(buffer_t *buffer, claimable_balance_id *claimableBalanceID) {
+bool read_claimable_balance_id(buffer_t *buffer, claimable_balance_id_t *claimableBalanceID) {
     uint32_t claimableBalanceIDType;
     READER_CHECK(buffer_read32(buffer, &claimableBalanceIDType))
     claimableBalanceID->type = claimableBalanceIDType;

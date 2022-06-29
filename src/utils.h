@@ -17,7 +17,7 @@ bool encode_pre_auth_x_key(const uint8_t raw_pre_auth_tx[static RAW_PRE_AUTH_TX_
 
 bool encode_muxed_account(const muxed_account_t *raw_muxed_account, char *out, size_t out_len);
 
-bool print_claimable_balance_id(const claimable_balance_id *claimable_balance_id,
+bool print_claimable_balance_id(const claimable_balance_id_t *claimable_balance_id,
                                 char *out,
                                 size_t out_len);
 

@@ -192,7 +192,7 @@ bool print_muxed_account(const muxed_account_t *muxed_account,
     return encode_muxed_account(muxed_account, out, out_len);
 }
 
-bool print_claimable_balance_id(const claimable_balance_id *claimable_balance_id,
+bool print_claimable_balance_id(const claimable_balance_id_t *claimable_balance_id,
                                 char *out,
                                 size_t out_len) {
     if (out_len < 36 * 2 + 1) {
