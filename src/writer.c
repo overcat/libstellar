@@ -188,8 +188,8 @@ bool write_change_trust_asset(const change_trust_asset_t *asset,
         case ASSET_TYPE_POOL_SHARE:
             write_uint32(asset->type, sha256_update_func);
             write_uint32(asset->liquidity_pool.type, sha256_update_func);
-            write_asset(&asset->liquidity_pool.constant_product.assetA, sha256_update_func);
-            write_asset(&asset->liquidity_pool.constant_product.assetB, sha256_update_func);
+            write_asset(&asset->liquidity_pool.constant_product.asset_a, sha256_update_func);
+            write_asset(&asset->liquidity_pool.constant_product.asset_b, sha256_update_func);
             write_uint32(asset->liquidity_pool.constant_product.fee, sha256_update_func);
             break;
         default:
@@ -407,7 +407,7 @@ bool write_trust_line_asset(const trust_line_asset_t *asset,
             return write_asset((asset_t *) asset, sha256_update_func);
         case ASSET_TYPE_POOL_SHARE:
             write_uint32(asset->type, sha256_update_func);
-            sha256_update_func(asset->liquidity_pool_id, sizeof(asset->liquidity_pool_id));
+            sha256_update_func(asset->liquidity_pool_id, LIQUIDITY_POOL_ID_SIZE);
             break;
         default:
             return false;
@@ -441,7 +441,8 @@ bool write_revoke_sponsorship_ledger_entry(const ledger_key_t *ledger_key,
                                        sha256_update_func);
             break;
         case LIQUIDITY_POOL:
-            sha256_update_func(ledger_key->liquidity_pool.liquidity_pool_id, 32);
+            sha256_update_func(ledger_key->liquidity_pool.liquidity_pool_id,
+                               LIQUIDITY_POOL_ID_SIZE);
             break;
         default:
             return false;
@@ -486,7 +487,7 @@ void write_set_trust_line_flags_op(const set_trust_line_flags_op_t *op,
 
 void write_liquidity_pool_deposit_op(const liquidity_pool_deposit_op_t *op,
                                      sha256_update_func sha256_update_func) {
-    sha256_update_func(op->liquidity_pool_id, 32);
+    sha256_update_func(op->liquidity_pool_id, LIQUIDITY_POOL_ID_SIZE);
     write_uint64(op->max_amount_a, sha256_update_func);
     write_uint64(op->max_amount_b, sha256_update_func);
     write_price(&op->min_price, sha256_update_func);
@@ -495,7 +496,7 @@ void write_liquidity_pool_deposit_op(const liquidity_pool_deposit_op_t *op,
 
 void write_liquidity_pool_withdraw_op(const liquidity_pool_withdraw_op_t *op,
                                       sha256_update_func sha256_update_func) {
-    sha256_update_func(op->liquidity_pool_id, 32);
+    sha256_update_func(op->liquidity_pool_id, LIQUIDITY_POOL_ID_SIZE);
     write_uint64(op->amount, sha256_update_func);
     write_uint64(op->min_amount_a, sha256_update_func);
     write_uint64(op->min_amount_b, sha256_update_func);
@@ -639,9 +640,9 @@ bool write_transaction_memo(memo_t *memo, sha256_update_func sha256_update_func)
     return write_memo(memo, sha256_update_func);
 }
 
-bool write_transaction_operation_len(uint8_t operations_len,
+bool write_transaction_operation_len(uint8_t operations_count,
                                      sha256_update_func sha256_update_func) {
-    write_uint32(operations_len, sha256_update_func);
+    write_uint32(operations_count, sha256_update_func);
     return true;
 }
 
@@ -652,7 +653,7 @@ bool write_transaction_details(const transaction_details_t *transaction_details,
     write_transaction_sequence(transaction_details->sequence_number, sha256_update_func);
     write_preconditions(&transaction_details->cond, sha256_update_func);
     write_memo(&transaction_details->memo, sha256_update_func);
-    write_transaction_operation_len(transaction_details->operations_len, sha256_update_func);
+    write_transaction_operation_len(transaction_details->operations_count, sha256_update_func);
     return true;
 }
 

@@ -70,7 +70,8 @@ bool write_transaction_preconditions(preconditions_t *preconditions,
 
 bool write_transaction_memo(memo_t *memo, sha256_update_func sha256_update_func);
 
-bool write_transaction_operation_len(uint8_t operations_len, sha256_update_func sha256_update_func);
+bool write_transaction_operation_len(uint8_t operations_count,
+                                     sha256_update_func sha256_update_func);
 
 bool write_transaction_details(const transaction_details_t *transaction_details,
                                sha256_update_func sha256_update_func);

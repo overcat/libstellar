@@ -602,7 +602,6 @@ static void test_claim_claimable_balance_op() {
     assert_memory_equal(operation.source_account.ed25519, kp1_public, sizeof(kp1_public));
 
     assert_int_equal(operation.type, OPERATION_TYPE_CLAIM_CLAIMABLE_BALANCE);
-    // TODO: uint8 []
     uint8_t balance_id_v0[] = {0xda, 0xd,  0x57, 0xda, 0x7d, 0x48, 0x50, 0xe7, 0xfc, 0x10, 0xd2,
                                0xa9, 0xd0, 0xeb, 0xc7, 0x31, 0xf7, 0xaf, 0xb4, 0x5,  0x74, 0xc0,
                                0x33, 0x95, 0xb1, 0x7d, 0x49, 0x14, 0x9b, 0x91, 0xf5, 0xbe};
@@ -746,11 +745,11 @@ static void test_revoke_trustline_sponsorship_op_pool() {
     assert_int_equal(operation.source_account.type, KEY_TYPE_ED25519);
     assert_memory_equal(operation.source_account.ed25519, kp1_public, sizeof(kp1_public));
 
-    trust_line_asset_t asset1 = {
-        .type = ASSET_TYPE_POOL_SHARE,
-        .liquidity_pool_id = {0xdd, 0x7b, 0x1a, 0xb8, 0x31, 0xc2, 0x73, 0x31, 0xd,  0xdb, 0xec,
-                              0x6f, 0x97, 0x87, 0xa,  0xa8, 0x3c, 0x2f, 0xbd, 0x78, 0xce, 0x22,
-                              0xad, 0xed, 0x37, 0xec, 0xbf, 0x4f, 0x33, 0x80, 0xfa, 0xc7}};
+    uint8_t liquidity_pool_id[] = {0xdd, 0x7b, 0x1a, 0xb8, 0x31, 0xc2, 0x73, 0x31, 0xd,  0xdb, 0xec,
+                                   0x6f, 0x97, 0x87, 0xa,  0xa8, 0x3c, 0x2f, 0xbd, 0x78, 0xce, 0x22,
+                                   0xad, 0xed, 0x37, 0xec, 0xbf, 0x4f, 0x33, 0x80, 0xfa, 0xc7};
+    trust_line_asset_t asset1 = {.type = ASSET_TYPE_POOL_SHARE,
+                                 .liquidity_pool_id = liquidity_pool_id};
 
     assert_int_equal(operation.revoke_sponsorship_op.ledger_key.trust_line.asset.type, asset1.type);
     assert_memory_equal(
@@ -980,7 +979,6 @@ static void test_clawback_claimable_balance_op() {
     assert_memory_equal(operation.source_account.ed25519, kp1_public, sizeof(kp1_public));
 
     assert_int_equal(operation.type, OPERATION_TYPE_CLAWBACK_CLAIMABLE_BALANCE);
-    // TODO: uint8 []
     uint8_t balance_id_v0[] = {0xda, 0xd,  0x57, 0xda, 0x7d, 0x48, 0x50, 0xe7, 0xfc, 0x10, 0xd2,
                                0xa9, 0xd0, 0xeb, 0xc7, 0x31, 0xf7, 0xaf, 0xb4, 0x5,  0x74, 0xc0,
                                0x33, 0x95, 0xb1, 0x7d, 0x49, 0x14, 0x9b, 0x91, 0xf5, 0xbe};
@@ -1344,7 +1342,7 @@ static void test_transaction_details() {
                 .time_bounds_present = true,
                 .time_bounds = {.min_time = 1649237469, .max_time = 1649238469},
             },
-        .operations_len = 2};
+        .operations_count = 2};
     assert_int_equal(transaction.source_account.type, expect_transaction.source_account.type);
     assert_memory_equal(transaction.source_account.ed25519,
                         expect_transaction.source_account.ed25519,
@@ -1359,7 +1357,7 @@ static void test_transaction_details() {
                      expect_transaction.cond.time_bounds.max_time);
     assert_int_equal(transaction.cond.time_bounds.min_time,
                      expect_transaction.cond.time_bounds.min_time);
-    assert_int_equal(transaction.operations_len, expect_transaction.operations_len);
+    assert_int_equal(transaction.operations_count, expect_transaction.operations_count);
 
     operation_t operation;
     assert_true(read_operation(&buffer, &operation));
@@ -1464,7 +1462,7 @@ static void test_fee_bump_transaction_details() {
                 .time_bounds_present = true,
                 .time_bounds = {.min_time = 1649237469, .max_time = 1649238469},
             },
-        .operations_len = 2};
+        .operations_count = 2};
     assert_int_equal(transaction.source_account.type, expect_transaction.source_account.type);
     assert_memory_equal(transaction.source_account.ed25519,
                         expect_transaction.source_account.ed25519,
@@ -1479,7 +1477,7 @@ static void test_fee_bump_transaction_details() {
                      expect_transaction.cond.time_bounds.max_time);
     assert_int_equal(transaction.cond.time_bounds.min_time,
                      expect_transaction.cond.time_bounds.min_time);
-    assert_int_equal(transaction.operations_len, expect_transaction.operations_len);
+    assert_int_equal(transaction.operations_count, expect_transaction.operations_count);
 
     operation_t operation;
     assert_true(read_operation(&buffer, &operation));

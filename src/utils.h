@@ -19,7 +19,9 @@ bool encode_muxed_account(const muxed_account_t *raw_muxed_account, char *out, s
 
 bool print_claimable_balance_id(const claimable_balance_id_t *claimable_balance_id,
                                 char *out,
-                                size_t out_len);
+                                size_t out_len,
+                                uint8_t num_chars_l,
+                                uint8_t num_chars_r);
 
 bool print_binary(const uint8_t *in,
                   size_t in_len,

@@ -62,7 +62,7 @@ bool read_transaction_preconditions(buffer_t *buffer, preconditions_t *precondit
 
 bool read_transaction_memo(buffer_t *buffer, memo_t *memo);
 
-bool read_transaction_operation_len(buffer_t *buffer, uint8_t *operations_len);
+bool read_transaction_operation_len(buffer_t *buffer, uint8_t *operations_count);
 
 bool read_transaction_details(buffer_t *buffer, transaction_details_t *transaction);
 

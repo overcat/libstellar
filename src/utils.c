@@ -194,14 +194,20 @@ bool print_muxed_account(const muxed_account_t *muxed_account,
 
 bool print_claimable_balance_id(const claimable_balance_id_t *claimable_balance_id,
                                 char *out,
-                                size_t out_len) {
+                                size_t out_len,
+                                uint8_t num_chars_l,
+                                uint8_t num_chars_r) {
     if (out_len < 36 * 2 + 1) {
         return false;
     }
     uint8_t data[36];
-    memcpy(data, &claimable_balance_id->type, 4);
+    // enum is 1 byte
+    data[0] = '\0';
+    data[1] = '\0';
+    data[2] = '\0';
+    data[3] = claimable_balance_id->type;
     memcpy(data + 4, claimable_balance_id->v0, 32);
-    return print_binary(data, 36, out, out_len, 0, 0);
+    return print_binary(data, 36, out, out_len, num_chars_l, num_chars_r);
 }
 
 bool print_uint(uint64_t num, char *out, size_t out_len) {

@@ -503,20 +503,18 @@ static void test_path_payment_strict_send_op() {
 }
 
 static void test_claim_claimable_balance_op() {
-    operation_t operation = {
-        .type = OPERATION_TYPE_CLAIM_CLAIMABLE_BALANCE,
-        .source_account_present = true,
-        .source_account =
-            {
-                .type = KEY_TYPE_ED25519,
-                .ed25519 = kp1_public,
-            },
-        .claim_claimable_balance_op = {
-            .balance_id = {.type = CLAIMABLE_BALANCE_ID_TYPE_V0,
-                           .v0 = {0xda, 0xd,  0x57, 0xda, 0x7d, 0x48, 0x50, 0xe7, 0xfc, 0x10, 0xd2,
-                                  0xa9, 0xd0, 0xeb, 0xc7, 0x31, 0xf7, 0xaf, 0xb4, 0x5,  0x74, 0xc0,
-                                  0x33, 0x95, 0xb1, 0x7d, 0x49, 0x14, 0x9b, 0x91, 0xf5, 0xbe}}}};
-    // TODO: v0 ptr?
+    uint8_t v0[] = {0xda, 0xd,  0x57, 0xda, 0x7d, 0x48, 0x50, 0xe7, 0xfc, 0x10, 0xd2,
+                    0xa9, 0xd0, 0xeb, 0xc7, 0x31, 0xf7, 0xaf, 0xb4, 0x5,  0x74, 0xc0,
+                    0x33, 0x95, 0xb1, 0x7d, 0x49, 0x14, 0x9b, 0x91, 0xf5, 0xbe};
+    operation_t operation = {.type = OPERATION_TYPE_CLAIM_CLAIMABLE_BALANCE,
+                             .source_account_present = true,
+                             .source_account =
+                                 {
+                                     .type = KEY_TYPE_ED25519,
+                                     .ed25519 = kp1_public,
+                                 },
+                             .claim_claimable_balance_op = {
+                                 .balance_id = {.type = CLAIMABLE_BALANCE_ID_TYPE_V0, .v0 = v0}}};
     sha256_init(&sha256_ctx);
     write_operation(&operation, sha256_update_f);
     sha256_final(&sha256_ctx, hash);
@@ -627,11 +625,11 @@ static void test_revoke_trustline_sponsorship_op_asset() {
 }
 
 static void test_revoke_trustline_sponsorship_op_pool() {
-    trust_line_asset_t asset1 = {
-        .type = ASSET_TYPE_POOL_SHARE,
-        .liquidity_pool_id = {0xdd, 0x7b, 0x1a, 0xb8, 0x31, 0xc2, 0x73, 0x31, 0xd,  0xdb, 0xec,
-                              0x6f, 0x97, 0x87, 0xa,  0xa8, 0x3c, 0x2f, 0xbd, 0x78, 0xce, 0x22,
-                              0xad, 0xed, 0x37, 0xec, 0xbf, 0x4f, 0x33, 0x80, 0xfa, 0xc7}};
+    uint8_t liquidity_pool_id[] = {0xdd, 0x7b, 0x1a, 0xb8, 0x31, 0xc2, 0x73, 0x31, 0xd,  0xdb, 0xec,
+                                   0x6f, 0x97, 0x87, 0xa,  0xa8, 0x3c, 0x2f, 0xbd, 0x78, 0xce, 0x22,
+                                   0xad, 0xed, 0x37, 0xec, 0xbf, 0x4f, 0x33, 0x80, 0xfa, 0xc7};
+    trust_line_asset_t asset1 = {.type = ASSET_TYPE_POOL_SHARE,
+                                 .liquidity_pool_id = liquidity_pool_id};
 
     operation_t operation = {
         .type = OPERATION_TYPE_REVOKE_SPONSORSHIP,
@@ -709,6 +707,9 @@ static void test_revoke_data_sponsorship_op() {
 }
 
 static void test_revoke_claimable_balance_sponsorship_op() {
+    uint8_t v0[] = {0xda, 0xd,  0x57, 0xda, 0x7d, 0x48, 0x50, 0xe7, 0xfc, 0x10, 0xd2,
+                    0xa9, 0xd0, 0xeb, 0xc7, 0x31, 0xf7, 0xaf, 0xb4, 0x5,  0x74, 0xc0,
+                    0x33, 0x95, 0xb1, 0x7d, 0x49, 0x14, 0x9b, 0x91, 0xf5, 0xbe};
     operation_t operation = {
         .type = OPERATION_TYPE_REVOKE_SPONSORSHIP,
         .source_account_present = true,
@@ -719,14 +720,9 @@ static void test_revoke_claimable_balance_sponsorship_op() {
             },
         .revoke_sponsorship_op = {
             .type = REVOKE_SPONSORSHIP_LEDGER_ENTRY,
-            .ledger_key = {
-                .type = CLAIMABLE_BALANCE,
-                .claimable_balance = {
-                    .balance_id = {
-                        .type = CLAIMABLE_BALANCE_ID_TYPE_V0,
-                        .v0 = {0xda, 0xd,  0x57, 0xda, 0x7d, 0x48, 0x50, 0xe7, 0xfc, 0x10, 0xd2,
-                               0xa9, 0xd0, 0xeb, 0xc7, 0x31, 0xf7, 0xaf, 0xb4, 0x5,  0x74, 0xc0,
-                               0x33, 0x95, 0xb1, 0x7d, 0x49, 0x14, 0x9b, 0x91, 0xf5, 0xbe}}}}}};
+            .ledger_key = {.type = CLAIMABLE_BALANCE,
+                           .claimable_balance = {
+                               .balance_id = {.type = CLAIMABLE_BALANCE_ID_TYPE_V0, .v0 = v0}}}}};
 
     sha256_init(&sha256_ctx);
     write_operation(&operation, sha256_update_f);
@@ -740,6 +736,9 @@ static void test_revoke_claimable_balance_sponsorship_op() {
 }
 
 static void test_revoke_liquidity_pool_sponsorship_op() {
+    uint8_t liquidity_pool_id[] = {0xdd, 0x7b, 0x1a, 0xb8, 0x31, 0xc2, 0x73, 0x31, 0xd,  0xdb, 0xec,
+                                   0x6f, 0x97, 0x87, 0xa,  0xa8, 0x3c, 0x2f, 0xbd, 0x78, 0xce, 0x22,
+                                   0xad, 0xed, 0x37, 0xec, 0xbf, 0x4f, 0x33, 0x80, 0xfa, 0xc7};
     operation_t operation = {
         .type = OPERATION_TYPE_REVOKE_SPONSORSHIP,
         .source_account_present = true,
@@ -751,11 +750,7 @@ static void test_revoke_liquidity_pool_sponsorship_op() {
         .revoke_sponsorship_op = {
             .type = REVOKE_SPONSORSHIP_LEDGER_ENTRY,
             .ledger_key = {.type = LIQUIDITY_POOL,
-                           .liquidity_pool = {
-                               .liquidity_pool_id = {
-                                   0xdd, 0x7b, 0x1a, 0xb8, 0x31, 0xc2, 0x73, 0x31, 0xd,  0xdb, 0xec,
-                                   0x6f, 0x97, 0x87, 0xa,  0xa8, 0x3c, 0x2f, 0xbd, 0x78, 0xce, 0x22,
-                                   0xad, 0xed, 0x37, 0xec, 0xbf, 0x4f, 0x33, 0x80, 0xfa, 0xc7}}}}};
+                           .liquidity_pool = {.liquidity_pool_id = liquidity_pool_id}}}};
 
     sha256_init(&sha256_ctx);
     write_operation(&operation, sha256_update_f);
@@ -823,20 +818,18 @@ static void test_clawback_op() {
 }
 
 static void test_clawback_claimable_balance_op() {
-    operation_t operation = {
-        .type = OPERATION_TYPE_CLAWBACK_CLAIMABLE_BALANCE,
-        .source_account_present = true,
-        .source_account =
-            {
-                .type = KEY_TYPE_ED25519,
-                .ed25519 = kp1_public,
-            },
-        .clawback_claimable_balance_op = {
-            .balance_id = {.type = CLAIMABLE_BALANCE_ID_TYPE_V0,
-                           .v0 = {0xda, 0xd,  0x57, 0xda, 0x7d, 0x48, 0x50, 0xe7, 0xfc, 0x10, 0xd2,
-                                  0xa9, 0xd0, 0xeb, 0xc7, 0x31, 0xf7, 0xaf, 0xb4, 0x5,  0x74, 0xc0,
-                                  0x33, 0x95, 0xb1, 0x7d, 0x49, 0x14, 0x9b, 0x91, 0xf5, 0xbe}}}};
-    // TODO: v0 ptr?
+    uint8_t v0[] = {0xda, 0xd,  0x57, 0xda, 0x7d, 0x48, 0x50, 0xe7, 0xfc, 0x10, 0xd2,
+                    0xa9, 0xd0, 0xeb, 0xc7, 0x31, 0xf7, 0xaf, 0xb4, 0x5,  0x74, 0xc0,
+                    0x33, 0x95, 0xb1, 0x7d, 0x49, 0x14, 0x9b, 0x91, 0xf5, 0xbe};
+    operation_t operation = {.type = OPERATION_TYPE_CLAWBACK_CLAIMABLE_BALANCE,
+                             .source_account_present = true,
+                             .source_account =
+                                 {
+                                     .type = KEY_TYPE_ED25519,
+                                     .ed25519 = kp1_public,
+                                 },
+                             .clawback_claimable_balance_op = {
+                                 .balance_id = {.type = CLAIMABLE_BALANCE_ID_TYPE_V0, .v0 = v0}}};
     sha256_init(&sha256_ctx);
     write_operation(&operation, sha256_update_f);
     sha256_final(&sha256_ctx, hash);
@@ -879,22 +872,21 @@ static void test_set_trust_line_flags_op() {
 }
 
 static void test_liquidity_pool_deposit_op() {
-    operation_t operation = {
-        .type = OPERATION_TYPE_LIQUIDITY_POOL_DEPOSIT,
-        .source_account_present = true,
-        .source_account =
-            {
-                .type = KEY_TYPE_ED25519,
-                .ed25519 = kp1_public,
-            },
-        .liquidity_pool_deposit_op = {
-            .liquidity_pool_id = {0x61, 0x90, 0x9,  0x98, 0xf1, 0x6a, 0x79, 0x7e, 0x1c, 0x1d, 0xbb,
-                                  0x2e, 0xb2, 0x1a, 0x1,  0x65, 0x7d, 0xa5, 0x8e, 0x6c, 0xc2, 0xf2,
-                                  0xba, 0xdc, 0x4c, 0x1e, 0xf7, 0x90, 0xf1, 0x7a, 0x22, 0xca},
-            .max_amount_a = 100000000,
-            .max_amount_b = 200000000,
-            .min_price = {.n = 9, .d = 20},
-            .max_price = {.n = 11, .d = 20}}};
+    uint8_t liquidity_pool_id[] = {0x61, 0x90, 0x9,  0x98, 0xf1, 0x6a, 0x79, 0x7e, 0x1c, 0x1d, 0xbb,
+                                   0x2e, 0xb2, 0x1a, 0x1,  0x65, 0x7d, 0xa5, 0x8e, 0x6c, 0xc2, 0xf2,
+                                   0xba, 0xdc, 0x4c, 0x1e, 0xf7, 0x90, 0xf1, 0x7a, 0x22, 0xca};
+    operation_t operation = {.type = OPERATION_TYPE_LIQUIDITY_POOL_DEPOSIT,
+                             .source_account_present = true,
+                             .source_account =
+                                 {
+                                     .type = KEY_TYPE_ED25519,
+                                     .ed25519 = kp1_public,
+                                 },
+                             .liquidity_pool_deposit_op = {.liquidity_pool_id = liquidity_pool_id,
+                                                           .max_amount_a = 100000000,
+                                                           .max_amount_b = 200000000,
+                                                           .min_price = {.n = 9, .d = 20},
+                                                           .max_price = {.n = 11, .d = 20}}};
 
     sha256_init(&sha256_ctx);
     write_operation(&operation, sha256_update_f);
@@ -908,21 +900,20 @@ static void test_liquidity_pool_deposit_op() {
 }
 
 static void test_liquidity_pool_withdraw_op() {
-    operation_t operation = {
-        .type = OPERATION_TYPE_LIQUIDITY_POOL_WITHDRAW,
-        .source_account_present = true,
-        .source_account =
-            {
-                .type = KEY_TYPE_ED25519,
-                .ed25519 = kp1_public,
-            },
-        .liquidity_pool_withdraw_op = {
-            .liquidity_pool_id = {0x61, 0x90, 0x9,  0x98, 0xf1, 0x6a, 0x79, 0x7e, 0x1c, 0x1d, 0xbb,
-                                  0x2e, 0xb2, 0x1a, 0x1,  0x65, 0x7d, 0xa5, 0x8e, 0x6c, 0xc2, 0xf2,
-                                  0xba, 0xdc, 0x4c, 0x1e, 0xf7, 0x90, 0xf1, 0x7a, 0x22, 0xca},
-            .min_amount_a = 100000000,
-            .min_amount_b = 200000000,
-            .amount = 50000000}};
+    uint8_t liquidity_pool_id[] = {0x61, 0x90, 0x9,  0x98, 0xf1, 0x6a, 0x79, 0x7e, 0x1c, 0x1d, 0xbb,
+                                   0x2e, 0xb2, 0x1a, 0x1,  0x65, 0x7d, 0xa5, 0x8e, 0x6c, 0xc2, 0xf2,
+                                   0xba, 0xdc, 0x4c, 0x1e, 0xf7, 0x90, 0xf1, 0x7a, 0x22, 0xca};
+    operation_t operation = {.type = OPERATION_TYPE_LIQUIDITY_POOL_WITHDRAW,
+                             .source_account_present = true,
+                             .source_account =
+                                 {
+                                     .type = KEY_TYPE_ED25519,
+                                     .ed25519 = kp1_public,
+                                 },
+                             .liquidity_pool_withdraw_op = {.liquidity_pool_id = liquidity_pool_id,
+                                                            .min_amount_a = 100000000,
+                                                            .min_amount_b = 200000000,
+                                                            .amount = 50000000}};
 
     sha256_init(&sha256_ctx);
     write_operation(&operation, sha256_update_f);
@@ -1215,7 +1206,7 @@ static void test_transaction_details() {
                 .time_bounds_present = true,
                 .time_bounds = {.min_time = 1649237469, .max_time = 1649238469},
             },
-        .operations_len = 2};
+        .operations_count = 2};
 
     sha256_init(&sha256_ctx);
     write_transaction_details(&transaction, sha256_update_f);
@@ -1269,7 +1260,7 @@ static void test_fee_bump_transaction_details() {
                 .time_bounds_present = true,
                 .time_bounds = {.min_time = 1649237469, .max_time = 1649238469},
             },
-        .operations_len = 2};
+        .operations_count = 2};
 
     fee_bump_transaction_details_t fee_bump_transaction = {
         .fee_source =

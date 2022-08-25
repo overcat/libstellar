@@ -44,8 +44,9 @@ typedef struct {
 /* max amount is max int64 scaled down: "922337203685.4775807" */
 #define AMOUNT_MAX_LENGTH 21
 
-#define HASH_SIZE              32
-#define LIQUIDITY_POOL_ID_SIZE 32
+#define HASH_SIZE                 32
+#define LIQUIDITY_POOL_ID_SIZE    32
+#define CLAIMABLE_BALANCE_ID_SIZE 32
 
 #define PUBLIC_KEY_TYPE_ED25519 0
 #define MEMO_TEXT_MAX_SIZE      28
@@ -165,8 +166,8 @@ typedef struct {
 typedef enum { LIQUIDITY_POOL_CONSTANT_PRODUCT = 0 } liquidity_pool_type_t;
 
 typedef struct {
-    asset_t assetA;
-    asset_t assetB;
+    asset_t asset_a;
+    asset_t asset_b;
     int32_t fee;  // Fee is in basis points, so the actual rate is (fee/100)%
 } liquidity_pool_constant_product_parameters_t;
 
@@ -192,7 +193,7 @@ typedef struct {
     union {
         alpha_num4_t alpha_num4;
         alpha_num12_t alpha_num12;
-        uint8_t liquidity_pool_id[LIQUIDITY_POOL_ID_SIZE];
+        const uint8_t *liquidity_pool_id;
     };
 } trust_line_asset_t;
 
@@ -308,9 +309,9 @@ typedef struct {
 typedef struct {
     bool inflation_destination_present;
     account_id_t inflation_destination;
-    bool clear_flags_present;  // TODO: read
+    bool clear_flags_present;
     uint32_t clear_flags;
-    bool set_flags_present;  // TODO: read
+    bool set_flags_present;
     uint32_t set_flags;
     bool master_weight_present;
     uint32_t master_weight;
@@ -370,7 +371,7 @@ typedef enum {
 
 typedef struct {
     claimable_balance_id_type_t type;
-    uint8_t v0[HASH_SIZE];
+    const uint8_t *v0;
 } claimable_balance_id_t;
 
 typedef struct {
@@ -418,7 +419,7 @@ typedef struct {
         } claimable_balance;  // type == CLAIMABLE_BALANCE
 
         struct {
-            uint8_t liquidity_pool_id[LIQUIDITY_POOL_ID_SIZE];
+            const uint8_t *liquidity_pool_id;
         } liquidity_pool;  // type == LIQUIDITY_POOL
     };
 
@@ -459,7 +460,7 @@ typedef struct {
 } set_trust_line_flags_op_t;
 
 typedef struct {
-    uint8_t liquidity_pool_id[LIQUIDITY_POOL_ID_SIZE];
+    const uint8_t *liquidity_pool_id;
     int64_t max_amount_a;  // maximum amount of first asset to deposit
     int64_t max_amount_b;  // maximum amount of second asset to deposit
     price_t min_price;     // minimum depositA/depositB
@@ -467,7 +468,7 @@ typedef struct {
 } liquidity_pool_deposit_op_t;
 
 typedef struct {
-    uint8_t liquidity_pool_id[LIQUIDITY_POOL_ID_SIZE];
+    const uint8_t *liquidity_pool_id;
     int64_t amount;        // amount of pool shares to withdraw
     int64_t min_amount_a;  // minimum amount of first asset to withdraw
     int64_t min_amount_b;  // minimum amount of second asset to withdraw
@@ -547,7 +548,7 @@ typedef struct {
     preconditions_t cond;               // validity conditions
     memo_t memo;
     uint32_t fee;  // the fee the source_account will pay
-    uint8_t operations_len;
+    uint8_t operations_count;
 } transaction_details_t;
 
 typedef struct {
