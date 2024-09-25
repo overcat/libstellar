@@ -3,6 +3,9 @@
 > [!IMPORTANT]
 > This project has not been updated for some time, and some of the content may be outdated. I suggest you take a look at [my other project](https://github.com/lightsail-network/libstellar), which may be helpful to you.
 
+> [!IMPORTANT]
+> We are actively promoting the use of Rust for developing embedded Stellar Apps, and you can check out [this PR](https://github.com/stellar/xdrgen/pull/205).
+
 `libstellar` is a pure C library for parsing and building Stellar transactions, our goal is to make it run on embedded
 devices, such as hardware wallets.
 
